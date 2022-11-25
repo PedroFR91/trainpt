@@ -8,6 +8,7 @@
   align-items: center;
   justify-content: space-between;
 }
+
 .selector {
   width: 180px;
   margin-right: 2rem;
@@ -21,9 +22,10 @@
   border-radius: 5px;
   color: #ffffff;
   background-color: var(--dark-blue);
+  text-decoration: none;
 }
 .button:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
   color: var(--dark-blue);
   background-color: transparent;
   border: 1px solid var(--dark-blue);
