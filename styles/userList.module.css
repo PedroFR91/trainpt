@@ -1,0 +1,29 @@
+.list {
+  width: 100%;
+  height: 80vh;
+  position: absolute;
+  top: 20%;
+  display: flex;
+  flex-direction: column;
+}
+.userdata {
+  width: 90%;
+  height: 20%;
+  display: flex;
+  margin: 20px auto;
+  padding: 1rem;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--transparent-blue-second);
+  font-family: 'Roboto';
+  color: #000;
+}
+.userdata > div {
+  width: 20%;
+  height: 100%;
+}
+.userdata div img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

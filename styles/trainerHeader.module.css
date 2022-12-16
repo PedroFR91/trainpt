@@ -3,18 +3,20 @@
   width: 100%;
   height: 15vh;
   background-color: var(--transparent-blue);
+  opacity: 1;
   box-shadow: 1px 1px 5px #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 10;
 }
+.menu {
+  width: 80%;
+  height: 100%;
 
-.selector {
-  width: 180px;
   margin-right: 2rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
   align-items: center;
 }
 .button {

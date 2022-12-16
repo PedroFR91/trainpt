@@ -1,28 +1,101 @@
-.container {
-  width: 100%;
-  height: 100vh;
-  background-image: url('../public/background.jpg');
-  background-size: cover;
-  z-index: -10;
-}
 .register {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%);
-  width: 290px;
-  height: 290px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.register form {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
   align-items: center;
-  background-color: var(--transparent-blue);
-  box-shadow: 10px 10px 10px var(--dark-blue);
+  justify-content: space-around;
 }
-.input {
+
+.register input {
   width: 200px;
   height: 30px;
-  border-radius: 20px;
+  margin: 10px;
+}
+.register button {
+  width: 200px;
+  height: 30px;
+  border: none;
+  background-color: var(--dark-blue);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+.register button:disabled {
+  background-color: grey;
+  cursor: not-allowed;
+}
+.register span {
+  font-size: 12px;
+  color: red;
+  margin-top: 5px;
+}
+.myimage {
+  width: 140px;
+  height: 140px;
+  margin: auto;
+  box-shadow: 1px 1px 5px black;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.myimage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.divimage {
+  width: 200px;
+  height: 25vh;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+.label {
+  width: 200px;
+  height: 30px;
+  border: none;
+  background-color: var(--dark-blue);
+  color: white;
+  font-weight: 600;
   text-align: center;
+  font-size: 12px;
+  font-family: 'Roboto';
+  padding: 0.5rem;
+}
+.label:hover {
+  cursor: pointer;
+}
+.selectRole {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Roboto';
+  color: #fff;
+  cursor: pointer;
+}
+.selectRole .roles {
+  display: flex;
+  width: 100%;
+}
+.selectRole .roles p {
+  background-color: #fff;
+  color: #fff;
+  width: 50%;
+  text-align: center;
+  padding: 0.5rem;
+}
+.selectRole .roles .selected {
+  background-color: var(--dark-blue);
+}
+.selectRole .roles .nonselected {
+  background-color: transparent;
 }

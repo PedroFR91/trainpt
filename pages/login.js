@@ -1,62 +1,71 @@
+import React, { useEffect, useState } from 'react';
 import styles from '../styles/login.module.css';
-import Header from '../components/header';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseconfig';
-import { useState } from 'react';
+import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase.config';
 import { useRouter } from 'next/router';
-export default function login() {
-  const [credentials, setCredentials] = useState({
-    email: '',
-    password: '',
-  });
+import { collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase.config';
 
+const login = () => {
+  const [error, setError] = useState(false);
+  const [email, setEmail] = useState(false);
+  const [password, setPassword] = useState(false);
   const { push } = useRouter();
+  const [myUid, setMyUid] = useState('');
+  const [data, setData] = useState([]);
+  const [ready, setReady] = useState(false);
 
-  const changeUser = (e) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value,
-    });
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        //Signed In
+        const user = userCredential.user;
+        setReady(true);
+        setMyUid(user.uid);
+        dataLogin(user.uid);
+      })
+      .catch((error) => {
+        setError(true);
+      });
   };
-
-  const loginUser = async (e) => {
+  const dataLogin = async (id) => {
     try {
-      await signInWithEmailAndPassword(
-        auth,
-        credentials.email,
-        credentials.password
-      );
-      push('/');
+      const docRef = doc(db, 'users', id);
+      const mydata = await getDoc(docRef);
+      const myrole =
+        mydata._document.data.value.mapValue.fields.role.stringValue;
+      console.log(myrole);
+      if (myrole === 'trainer') {
+        push('/trainer/home');
+      } else {
+        push('client/program');
+      }
     } catch (error) {
       console.log(error);
     }
   };
+
   return (
-    <div className={styles.container}>
-      <Header />
-      <div className={styles.login}>
-        <div>
-          <input
-            name='email'
-            type='text'
-            placeholder='Usuario'
-            className={styles.input}
-            onChange={changeUser}
-          />
-        </div>
-        <div>
-          <input
-            name='password'
-            type='password'
-            placeholder='Contraseña'
-            className={styles.input}
-            onChange={changeUser}
-          />
-        </div>
-        <div>
-          <button onClick={loginUser}>Login</button>
-        </div>
-      </div>
+    <div className={styles.login}>
+      <form onSubmit={handleLogin}>
+        <input
+          type='email'
+          placeholder='Correo'
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type='password'
+          placeholder='Contraseña'
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type='submit'>Login</button>
+        {error && <span>Compruebe datos de acceso o registrese</span>}
+      </form>
+      <p onClick={() => console.log(data, myUid)}>Click</p>
     </div>
   );
-}
+};
+
+export default login;
