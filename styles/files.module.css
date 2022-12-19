@@ -1,0 +1,14 @@
+.container {
+  width: 100%;
+  min-height: 100vh;
+  background-image: url('../public/background.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  z-index: -10;
+}
+.uploadFiles {
+  position: absolute;
+  top: 20vh;
+  left: 50%;
+  transform: translateX(-50%);
+}

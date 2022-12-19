@@ -1,0 +1,52 @@
+.container {
+  width: 100%;
+  min-height: 100vh;
+  background-image: url('../public/background.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  z-index: -10;
+}
+.formContainer {
+  position: absolute;
+  top: 20vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  border: 1px solid black;
+  width: 80%;
+  min-height: 20vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+.inicial div p,
+.follow div p {
+  font-size: large;
+  font-weight: 400;
+  font-family: 'Roboto';
+}
+.inicial div input,
+.follow div input {
+  width: 200px;
+  height: 30px;
+}
+.formContainer div {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 1px solid black;
+}
+.inicial {
+  position: absolute;
+  top: 20vh;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.follow {
+  position: absolute;
+  top: 20vh;
+  left: 50%;
+  transform: translateX(-50%);
+}
