@@ -49,7 +49,6 @@ const routine = () => {
     console.log(user.uid);
     setStep(1);
     setData([]);
-    console.log(data);
   };
 
   return (

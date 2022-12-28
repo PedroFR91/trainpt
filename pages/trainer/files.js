@@ -11,11 +11,14 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import ReactPlayer from 'react-player';
 const files = () => {
   const [file, setFile] = useState('');
   const [data, setData] = useState({});
   const [per, setPer] = useState(null);
   const [myfiles, setMyFiles] = useState([]);
+  const [showvideo, setShowvideo] = useState(false);
+  const [url, setUrl] = useState('');
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -82,10 +85,14 @@ const files = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
+    const name = new Date().getTime() + file.name;
     try {
-      await setDoc(doc(db, 'files', 'prueba'), {
+      await setDoc(doc(db, 'files', name), {
         ...data,
-        id: user.uid,
+        fileType: file.type,
+        title: file.name,
+        size: file.size,
+        trainerId: user.uid,
         timeStamp: serverTimestamp(),
       });
       console.log(myfiles);
@@ -93,22 +100,55 @@ const files = () => {
       console.log(error);
     }
   };
+
+  const addVideo = async (e) => {
+    e.preventDefault();
+    try {
+      await setDoc(doc(db, 'videos', 'video'), {
+        url: url,
+        trainerId: user.uid,
+        timeStamp: serverTimestamp(),
+      });
+      setShowvideo(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className={styles.container}>
       <TrainerHeader />
+
       <div className={styles.uploadFiles}>
         <h1>Suba sus archivos</h1>
         <div>
-          <h3>Archivos subidos</h3>
-          <div></div>
           <input
-            type='file'
-            name=''
-            id=''
-            accept='image/*,.pdf,.doc,.docx,.xml'
-            onChange={(e) => setFile(e.target.files[0])}
+            type='text'
+            placeholder='URL'
+            onChange={(e) => setUrl(e.target.value)}
           />
-          <button onClick={handleUpload}>Subir Archivo</button>
+          <button onClick={addVideo}>Añadir video</button>
+          <div className={styles.video}>
+            {showvideo && <ReactPlayer url={url} width={'100%'} />}
+          </div>
+        </div>
+        <input
+          type='file'
+          id='filepicker'
+          accept='image/*,.pdf,.doc,.docx,.xml'
+          onChange={(e) => setFile(e.target.files[0])}
+        />
+        <button onClick={handleUpload}>Subir Archivo</button>
+
+        <div className={styles.gallery}>
+          {myfiles.map((item) => (
+            <div key={item.id}>
+              <img
+                src={item.fileType === 'image/jpeg' ? item.img : '/doc.png'}
+              />
+              <p>{item.title}</p>
+              <a href={item.img}>Ver/Descargar</a>
+            </div>
+          ))}
         </div>
       </div>
     </div>

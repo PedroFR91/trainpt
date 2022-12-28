@@ -2,6 +2,7 @@
   width: 100%;
   height: 100%;
   display: flex;
+
   align-items: center;
   justify-content: center;
 }
@@ -38,8 +39,8 @@
   margin-top: 5px;
 }
 .myimage {
-  width: 140px;
-  height: 140px;
+  width: 220px;
+  height: 220px;
   margin: auto;
   box-shadow: 1px 1px 5px black;
   border-radius: 50%;
@@ -51,11 +52,15 @@
   object-fit: contain;
 }
 .divimage {
-  width: 200px;
-  height: 25vh;
+  position: absolute;
+  top: 10vh;
+  left: 10%;
+  width: 300px;
+  height: 300px;
   display: flex;
   flex-direction: column;
-  margin-bottom: 20px;
+  justify-content: space-around;
+  align-items: center;
 }
 .label {
   width: 200px;

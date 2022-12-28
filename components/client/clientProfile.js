@@ -41,13 +41,12 @@ const clientProfile = () => {
   return (
     <>
       {data
-        .filter((item) => item.role === 'trainer')
+        .filter((item) => item.role === 'client' && item.id === myUid)
         .map((data) => (
           <div key={data.id} className={styles.myprofile}>
             <img src={data.img} alt={'img'} className={styles.myprofileimg} />
             <div className={styles.myprofileinfo}>
               <p>{data.username}</p>
-              <p>{data.description}</p>
             </div>
           </div>
         ))}

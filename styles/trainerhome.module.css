@@ -1,0 +1,36 @@
+.container {
+  width: 100%;
+  min-height: 100vh;
+  background-image: url('../public/background.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  z-index: -10;
+}
+.userContainer {
+  border: 1px solid black;
+  width: 50%;
+  height: 50%;
+  position: absolute;
+  top: 20vh;
+  left: 5%;
+  overflow-y: auto;
+  background-color: var(--transparent-blue);
+
+  border-radius: 10px;
+  border-color: transparent;
+  scrollbar-color: blue;
+}
+.calendar {
+  border: 1px solid black;
+  width: 30%;
+  height: 50%;
+  position: absolute;
+  top: 20vh;
+  right: 5%;
+  border-radius: 10px;
+  background-color: var(--transparent-blue);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}

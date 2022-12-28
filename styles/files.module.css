@@ -5,10 +5,36 @@
   background-size: cover;
   background-attachment: fixed;
   z-index: -10;
+  display: flex;
+  flex-direction: column;
 }
 .uploadFiles {
   position: absolute;
   top: 20vh;
   left: 50%;
   transform: translateX(-50%);
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.gallery {
+  width: 100%;
+  height: fit-content;
+  border: 1px solid black;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+.gallery img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border: 1px solid black;
+}
+.video {
+  width: 400px;
+  border: 1px solid black;
+  height: 300px;
 }

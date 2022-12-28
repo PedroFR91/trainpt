@@ -36,11 +36,13 @@ const login = () => {
       const mydata = await getDoc(docRef);
       const myrole =
         mydata._document.data.value.mapValue.fields.role.stringValue;
+      console.log(id);
+      console.log(mydata);
       console.log(myrole);
       if (myrole === 'trainer') {
         push('/trainer/home');
       } else {
-        push('client/program');
+        push('/client/program');
       }
     } catch (error) {
       console.log(error);

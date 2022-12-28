@@ -111,19 +111,21 @@ const register = () => {
             Sube tu Imagen
           </label>
         </div>
+        <div>
+          {userInputs.map((input) => (
+            <div key={input.id}>
+              {/* <label>{input.label}</label> */}
+              <input
+                id={input.id}
+                type={input.type}
+                placeholder={input.placeholder}
+                onChange={handleInput}
+                required
+              />
+            </div>
+          ))}
+        </div>
 
-        {userInputs.map((input) => (
-          <div key={input.id}>
-            {/* <label>{input.label}</label> */}
-            <input
-              id={input.id}
-              type={input.type}
-              placeholder={input.placeholder}
-              onChange={handleInput}
-              required
-            />
-          </div>
-        ))}
         <div className={styles.selectRole}>
           Seleccione su Rol
           <div className={styles.roles}>
@@ -150,10 +152,10 @@ const register = () => {
               Cliente
             </p>
           </div>
+          <button disabled={per !== null && per < 100} type='submit'>
+            Registro
+          </button>
         </div>
-        <button disabled={per !== null && per < 100} type='submit'>
-          Registro
-        </button>
       </form>
     </div>
   );

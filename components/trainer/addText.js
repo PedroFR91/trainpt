@@ -1,29 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import styles from '../../styles/addtext.module.css';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import React, { useContext, useState } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { async } from '@firebase/util';
 import { db } from '../../firebase.config';
-import { updateText } from '../../functions/functions';
+import AuthContext from '../../context/AuthContext';
+import styles from '../../styles/myprofile.module.css';
 const addText = () => {
-  const [myUid, setMyUid] = useState('');
+  const { myUid } = useContext(AuthContext);
   const [data, setData] = useState([]);
-  const [text, setText] = useState('Cuentanos algo sobre ti');
-  const auth = getAuth();
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is signed in, see docs for a list of available properties
-      // https://firebase.google.com/docs/reference/js/firebase.User
-      const uid = user.uid;
-      setMyUid(uid);
-
-      // ...
-    } else {
-      // User is signed out
-      // ...
-    }
-  });
+  const [text, setText] = useState('Añade tu descripción');
+  const [showinput, setShowinput] = useState(false);
 
   const updateText = async (e) => {
     const docRef = doc(db, 'users', myUid);
@@ -45,10 +29,25 @@ const addText = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <input type='text' onChange={updateText} />
-
-      <div>{text}</div>
+    <div className={styles.addText}>
+      <div className={styles.text}>
+        {showinput ? (
+          <input type='text' onChange={updateText} placeholder={text} />
+        ) : (
+          <div>{text}</div>
+        )}
+      </div>
+      <div className={styles.buttons}>
+        {!showinput ? (
+          <button onClick={() => setShowinput(true)}>
+            <h3>Editar</h3>
+          </button>
+        ) : (
+          <button onClick={() => setShowinput(false)}>
+            <h3>Guardar</h3>
+          </button>
+        )}
+      </div>
     </div>
   );
 };
