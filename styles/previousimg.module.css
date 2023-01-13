@@ -1,30 +1,61 @@
 .container {
-  width: 90%;
+  width: 40%;
   min-height: 50vh;
   display: flex;
-  justify-content: space-evenly;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
 }
 .clientPhotos {
   display: flex;
+  width: 100%;
   flex-direction: row;
+  flex-wrap: wrap;
+}
+.clientPhotos div button {
+  width: auto;
+  font-family: 'Roboto';
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  color: #ffffff;
+  background-color: var(--dark-blue);
+  text-decoration: none;
 }
 .divimage {
   width: 400px;
-  height: 200px;
-  border: 1px solid black;
+  height: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  margin-top: 3rem;
 }
 .divimage img {
   width: 150px;
   height: 150px;
   object-fit: contain;
 }
+.clientImg {
+  width: 200px;
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 3rem;
+}
+.clientImg img {
+  width: 100%;
+  margin: auto;
+  object-fit: contain;
+}
+.labels {
+  display: flex;
+  justify-content: space-around;
+}
 .divimage label {
-  width: 90%;
+  width: 40%;
   text-align: center;
+
   font-family: 'Roboto';
   padding: 0.5rem 1rem;
   border-radius: 5px;

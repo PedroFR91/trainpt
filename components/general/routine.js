@@ -4,6 +4,7 @@ import {
   doc,
   onSnapshot,
   collection,
+  deleteDoc,
 } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase.config';
@@ -49,6 +50,12 @@ const routine = () => {
     console.log(user.uid);
     setStep(1);
     setData([]);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'routines', id));
+    } catch (error) {}
   };
 
   return (
@@ -124,6 +131,7 @@ const routine = () => {
             <p>Ejercicios:{routine.exercises}</p>
             <p>Series:{routine.sets}</p>
             <p>Repeticiones:{routine.reps}</p>
+            <button onClick={() => handleDelete(routine.id)}>X</button>
           </div>
         ))}
       </div>

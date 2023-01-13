@@ -10,8 +10,10 @@ const profile = () => {
       <TrainerHeader />
       <div className={styles.layout}>
         <Profile />
-        <Rates />
-        <PreviousImages />
+        <div className={styles.subdivision}>
+          <Rates />
+          <PreviousImages />
+        </div>
       </div>
     </div>
   );

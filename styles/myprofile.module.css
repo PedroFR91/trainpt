@@ -72,3 +72,10 @@
   justify-content: space-evenly;
   align-items: center;
 }
+.subdivision {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  background-color: var(--transparent-blue-second);
+  margin: 3rem;
+}

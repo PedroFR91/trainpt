@@ -65,7 +65,6 @@ const login = () => {
         <button type='submit'>Login</button>
         {error && <span>Compruebe datos de acceso o registrese</span>}
       </form>
-      <p onClick={() => console.log(data, myUid)}>Click</p>
     </div>
   );
 };
