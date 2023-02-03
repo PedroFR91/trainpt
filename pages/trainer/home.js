@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../../styles/trainerhome.module.css';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import UserList from '../../components/trainer/userList';
-
+import Calendar from '../../components/trainer/calendar';
 const home = () => {
   const date = new Date();
 
@@ -14,9 +14,7 @@ const home = () => {
         <UserList />
       </div>
       <div className={styles.calendar}>
-        <div>{month.toUpperCase()}</div>
-        <div>Próximas revisiones</div>
-        <div></div>
+        <Calendar />
       </div>
       {/* <Review /> */}
     </div>

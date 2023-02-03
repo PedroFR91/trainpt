@@ -74,6 +74,7 @@ const register = () => {
 
       await setDoc(doc(db, 'users', res.user.uid), {
         ...data,
+        id: res.user.uid,
         timeStamp: serverTimestamp(),
       });
       if (selected === 'trainer') {
@@ -114,7 +115,6 @@ const register = () => {
         <div>
           {userInputs.map((input) => (
             <div key={input.id}>
-              {/* <label>{input.label}</label> */}
               <input
                 id={input.id}
                 type={input.type}
@@ -127,7 +127,6 @@ const register = () => {
         </div>
 
         <div className={styles.selectRole}>
-          Seleccione su Rol
           <div className={styles.roles}>
             <p
               className={

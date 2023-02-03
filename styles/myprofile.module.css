@@ -7,7 +7,7 @@
   z-index: -10;
 }
 .myprofile {
-  width: 80%;
+  width: 50%;
   min-height: 30vh;
   background-color: var(--transparent-blue-second);
   display: flex;

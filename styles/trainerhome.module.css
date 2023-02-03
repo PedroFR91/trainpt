@@ -23,7 +23,7 @@
 .calendar {
   border: 1px solid black;
   width: 30%;
-  height: 50%;
+  height: fit-content;
   position: absolute;
   top: 20vh;
   right: 5%;

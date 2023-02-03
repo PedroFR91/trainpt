@@ -92,7 +92,7 @@ const myrates = () => {
             <p>{rate.ratename}</p>
             <p>{rate.rateprice}</p>
             <p>{rate.ratefre}</p>
-            <button onClick={() => handleDelete(rate.ratename)}>X</button>
+            <button onClick={() => handleDelete(rate.ratename)}>Borrar</button>
           </div>
         ))}
       </div>

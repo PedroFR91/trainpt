@@ -7,8 +7,8 @@
   justify-content: center;
 }
 .register form {
-  width: 50%;
-  height: 80%;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,9 +16,9 @@
 }
 
 .register input {
-  width: 200px;
-  height: 30px;
-  margin: 10px;
+  width: 300px;
+  height: 40px;
+  margin: 3px;
 }
 .register button {
   width: 200px;
@@ -28,6 +28,7 @@
   color: white;
   font-weight: bold;
   cursor: pointer;
+  margin-top: 5px;
 }
 .register button:disabled {
   background-color: grey;
@@ -38,19 +39,6 @@
   color: red;
   margin-top: 5px;
 }
-.myimage {
-  width: 220px;
-  height: 220px;
-  margin: auto;
-  box-shadow: 1px 1px 5px black;
-  border-radius: 50%;
-  overflow: hidden;
-}
-.myimage img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
 .divimage {
   width: 300px;
   height: 300px;
@@ -59,17 +47,31 @@
   justify-content: space-around;
   align-items: center;
 }
+.myimage {
+  width: 150px;
+  height: 150px;
+  margin: auto;
+
+  border-radius: 50%;
+  overflow: hidden;
+}
+.myimage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .label {
   width: 200px;
-  height: 30px;
+  height: 35px;
   border: none;
   background-color: var(--dark-blue);
   color: white;
   font-weight: 600;
   text-align: center;
-  font-size: 12px;
+  font-size: 16px;
   font-family: 'Roboto';
-  padding: 0.5rem;
+  padding-top: 0.5rem;
 }
 .label:hover {
   cursor: pointer;
@@ -83,6 +85,11 @@
   font-family: 'Roboto';
   color: #fff;
   cursor: pointer;
+}
+.selectRole p {
+  color: var(--dark-blue);
+  font-size: 160;
+  font-weight: 600;
 }
 .selectRole .roles {
   display: flex;
@@ -99,5 +106,5 @@
   background-color: var(--dark-blue);
 }
 .selectRole .roles .nonselected {
-  background-color: transparent;
+  background-color: var(--light-blue);
 }

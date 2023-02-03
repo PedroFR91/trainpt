@@ -52,10 +52,12 @@ const trainerHeader = () => {
         </Link>
       </div>
       {isLogged && (
-        <div onClick={exit}>
+        <div onClick={exit} className={styles.signOut}>
           <Link href={'../'}>
             <h3>
-              <FaSignOutAlt />
+              <FaSignOutAlt
+                style={{ color: '#ffffff', backgroundColor: '#172c63' }}
+              />
             </h3>
           </Link>
         </div>

@@ -1,48 +1,55 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import styles from '../../styles/userList.module.css';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase.config';
-
+import AuthContext from '../../context/AuthContext';
 const userList = () => {
-  const [data, setData] = useState([]);
+  const [show, setShow] = useState(false);
+  const [current, setCurrent] = useState('');
+  const { myData, myUid } = useContext(AuthContext);
 
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'users'),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setData(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    return () => {
-      unsub();
-    };
-  }, []);
-
+  const showClient = (data) => {
+    setShow(true);
+    setCurrent(data);
+  };
   return (
     <div className={styles.list}>
-      {data
-        .filter((data) => data.role === 'client')
-        .map((data) => (
-          <div key={data.id} className={styles.userdata}>
-            <div>
-              {data.img ? (
-                <img src={data.img} alt={'myprofileimg'} />
-              ) : (
-                <img src='/face.jpg' alt={'myprofileimg'} />
-              )}
+      {!show &&
+        myData
+          .filter((data) => data.role === 'client' && data.link === myUid)
+          .map((data) => (
+            <div key={data.id} className={styles.userdata}>
+              <div>
+                {data.img ? (
+                  <img src={data.img} alt={'myprofileimg'} />
+                ) : (
+                  <img src='/face.jpg' alt={'myprofileimg'} />
+                )}
+              </div>
+              <div>{data.username}</div>
+              <div>{data.status}</div>
+              <div className={styles.button} onClick={() => showClient(data)}>
+                Ver
+              </div>
             </div>
-            <div>{data.username}</div>
-            <div>Pendiente de envío</div>
-            <div className={styles.button}>Ver</div>
+          ))}
+      {show && (
+        <div className={styles.client}>
+          <div>
+            {' '}
+            {current.img ? (
+              <img src={current.img} alt={'myprofileimg'} />
+            ) : (
+              <img src='/face.jpg' alt={'myprofileimg'} />
+            )}
           </div>
-        ))}
+          <div>{current.username}</div>
+          <div>Rutinas:</div>
+          <div>Formularios:</div>
+          <div>Fotos:</div>
+          <button onClick={() => setShow(false)}>X</button>
+        </div>
+      )}
     </div>
   );
 };

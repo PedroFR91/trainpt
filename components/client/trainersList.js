@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import styles from '../../styles/program.module.css';
-import { collection, onSnapshot } from 'firebase/firestore';
+import {
+  arrayUnion,
+  collection,
+  doc,
+  onSnapshot,
+  updateDoc,
+} from 'firebase/firestore';
 import { db } from '../../firebase.config';
-const trainersList = () => {
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import AuthContext from '../../context/AuthContext';
+const trainersList = (props) => {
   const [data, setData] = useState([]);
+  const [select, setSelect] = useState('');
+  const [show, setShow] = useState(false);
+  const { myData, myUid } = useContext(AuthContext);
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'users'),
@@ -22,6 +33,17 @@ const trainersList = () => {
       unsub();
     };
   }, []);
+
+  const selectTrainer = async (id) => {
+    console.log(id);
+    console.log(myUid);
+    const docRef = doc(db, 'users', myUid);
+    await updateDoc(docRef, {
+      link: id,
+    });
+  };
+
+  const hide = () => {};
   return (
     <div className={styles.trainersList}>
       {data
@@ -37,9 +59,18 @@ const trainersList = () => {
             </div>
             <div>{data.username}</div>
             <div className={styles.button}>Ver Perfil</div>
-            <div className={styles.button}>Seleccionar</div>
+            <div
+              className={styles.button}
+              onClick={() => {
+                hide();
+                selectTrainer(data.id);
+              }}
+            >
+              Seleccionar
+            </div>
           </div>
         ))}
+      <div></div>
     </div>
   );
 };

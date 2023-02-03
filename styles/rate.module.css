@@ -27,7 +27,7 @@
   cursor: pointer;
 }
 .addrate {
-  width: 80%;
+  width: 200px;
   height: 200px;
   background-color: var(--my-blue);
   display: flex;
@@ -42,8 +42,12 @@
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
-  background-color: var(--transparent-blue-second);
+  background-color: #ffffff;
   margin-bottom: 10px;
+}
+.rate button {
+  width: 50px;
+  height: 30px;
 }
 
 .addrate input,
