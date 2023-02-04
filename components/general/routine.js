@@ -6,10 +6,6 @@ import {
   collection,
   deleteDoc,
   updateDoc,
-  FieldValue,
-  arrayUnion,
-  getDocs,
-  query,
 } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react';
 import { db } from '../../firebase.config';
@@ -24,6 +20,7 @@ const routine = () => {
   const [visible, setVisible] = useState(false);
   const { myData, myUid } = useContext(AuthContext);
   const [showClient, setShowClient] = useState(false);
+  const [currentRoutine, setCurrentRoutine] = useState([]);
   const auth = getAuth();
   const user = auth.currentUser;
   const [inputFields, setInputFields] = useState([
@@ -69,7 +66,7 @@ const routine = () => {
     } catch (error) {
       console.log(error);
     }
-    setData([]);
+    setInputFields([{ exercise: '', series: '', reps: '' }]);
   };
 
   const handleDelete = async (id) => {
@@ -82,10 +79,18 @@ const routine = () => {
     setVisible(true);
   };
 
-  const asignRoutine = () => {
+  const asignRoutine = (id) => {
     setShowClient(true);
+    setCurrentRoutine(id);
   };
-
+  const selectTrainer = async (cr, id) => {
+    console.log('id', id);
+    console.log('MyUid', myUid);
+    await updateDoc(doc(db, 'routines', cr), {
+      link: id,
+    });
+    setShowClient(false);
+  };
   return (
     <div className={styles.routinesContainer}>
       <div className={styles.routineContainer}>
@@ -108,7 +113,12 @@ const routine = () => {
             placeholder='Músculos trabajados'
             onChange={(e) => setData({ ...data, muscles: e.target.value })}
           />
-          <button onClick={handleCreate}>Crear Rutina</button>
+          <div>
+            <button onClick={handleCreate}>Crear Rutina</button>
+            <button onClick={addExercises} className={styles.plus}>
+              Añadir ejercicio
+            </button>
+          </div>
         </div>
         <div className={styles.exercises}>
           {inputFields.map((input, index) => {
@@ -123,7 +133,7 @@ const routine = () => {
                       onChange={(e) => handleChange(index, e)}
                     />
                   </div>
-                  <div>
+                  <div className={styles.second}>
                     <input
                       name='series'
                       placeholder='Series'
@@ -138,70 +148,74 @@ const routine = () => {
                     />
                   </div>
                 </div>
-
-                <button onClick={addExercises} className={styles.plus}>
-                  Añadir ejercicio
-                </button>
               </div>
             );
           })}
         </div>
       </div>
       <div className={styles.listRoutines}>
-        {!showClient &&
-          routine
-            .filter((data) => data.routineid === myUid)
-            .map((routine) => (
-              <div key={routine.id} className={styles.routine}>
-                <div>
-                  <p>
-                    <span>Nombre Rutina</span>
-                    <span>{routine.nameroutine}</span>
-                  </p>
-                  <p>
-                    <span>Descripción Rutina</span>
-                    <span>{routine.desroutine}</span>
-                  </p>
-                  <p>
-                    <span>Músculos</span>
-                    <span>{routine.muscles}</span>
-                  </p>
-                </div>
-                <div>
-                  {routine.mydata.map((e, i) => (
-                    <div key={i} className={styles.exer}>
-                      <div>
-                        <p>Ejercicio:{e.exercise}</p>
-                      </div>
-                      <div>
-                        <p>Repeticiones:{e.reps}</p>
-                        <p>Series:{e.series}</p>
-                      </div>
+        {routine
+          .filter((data) => data.routineid === myUid)
+          .map((routine) => (
+            <div key={routine.id} className={styles.routine}>
+              <div>
+                <p>
+                  <span>Nombre Rutina</span>
+                  <span>{routine.nameroutine}</span>
+                </p>
+                <p>
+                  <span>Descripción Rutina</span>
+                  <span>{routine.desroutine}</span>
+                </p>
+                <p>
+                  <span>Músculos</span>
+                  <span>{routine.muscles}</span>
+                </p>
+              </div>
+              <div>
+                {routine.mydata.map((e, i) => (
+                  <div key={i} className={styles.exer}>
+                    <div>
+                      <p>Ejercicio:{e.exercise}</p>
                     </div>
-                  ))}
-                </div>
+                    <div>
+                      <p>Repeticiones:{e.reps}</p>
+                      <p>Series:{e.series}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <button onClick={() => handleDelete(routine.id)}>Borrar</button>
+                <button onClick={() => asignRoutine(routine.id)}>
+                  Asignar Rutina
+                </button>
+              </div>
+            </div>
+          ))}
+      </div>
+      {showClient && (
+        <div className={styles.share}>
+          {myData
+            .filter((data) => data.role === 'client')
+            .map((data) => (
+              <div
+                key={data.id}
+                onClick={() => selectTrainer(currentRoutine, data.id)}
+              >
                 <div>
-                  <button onClick={() => handleDelete(routine.id)}>
-                    Borrar
-                  </button>
-                  <button onClick={() => asignRoutine(routine.id)}>
-                    Asignar Rutina
-                  </button>
+                  {data.img ? (
+                    <img src={data.img} alt={'myprofileimg'} />
+                  ) : (
+                    <img src='/face.jpg' alt={'myprofileimg'} />
+                  )}
                 </div>
+                <p>{data.username}</p>
               </div>
             ))}
-        {showClient && (
-          <div className={styles.share}>
-            {myData
-              .filter((data) => data.role === 'client')
-              .map((data) => {
-                <div key={data.id}>
-                  <p>{data.username}</p>
-                </div>;
-              })}
-          </div>
-        )}
-      </div>
+          <button onClick={() => setShowClient(false)}>Cerrar</button>
+        </div>
+      )}
     </div>
   );
 };

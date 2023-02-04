@@ -16,7 +16,17 @@ const program = () => {
           <div className={styles.datacontainer}>
             <div>Datos semanales</div>
             <div>
-              <div>Medidas</div>
+              <div>
+                <div>
+                  <p>Medidas</p>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div>
+                    <label>Pecho</label>
+                    <input type='text' />
+                  </div>
+                </div>
+              </div>
               <div>Fotos</div>
             </div>
           </div>

@@ -1,0 +1,25 @@
+.myforms {
+  background-color: var(--light-blue);
+  padding-top: 20vh;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+}
+.myforms div {
+  width: 400px;
+  min-height: fit-content;
+  background: #ffffff;
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: center;
+  padding: 1rem;
+}
+.myforms div p {
+  width: 80%;
+
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 0.5rem;
+}

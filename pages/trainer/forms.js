@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styles from '../../styles/forms.module.css';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import {
@@ -7,16 +7,21 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import { getAuth } from 'firebase/auth';
+import AuthContext from '../../context/AuthContext';
 
 const forms = () => {
   const [data, setData] = useState([]);
   const [myForm, setMyForm] = useState([]);
+  const { myData, myUid } = useContext(AuthContext);
   const auth = getAuth();
   const user = auth.currentUser;
   const [show, setShow] = useState(false);
+  const [showClient, setShowClient] = useState(false);
+  const [currentForm, setCurrentForm] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -168,6 +173,18 @@ const forms = () => {
     } catch (error) {
       console.log(error);
     }
+  };
+  const asignForm = (id) => {
+    setShowClient(true);
+    setCurrentForm(id);
+  };
+  const selectTrainer = async (cf, id) => {
+    console.log('id', id);
+    console.log('MyUid', myUid);
+    await updateDoc(doc(db, 'forms', cf), {
+      link: id,
+    });
+    setShowClient(false);
   };
   return (
     <div className={styles.container}>
@@ -455,10 +472,88 @@ const forms = () => {
       <div className={styles.myforms}>
         {myForm.map((form) => (
           <div key={form.id}>
-            <p>{form.name}</p>
+            <p>
+              <span>Nombre:</span> <span>{form.name}</span>
+            </p>
+            <p>
+              <span>Sexo:</span> <span>{form.gender}</span>
+            </p>
+            <p>
+              <span>Peso:</span> <span>{form.weight}</span>
+            </p>
+            <p>
+              <span>Altura:</span> <span>{form.height}</span>
+            </p>
+            <p>Medidas</p>
+            <p>
+              <span>Pecho:</span> <span>{form.measures.chest}</span>
+            </p>
+            <p>
+              <span>Hombro:</span> <span>{form.measures.shoulders}</span>
+            </p>
+            <p>
+              <span>Biceps:</span> <span>{form.measures.biceps}</span>
+            </p>
+            <p>
+              <span>Cintura:</span> <span>{form.measures.hips}</span>
+            </p>
+            <p>
+              <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
+            </p>
+            <p>
+              <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
+            </p>
+            <p>
+              <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
+            </p>
+            <p>Fotos</p>
+            <p>
+              <span>Frente:</span> <span>{form.photos.front}</span>
+            </p>
+            <p>
+              <span>Espalda:</span> <span>{form.photos.back}</span>
+            </p>
+            <p>
+              <span>Lateral:</span> <span>{form.photos.lateral}</span>
+            </p>
+            <p>
+              <span>Intolerancias:</span> <span>{form.intolerances}</span>
+            </p>
+            <p>
+              <span>Comida preferida:</span> <span>{form.preferredFoods}</span>
+            </p>
+            <p>
+              <span>Días de entrenamiento:</span>{' '}
+              <span>{form.trainingDays}</span>
+            </p>
+            <button onClick={() => asignForm(form.id)}>
+              Asignar Formulario
+            </button>
           </div>
         ))}
       </div>
+      {showClient && (
+        <div className={styles.share}>
+          {myData
+            .filter((data) => data.role === 'client')
+            .map((data) => (
+              <div
+                key={data.id}
+                onClick={() => selectTrainer(currentForm, data.id)}
+              >
+                <div>
+                  {data.img ? (
+                    <img src={data.img} alt={'myprofileimg'} />
+                  ) : (
+                    <img src='/face.jpg' alt={'myprofileimg'} />
+                  )}
+                </div>
+                <p>{data.username}</p>
+              </div>
+            ))}
+          <button onClick={() => setShowClient(false)}>Cerrar</button>
+        </div>
+      )}
     </div>
   );
 };
