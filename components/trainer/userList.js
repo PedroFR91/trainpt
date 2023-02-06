@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styles from '../../styles/userList.module.css';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase.config';
@@ -7,11 +7,30 @@ const userList = () => {
   const [show, setShow] = useState(false);
   const [current, setCurrent] = useState('');
   const { myData, myUid } = useContext(AuthContext);
+  const [routine, setRoutine] = useState([]);
 
   const showClient = (data) => {
     setShow(true);
     setCurrent(data);
   };
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'routines'),
+      (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setRoutine(list);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+    return () => {
+      unsub();
+    };
+  }, []);
   return (
     <div className={styles.list}>
       {!show &&
@@ -44,8 +63,35 @@ const userList = () => {
             )}
           </div>
           <div>{current.username}</div>
-          <div>Rutinas:</div>
-          <div>Formularios:</div>
+          <div>
+            <p>Rutinas:</p>
+            <div>
+              {' '}
+              {routine
+                .filter((data) => data.routineid === myUid)
+                .map((routine) => (
+                  <div key={routine.id} className={styles.routine}>
+                    <div>
+                      <p>
+                        <span>{routine.nameroutine}</span>
+                      </p>
+                    </div>
+                    <div>
+                      <button onClick={() => handleDelete(routine.id)}>
+                        Borrar
+                      </button>
+                      <button onClick={() => asignRoutine(routine.id)}>
+                        Asignar Rutina
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+          <div>
+            <p>Formularios:</p>
+            <div></div>
+          </div>
           <div>Fotos:</div>
           <button onClick={() => setShow(false)}>X</button>
         </div>

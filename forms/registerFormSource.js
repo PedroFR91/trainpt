@@ -17,10 +17,10 @@ export const userInputs = [
     type: 'password',
     placeholder: '*********',
   },
-  {
-    id: 'description',
-    label: 'Descripción',
-    type: 'text',
-    placeholder: 'Háblamos sobre ti',
-  },
+  //   {
+  //     id: 'description',
+  //     label: 'Descripción',
+  //     type: 'text',
+  //     placeholder: 'Háblamos sobre ti',
+  //   },
 ];

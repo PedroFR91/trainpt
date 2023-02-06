@@ -10,17 +10,27 @@ const myprofile = () => {
 
   return (
     <>
-      {myData
-        .filter((item) => item.id === myUid)
-        .map((data) => (
-          <div key={data.id} className={styles.myprofile}>
-            <img src={data.img} alt={'img'} className={styles.myprofileimg} />
-            <div className={styles.myprofileinfo}>
-              <p>{data.username}</p>
-              <AddText />
+      {myData ? (
+        myData
+          .filter((item) => item.trainerId === myUid)
+          .map((data) => (
+            <div key={data.id} className={styles.myprofile}>
+              <img src={data.img} alt={'img'} className={styles.myprofileimg} />
+              <div className={styles.myprofileinfo}>
+                <p>{data.username}</p>
+                <AddText />
+              </div>
             </div>
+          ))
+      ) : (
+        <div className={styles.myprofile}>
+          <img src={'/face.png'} alt={'img'} className={styles.myprofileimg} />
+          <div className={styles.myprofileinfo}>
+            <p>Cargando...</p>
+            <AddText />
           </div>
-        ))}
+        </div>
+      )}
     </>
   );
 };

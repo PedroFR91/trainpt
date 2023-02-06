@@ -132,15 +132,17 @@ const previousClientsImg = () => {
         </div>
       </div>
       <div className={styles.clientPhotos}>
-        {photos.map((photo) => (
-          <div key={photo.id}>
-            <div className={styles.clientImg}>
-              <img src={photo.img} alt={photo.title} />
-              <p>{photo.type}</p>
+        {photos
+          .filter((data) => data.trainerId === myUid)
+          .map((photo) => (
+            <div key={photo.id}>
+              <div className={styles.clientImg}>
+                <img src={photo.img} alt={photo.title} />
+                <p>{photo.type}</p>
+              </div>
+              <button onClick={() => handleDelete(photo.id)}>Borrar</button>
             </div>
-            <button onClick={() => handleDelete(photo.id)}>Borrar</button>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

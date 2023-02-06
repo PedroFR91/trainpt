@@ -101,6 +101,28 @@ const routine = () => {
             placeholder='Nombre de la Rutina'
             onChange={(e) => setData({ ...data, nameroutine: e.target.value })}
           />
+
+          <input
+            type='text'
+            placeholder={data.desroutine ? data.desroutine : 'Descripción'}
+            onChange={(e) => setData({ ...data, desroutine: e.target.value })}
+            required
+          />
+
+          <div>
+            <button onClick={handleCreate}>Crear Rutina</button>
+            <button onClick={addExercises} className={styles.plus}>
+              Añadir ejercicio
+            </button>
+          </div>
+        </div>
+        <div className={styles.addtraining}>
+          <input
+            type='text'
+            placeholder='Nombre del entrenamiento'
+            onChange={(e) => setData({ ...data, nametrain: e.target.value })}
+          />
+
           <input
             type='text'
             placeholder={data.desroutine ? data.desroutine : 'Descripción'}

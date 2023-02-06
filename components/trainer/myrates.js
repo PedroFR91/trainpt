@@ -87,14 +87,18 @@ const myrates = () => {
         </button>
       </div>
       <div className={styles.rates}>
-        {rates.map((rate) => (
-          <div key={rate.ratename} className={styles.rate}>
-            <p>{rate.ratename}</p>
-            <p>{rate.rateprice}</p>
-            <p>{rate.ratefre}</p>
-            <button onClick={() => handleDelete(rate.ratename)}>Borrar</button>
-          </div>
-        ))}
+        {rates
+          .filter((data) => data.rateid === myUid)
+          .map((rate) => (
+            <div key={rate.ratename} className={styles.rate}>
+              <p>{rate.ratename}</p>
+              <p>{rate.rateprice}</p>
+              <p>{rate.ratefre}</p>
+              <button onClick={() => handleDelete(rate.ratename)}>
+                Borrar
+              </button>
+            </div>
+          ))}
       </div>
     </div>
   );

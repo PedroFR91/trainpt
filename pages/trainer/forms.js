@@ -12,7 +12,6 @@ import {
 import { db } from '../../firebase.config';
 import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
-
 const forms = () => {
   const [data, setData] = useState([]);
   const [myForm, setMyForm] = useState([]);
@@ -189,7 +188,7 @@ const forms = () => {
   return (
     <div className={styles.container}>
       <TrainerHeader />
-
+      {/* <EditableForm /> */}
       <div className={styles.formLayout}>
         {!show ? (
           <button onClick={() => setShow(true)}>Seguimiento</button>
@@ -355,9 +354,13 @@ const forms = () => {
                 onChange={handleChange}
               >
                 <option value=''>Días de entrenamiento</option>
+                <option value='1'>1 día a la semana</option>
+                <option value='2'>2 días a la semana</option>
                 <option value='3'>3 días a la semana</option>
                 <option value='4'>4 días a la semana</option>
                 <option value='5'>5 días a la semana</option>
+                <option value='6'>6 días a la semana</option>
+                <option value='7'>7 días a la semana</option>
               </select>
             </label>
             <br />
