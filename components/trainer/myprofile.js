@@ -12,7 +12,7 @@ const myprofile = () => {
     <>
       {myData ? (
         myData
-          .filter((item) => item.trainerId === myUid)
+          .filter((item) => item.id === myUid)
           .map((data) => (
             <div key={data.id} className={styles.myprofile}>
               <img src={data.img} alt={'img'} className={styles.myprofileimg} />
