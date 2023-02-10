@@ -109,7 +109,7 @@ const register = () => {
             required
           />
           <label className={styles.label} htmlFor='file'>
-            Sube tu Imagen
+            Imagen de Perfil
           </label>
         </div>
         <div>
@@ -125,7 +125,6 @@ const register = () => {
             </div>
           ))}
         </div>
-
         <div className={styles.selectRole}>
           <div className={styles.roles}>
             <p

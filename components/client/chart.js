@@ -1,80 +1,57 @@
-import React, { useState } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  ReferenceArea,
-  CartesianGrid,
-} from 'recharts';
+import React, { useEffect, useRef } from 'react';
+import Chart from 'chart.js/auto';
 
-const data = [
-  { date: '2020-01-01', type1: 40, type2: 24 },
-  { date: '2020-01-02', type1: 30, type2: 13 },
-  { date: '2020-01-03', type1: 20, type2: 98 },
-  { date: '2020-01-04', type1: 27, type2: 39 },
-  { date: '2020-01-05', type1: 19, type2: 48 },
-  { date: '2020-01-06', type1: 23, type2: 38 },
-  { date: '2020-01-07', type1: 35, type2: 43 },
-];
+const Graph = ({ measures }) => {
+  const chartContainer = useRef(null);
 
-const FilterableLineChart = () => {
-  const [startDate, setStartDate] = useState('2020-01-01');
-  const [endDate, setEndDate] = useState('2020-01-07');
+  const exampleMeasures = {
+    chest: 20,
+    shoulders: 25,
+    biceps: 10,
+    hips: 30,
+    abdomen: 15,
+    cuadriceps: 20,
+    gemelos: 18,
+  };
 
-  const filteredData = data.filter(
-    (d) => d.date >= startDate && d.date <= endDate
-  );
+  useEffect(() => {
+    const chart = new Chart(chartContainer.current, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(measures || exampleMeasures),
+        datasets: [
+          {
+            label: 'Medidas',
+            data: Object.values(measures || exampleMeasures),
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          yAxes: [
+            {
+              ticks: {
+                beginAtZero: true,
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    return () => {
+      chart.destroy();
+    };
+  }, [measures]);
 
   return (
-    <div
-      style={{
-        width: '80%',
-        height: '80vh',
-        paddingTop: '20vh',
-        margin: 'auto',
-      }}
-    >
-      <ResponsiveContainer>
-        <LineChart
-          data={filteredData}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 20,
-          }}
-        >
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='date' />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type='monotone' dataKey='type1' stroke='#8884d8' />
-          <Line type='monotone' dataKey='type2' stroke='#82ca9d' />
-        </LineChart>
-      </ResponsiveContainer>
-      <input
-        type='range'
-        min='2020-01-01'
-        max='2020-01-07'
-        step='1'
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-      />
-      <input
-        type='range'
-        min='2020-01-01'
-        max='2020-01-07'
-        step='1'
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-      />
+    <div>
+      <canvas ref={chartContainer} />
     </div>
   );
 };
 
-export default FilterableLineChart;
+export default Graph;

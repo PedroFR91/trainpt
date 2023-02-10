@@ -119,11 +119,11 @@ const files = () => {
       <TrainerHeader />
 
       <div className={styles.uploadFiles}>
-        <h1>Suba sus archivos</h1>
-        <div>
+        <div className={styles.videoArea}>
+          <h1>Reproductor de Video</h1>
           <input
             type='text'
-            placeholder='URL'
+            placeholder='Pegue aquí su URL'
             onChange={(e) => setUrl(e.target.value)}
           />
           <button onClick={addVideo}>Añadir video</button>
@@ -131,21 +131,23 @@ const files = () => {
             {showvideo && <ReactPlayer url={url} width={'100%'} />}
           </div>
         </div>
-        <input
-          type='file'
-          id='filepicker'
-          accept='image/*,.pdf,.doc,.docx,.xml'
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-        <button onClick={handleUpload}>Subir Archivo</button>
-
+        <h1>Suba sus archivos</h1>
+        <div>
+          <input
+            type='file'
+            id='filepicker'
+            accept='image/*,.pdf,.doc,.docx,.xml'
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+          <button onClick={handleUpload}>Subir Archivo</button>
+        </div>
         <div className={styles.gallery}>
           {myfiles.map((item) => (
             <div key={item.id}>
               <img
                 src={item.fileType === 'image/jpeg' ? item.img : '/doc.png'}
               />
-              <p>{item.title}</p>
+              <p>{item.title.substr(0, 15)}</p>
               <a href={item.img}>Ver/Descargar</a>
             </div>
           ))}

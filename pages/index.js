@@ -19,22 +19,27 @@ export default function Home() {
     <>
       {!isLogged && (
         <div className={styles.container}>
-          <div className={styles.left}>
+          <div className={styles.leftContainer}>
             <Image
               src='/logo.png'
-              width={420}
-              height={140}
+              width={480}
+              height={160}
               alt='Logo de Empresa. TrainPT'
             />
             <div className={styles.bottomtext}>
               {toggleView && (
-                <p onClick={() => setToggleView(!toggleView)}>Accede</p>
+                <button onClick={() => setToggleView(!toggleView)}>
+                  Accede
+                </button>
               )}
               {!toggleView && (
-                <p onClick={() => setToggleView(!toggleView)}>Regístrate</p>
+                <button onClick={() => setToggleView(!toggleView)}>
+                  Regístrate
+                </button>
               )}
             </div>
           </div>
+
           <div className={styles.access}>
             {!toggleView && <Login />}
             {toggleView && <Register />}

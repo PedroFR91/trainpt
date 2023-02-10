@@ -70,11 +70,7 @@
   align-items: center;
   border-radius: 15px;
 }
-.datacontainer div {
-  width: 100%;
-  display: flex;
-  justify-content: space-evenly;
-}
+
 .trainersList {
   width: 60%;
   min-height: 50vh;
@@ -121,4 +117,32 @@
   background-color: transparent;
   border: 1px solid var(--dark-blue);
   cursor: pointer;
+}
+.weekData {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 10px;
+  background: var(--transparent-blue-second);
+  padding: 1rem;
+  z-index: 10;
+}
+.weekfollow {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin: auto;
+  align-items: center;
+}
+.weekfollowLeft div,
+.weekfollowRight div {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+}
+.trainerInfo {
 }

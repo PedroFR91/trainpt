@@ -14,10 +14,14 @@
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
+  height: fit-content;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+.videoArea {
+  margin: 2rem;
 }
 .gallery {
   width: 100%;
@@ -34,7 +38,7 @@
   border: 1px solid black;
 }
 .video {
-  width: 400px;
+  width: 100%;
   border: 1px solid black;
-  height: 300px;
+  height: fit-content;
 }

@@ -14,8 +14,7 @@ const myrates = () => {
   const { myUid } = useContext(AuthContext);
   const [data, setData] = useState([]);
   const [rates, setRates] = useState([]);
-  const [showadd, setShowadd] = useState(false);
-
+  const [view, setView] = useState(true);
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'rates'),
@@ -37,11 +36,10 @@ const myrates = () => {
 
   const handleSave = async (e) => {
     const time = new Date().getTime();
-    setShowadd(false);
     try {
       await setDoc(doc(db, 'rates', data.ratename), {
         ...data,
-        rateid: myUid + time,
+        rateid: myUid,
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -62,39 +60,51 @@ const myrates = () => {
   return (
     <div className={styles.container}>
       <div className={styles.addrate}>
-        <input
-          type='text'
-          placeholder='Nombre de Tarifa'
-          onChange={(e) => setData({ ...data, ratename: e.target.value })}
-        />
-        <input
-          type='text'
-          placeholder='Precio'
-          onChange={(e) => setData({ ...data, rateprice: e.target.value })}
-        />
-        <input
-          type='text'
-          placeholder='Frecuencia'
-          onChange={(e) => setData({ ...data, ratefre: e.target.value })}
-        />
-        <button
-          onClick={() => {
-            handleSave();
-          }}
-          className={styles.add}
-        >
-          Añadir Tarifa
-        </button>
+        {view ? (
+          <button className={styles.add} onClick={() => setView(false)}>
+            Añadir Tarifa
+          </button>
+        ) : (
+          <>
+            <input
+              type='text'
+              placeholder='Nombre de Tarifa'
+              onChange={(e) => setData({ ...data, ratename: e.target.value })}
+            />
+            <input
+              type='text'
+              placeholder='Precio'
+              onChange={(e) => setData({ ...data, rateprice: e.target.value })}
+            />
+            <input
+              type='text'
+              placeholder='Frecuencia'
+              onChange={(e) => setData({ ...data, ratefre: e.target.value })}
+            />
+            <button
+              className={styles.add}
+              onClick={() => {
+                handleSave();
+                setView(true);
+              }}
+            >
+              Guardar
+            </button>
+          </>
+        )}
       </div>
       <div className={styles.rates}>
         {rates
           .filter((data) => data.rateid === myUid)
           .map((rate) => (
             <div key={rate.ratename} className={styles.rate}>
-              <p>{rate.ratename}</p>
-              <p>{rate.rateprice}</p>
-              <p>{rate.ratefre}</p>
-              <button onClick={() => handleDelete(rate.ratename)}>
+              <p>Tipo:{rate.ratename}</p>
+              <p>Precio:{rate.rateprice}</p>
+              <p>Frecuencia:{rate.ratefre}</p>
+              <button
+                onClick={() => handleDelete(rate.ratename)}
+                className={styles.add}
+              >
                 Borrar
               </button>
             </div>

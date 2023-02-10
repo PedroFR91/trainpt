@@ -7,6 +7,7 @@ import {
   onSnapshot,
   collection,
   deleteDoc,
+  addDoc,
 } from 'firebase/firestore';
 import { db, storage } from '../../firebase.config';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -60,31 +61,9 @@ const previousClientsImg = () => {
     };
     file && uploadFile();
   }, [file]);
-
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'clientPhotos'),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setPhotos(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    return () => {
-      unsub();
-    };
-  }, []);
-
   const handleUpload = async () => {
-    const name = new Date().getTime() + file.name;
-
     try {
-      await setDoc(doc(db, 'clientPhotos', name), {
+      await addDoc(collection(db, 'clientPhotos'), {
         ...data,
         type: type,
         trainerId: myUid,
@@ -93,11 +72,6 @@ const previousClientsImg = () => {
     } catch (error) {
       console.log(error);
     }
-  };
-  const handleDelete = async (id) => {
-    try {
-      await deleteDoc(doc(db, 'clientPhotos', id));
-    } catch (error) {}
   };
 
   return (

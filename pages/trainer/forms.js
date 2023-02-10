@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import styles from '../../styles/forms.module.css';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import {
+  addDoc,
   collection,
   doc,
   onSnapshot,
@@ -12,6 +13,8 @@ import {
 import { db } from '../../firebase.config';
 import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
+import { follow, initialForm } from '../../forms/initialForm';
+import EditableForm from '../../forms/editableForm';
 const forms = () => {
   const [data, setData] = useState([]);
   const [myForm, setMyForm] = useState([]);
@@ -21,45 +24,8 @@ const forms = () => {
   const [show, setShow] = useState(false);
   const [showClient, setShowClient] = useState(false);
   const [currentForm, setCurrentForm] = useState([]);
-  const [formData, setFormData] = useState({
-    name: '',
-    gender: '',
-    weight: '',
-    height: '',
-    measures: {
-      chest: '',
-      shoulders: '',
-      biceps: '',
-      hips: '',
-      abdomen: '',
-      cuadriceps: '',
-      gemelos: '',
-    },
-    photos: {
-      front: '',
-      back: '',
-      lateral: '',
-    },
-    intolerances: '',
-    preferredFoods: '',
-    trainingDays: '',
-  });
-  const [formDataFollow, setFormDataFollow] = useState({
-    measures: {
-      chest: '',
-      shoulders: '',
-      biceps: '',
-      hips: '',
-      abdomen: '',
-      cuadriceps: '',
-      gemelos: '',
-    },
-    photos: {
-      front: '',
-      back: '',
-      lateral: '',
-    },
-  });
+  const [formData, setFormData] = useState(initialForm);
+  const [formDataFollow, setFormDataFollow] = useState(follow);
   //Initial
   const handleChange = (event) => {
     setFormData({
@@ -153,9 +119,10 @@ const forms = () => {
 
   const handleCreate = async (e) => {
     try {
-      await setDoc(doc(db, 'forms', formData.name), {
+      await addDoc(collection(db, 'forms'), {
         ...formData,
-        formid: user.uid,
+        formid: myUid,
+        type: 'Inicial',
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -164,9 +131,10 @@ const forms = () => {
   };
   const handleCreateFollow = async (e) => {
     try {
-      await setDoc(doc(db, 'forms', 'ey'), {
+      await addDoc(collection(db, 'forms'), {
         ...formDataFollow,
-        formid: user.uid,
+        formid: myUid,
+        type: 'Seguimiento',
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -188,7 +156,7 @@ const forms = () => {
   return (
     <div className={styles.container}>
       <TrainerHeader />
-      {/* <EditableForm /> */}
+
       <div className={styles.formLayout}>
         {!show ? (
           <button onClick={() => setShow(true)}>Seguimiento</button>
@@ -197,343 +165,384 @@ const forms = () => {
         )}
         {!show && (
           <form onSubmit={handleSubmit} className={styles.initial}>
-            <h3>Datos generales</h3>
-            <label>
-              <span> Nombre:</span>
+            <div className={styles.initialLeft}>
+              <div>
+                <h3>Datos generales</h3>
+                <label>
+                  <span> Nombre:</span>
 
-              <input
-                type='text'
-                name='name'
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </label>
-            <br />
-            <label>
-              Sexo:
-              <select
-                name='gender'
-                value={formData.gender}
-                onChange={handleChange}
-              >
-                <option value='man'>Hombre</option>
-                <option value='woman'>Mujer</option>
-              </select>
-            </label>
-            <br />
-            <label>
-              Peso
-              <input
-                type='text'
-                name='weight'
-                value={formData.weight}
-                onChange={handleChange}
-              />
-            </label>
-            <br />
-            <label>
-              Altura
-              <input
-                type='text'
-                name='height'
-                value={formData.height}
-                onChange={handleChange}
-              />
-            </label>
-            <br />
-            <h3>Medidas</h3>
-            <label>
-              Pecho:
-              <input
-                type='text'
-                name='chest'
-                value={formData.measures.chest}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <label>
-              Hombros:
-              <input
-                type='text'
-                name='shoulders'
-                value={formData.measures.shoulders}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <label>
-              Biceps:
-              <input
-                type='text'
-                name='biceps'
-                value={formData.measures.biceps}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <label>
-              Cintura:
-              <input
-                type='text'
-                name='hips'
-                value={formData.measures.hips}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <label>
-              Abdomen:
-              <input
-                type='text'
-                name='abdomen'
-                value={formData.measures.abdomen}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <label>
-              Cuadriceps:
-              <input
-                type='text'
-                name='cuadriceps'
-                value={formData.measures.cuadriceps}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <label>
-              Gemelos:
-              <input
-                type='text'
-                name='gemelos'
-                value={formData.measures.gemelos}
-                onChange={handleMeasuresChange}
-              />
-            </label>
-            <br />
-            <h3>Fotos</h3>
-            <label>
-              Frente:
-              <input type='file' name='front' onChange={handlePhotosChange} />
-            </label>
-            <br />
-            <label>
-              Espalda:
-              <input type='file' name='back' onChange={handlePhotosChange} />
-            </label>
-            <br />
-            <label>
-              Lateral:
-              <input type='file' name='lateral' onChange={handlePhotosChange} />
-            </label>
-            <br />
-            <label>
-              Intolerancias:
-              <textarea
-                name='intolerances'
-                value={formData.intolerances}
-                onChange={handleChange}
-              />
-            </label>
-            <br />
-            <label>
-              Comida preferida:
-              <textarea
-                name='preferredFoods'
-                value={formData.preferredFoods}
-                onChange={handleChange}
-              />
-            </label>
-            <br />
-            <label>
-              Días de entrenamiento:
-              <select
-                name='trainingDays'
-                value={formData.trainingDays}
-                onChange={handleChange}
-              >
-                <option value=''>Días de entrenamiento</option>
-                <option value='1'>1 día a la semana</option>
-                <option value='2'>2 días a la semana</option>
-                <option value='3'>3 días a la semana</option>
-                <option value='4'>4 días a la semana</option>
-                <option value='5'>5 días a la semana</option>
-                <option value='6'>6 días a la semana</option>
-                <option value='7'>7 días a la semana</option>
-              </select>
-            </label>
-            <br />
-            <button type='submit'>Submit</button>
+                  <input
+                    type='text'
+                    name='name'
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Sexo:
+                  <select
+                    name='gender'
+                    value={formData.gender}
+                    onChange={handleChange}
+                  >
+                    <option value='man'>Hombre</option>
+                    <option value='woman'>Mujer</option>
+                  </select>
+                </label>
+                <br />
+                <label>
+                  Peso
+                  <input
+                    type='text'
+                    name='weight'
+                    value={formData.weight}
+                    onChange={handleChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Altura
+                  <input
+                    type='text'
+                    name='height'
+                    value={formData.height}
+                    onChange={handleChange}
+                  />
+                </label>
+                <br />
+              </div>
+              <div>
+                <h3>Fotos</h3>
+                <label>
+                  Frente:
+                  <input
+                    type='file'
+                    name='front'
+                    onChange={handlePhotosChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Espalda:
+                  <input
+                    type='file'
+                    name='back'
+                    onChange={handlePhotosChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Lateral:
+                  <input
+                    type='file'
+                    name='lateral'
+                    onChange={handlePhotosChange}
+                  />
+                </label>
+                <br />
+              </div>
+              <div>
+                <h3>Dieta</h3>
+                <label>
+                  Intolerancias:
+                  <textarea
+                    name='intolerances'
+                    value={formData.intolerances}
+                    onChange={handleChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Comida preferida:
+                  <textarea
+                    name='preferredFoods'
+                    value={formData.preferredFoods}
+                    onChange={handleChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Días de entrenamiento:
+                  <select
+                    name='trainingDays'
+                    value={formData.trainingDays}
+                    onChange={handleChange}
+                  >
+                    <option value=''>Días de entrenamiento</option>
+                    <option value='1'>1 día a la semana</option>
+                    <option value='2'>2 días a la semana</option>
+                    <option value='3'>3 días a la semana</option>
+                    <option value='4'>4 días a la semana</option>
+                    <option value='5'>5 días a la semana</option>
+                    <option value='6'>6 días a la semana</option>
+                    <option value='7'>7 días a la semana</option>
+                  </select>
+                </label>
+                <br />
+              </div>
+            </div>
+            <div className={styles.initialRight}>
+              <div>
+                <h3>Medidas</h3>
+                <label>
+                  Pecho:
+                  <input
+                    type='text'
+                    name='chest'
+                    value={formData.measures.chest}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Hombros:
+                  <input
+                    type='text'
+                    name='shoulders'
+                    value={formData.measures.shoulders}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Biceps:
+                  <input
+                    type='text'
+                    name='biceps'
+                    value={formData.measures.biceps}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Cintura:
+                  <input
+                    type='text'
+                    name='hips'
+                    value={formData.measures.hips}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Abdomen:
+                  <input
+                    type='text'
+                    name='abdomen'
+                    value={formData.measures.abdomen}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Cuadriceps:
+                  <input
+                    type='text'
+                    name='cuadriceps'
+                    value={formData.measures.cuadriceps}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+                <label>
+                  Gemelos:
+                  <input
+                    type='text'
+                    name='gemelos'
+                    value={formData.measures.gemelos}
+                    onChange={handleMeasuresChange}
+                  />
+                </label>
+                <br />
+              </div>
+              <button type='submit'>Submit</button>
+            </div>
           </form>
         )}
         {show && (
           <form onSubmit={handleSubmitFollow} className={styles.follow}>
-            <h3>Medidas</h3>
-            <label>
-              Chest:
-              <input
-                type='text'
-                name='chest'
-                value={formDataFollow.measures.chest}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Hombros:
-              <input
-                type='text'
-                name='shoulders'
-                value={formDataFollow.measures.shoulders}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Biceps:
-              <input
-                type='text'
-                name='biceps'
-                value={formDataFollow.measures.biceps}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Cintura:
-              <input
-                type='text'
-                name='hips'
-                value={formDataFollow.measures.hips}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Abdomen:
-              <input
-                type='text'
-                name='abdomen'
-                value={formDataFollow.measures.abdomen}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Cuadriceps:
-              <input
-                type='text'
-                name='cuadriceps'
-                value={formDataFollow.measures.cuadriceps}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Gemelos:
-              <input
-                type='text'
-                name='gemelos'
-                value={formDataFollow.measures.gemelos}
-                onChange={handleMeasuresChangeFollow}
-              />
-            </label>
-            <br />
-            <h3>Fotos</h3>
-            <label>
-              Frontal:
-              <input
-                type='file'
-                name='front'
-                onChange={handlePhotosChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Espalda:
-              <input
-                type='file'
-                name='back'
-                onChange={handlePhotosChangeFollow}
-              />
-            </label>
-            <br />
-            <label>
-              Lateral:
-              <input
-                type='file'
-                name='lateral'
-                onChange={handlePhotosChangeFollow}
-              />
-            </label>
-            <br />
-            <button type='submit'>Submit</button>
+            <div className={styles.followLeft}>
+              <div>
+                <h3>Medidas</h3>
+                <label>
+                  Chest:
+                  <input
+                    type='text'
+                    name='chest'
+                    value={formDataFollow.measures.chest}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Hombros:
+                  <input
+                    type='text'
+                    name='shoulders'
+                    value={formDataFollow.measures.shoulders}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Biceps:
+                  <input
+                    type='text'
+                    name='biceps'
+                    value={formDataFollow.measures.biceps}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Cintura:
+                  <input
+                    type='text'
+                    name='hips'
+                    value={formDataFollow.measures.hips}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Abdomen:
+                  <input
+                    type='text'
+                    name='abdomen'
+                    value={formDataFollow.measures.abdomen}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Cuadriceps:
+                  <input
+                    type='text'
+                    name='cuadriceps'
+                    value={formDataFollow.measures.cuadriceps}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Gemelos:
+                  <input
+                    type='text'
+                    name='gemelos'
+                    value={formDataFollow.measures.gemelos}
+                    onChange={handleMeasuresChangeFollow}
+                  />
+                </label>
+                <br />
+              </div>
+            </div>
+            <div className={styles.followRight}>
+              <div>
+                <h3>Fotos</h3>
+                <label>
+                  Frontal:
+                  <input
+                    type='file'
+                    name='front'
+                    onChange={handlePhotosChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Espalda:
+                  <input
+                    type='file'
+                    name='back'
+                    onChange={handlePhotosChangeFollow}
+                  />
+                </label>
+                <br />
+                <label>
+                  Lateral:
+                  <input
+                    type='file'
+                    name='lateral'
+                    onChange={handlePhotosChangeFollow}
+                  />
+                </label>
+                <br />
+              </div>
+              <button type='submit'>Submit</button>
+            </div>
           </form>
         )}
       </div>
       <div className={styles.myforms}>
-        {myForm.map((form) => (
-          <div key={form.id}>
-            <p>
-              <span>Nombre:</span> <span>{form.name}</span>
-            </p>
-            <p>
-              <span>Sexo:</span> <span>{form.gender}</span>
-            </p>
-            <p>
-              <span>Peso:</span> <span>{form.weight}</span>
-            </p>
-            <p>
-              <span>Altura:</span> <span>{form.height}</span>
-            </p>
-            <p>Medidas</p>
-            <p>
-              <span>Pecho:</span> <span>{form.measures.chest}</span>
-            </p>
-            <p>
-              <span>Hombro:</span> <span>{form.measures.shoulders}</span>
-            </p>
-            <p>
-              <span>Biceps:</span> <span>{form.measures.biceps}</span>
-            </p>
-            <p>
-              <span>Cintura:</span> <span>{form.measures.hips}</span>
-            </p>
-            <p>
-              <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
-            </p>
-            <p>
-              <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
-            </p>
-            <p>
-              <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
-            </p>
-            <p>Fotos</p>
-            <p>
-              <span>Frente:</span> <span>{form.photos.front}</span>
-            </p>
-            <p>
-              <span>Espalda:</span> <span>{form.photos.back}</span>
-            </p>
-            <p>
-              <span>Lateral:</span> <span>{form.photos.lateral}</span>
-            </p>
-            <p>
-              <span>Intolerancias:</span> <span>{form.intolerances}</span>
-            </p>
-            <p>
-              <span>Comida preferida:</span> <span>{form.preferredFoods}</span>
-            </p>
-            <p>
-              <span>Días de entrenamiento:</span>{' '}
-              <span>{form.trainingDays}</span>
-            </p>
-            <button onClick={() => asignForm(form.id)}>
-              Asignar Formulario
-            </button>
-          </div>
-        ))}
+        {myForm
+          .filter(
+            (data) => data.type === 'Inicial' || data.type === 'Seguimiento'
+          )
+          .map((form) => (
+            <div key={form.id}>
+              <p>
+                <span>Nombre:</span> <span>{form.name}</span>
+              </p>
+              <p>
+                <span>Sexo:</span> <span>{form.gender}</span>
+              </p>
+              <p>
+                <span>Peso:</span> <span>{form.weight}</span>
+              </p>
+              <p>
+                <span>Altura:</span> <span>{form.height}</span>
+              </p>
+              <p>Medidas</p>
+              <p>
+                <span>Pecho:</span> <span>{form.measures.chest}</span>
+              </p>
+              <p>
+                <span>Hombro:</span> <span>{form.measures.shoulders}</span>
+              </p>
+              <p>
+                <span>Biceps:</span> <span>{form.measures.biceps}</span>
+              </p>
+              <p>
+                <span>Cintura:</span> <span>{form.measures.hips}</span>
+              </p>
+              <p>
+                <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
+              </p>
+              <p>
+                <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
+              </p>
+              <p>
+                <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
+              </p>
+              <p>Fotos</p>
+              <p>
+                <span>Frente:</span> <span>{form.photos.front}</span>
+              </p>
+              <p>
+                <span>Espalda:</span> <span>{form.photos.back}</span>
+              </p>
+              <p>
+                <span>Lateral:</span> <span>{form.photos.lateral}</span>
+              </p>
+              <p>
+                <span>Intolerancias:</span> <span>{form.intolerances}</span>
+              </p>
+              <p>
+                <span>Comida preferida:</span>{' '}
+                <span>{form.preferredFoods}</span>
+              </p>
+              <p>
+                <span>Días de entrenamiento:</span>{' '}
+                <span>{form.trainingDays}</span>
+              </p>
+              <button onClick={() => asignForm(form.id)}>
+                Asignar Formulario
+              </button>
+            </div>
+          ))}
+      </div>
+      <div className={styles.editable}>
+        <EditableForm />
       </div>
       {showClient && (
         <div className={styles.share}>

@@ -26,13 +26,51 @@ const routine = () => {
   const [inputFields, setInputFields] = useState([
     { exercise: '', series: '', reps: '' },
   ]);
+  const [days, setDays] = useState([
+    {
+      id: '0',
+      day: 'Día 1',
+    },
+    {
+      id: '1',
+      day: 'Día 2',
+    },
+    {
+      id: '2',
+      day: 'Día 3',
+    },
+    {
+      id: '3',
+      day: 'Día 4',
+    },
+    {
+      id: '4',
+      day: 'Día 5',
+    },
+    {
+      id: '5',
+      day: 'Día 6',
+    },
+    {
+      id: '6',
+      day: 'Día 7',
+    },
+  ]);
+  const [sel, setSel] = useState([]);
 
+  const handleWeek = (index, e) => {
+    let myweek = [...days];
+    myweek[index][e.day] = e.day;
+    setInputFields(myweek);
+    setData({ ...data, myweek });
+  };
   const handleChange = (index, e) => {
     let mydata = [...inputFields];
     mydata[index][e.target.name] = e.target.value;
     setInputFields(mydata);
     setData({ ...data, mydata });
   };
+
   const addExercises = () => {
     let newexercise = { exercise: '', series: '', reps: '' };
     setInputFields([...inputFields, newexercise]);
@@ -94,7 +132,7 @@ const routine = () => {
   return (
     <div className={styles.routinesContainer}>
       <div className={styles.routineContainer}>
-        <div className={styles.title}>Creador de Rutinas</div>
+        <h1 className={styles.title}>Creador de Rutinas</h1>
         <div className={styles.addroutine}>
           <input
             type='text'
@@ -108,12 +146,21 @@ const routine = () => {
             onChange={(e) => setData({ ...data, desroutine: e.target.value })}
             required
           />
-
-          <div>
-            <button onClick={handleCreate}>Crear Rutina</button>
-            <button onClick={addExercises} className={styles.plus}>
-              Añadir ejercicio
-            </button>
+          <h2>Selecciones los días de entrenamiento</h2>
+          <div className={styles.week}>
+            {days.map((mydata, item) => (
+              <div key={item}>
+                <p
+                  onClick={(e) => {
+                    setData({ ...data, days: mydata.day });
+                    console.log(data.days);
+                    console.log(data);
+                  }}
+                >
+                  {mydata.day}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
         <div className={styles.addtraining}>
@@ -125,8 +172,8 @@ const routine = () => {
 
           <input
             type='text'
-            placeholder={data.desroutine ? data.desroutine : 'Descripción'}
-            onChange={(e) => setData({ ...data, desroutine: e.target.value })}
+            placeholder={data.destrain ? data.destrain : 'Descripción'}
+            onChange={(e) => setData({ ...data, destrain: e.target.value })}
             required
           />
 
@@ -135,12 +182,6 @@ const routine = () => {
             placeholder='Músculos trabajados'
             onChange={(e) => setData({ ...data, muscles: e.target.value })}
           />
-          <div>
-            <button onClick={handleCreate}>Crear Rutina</button>
-            <button onClick={addExercises} className={styles.plus}>
-              Añadir ejercicio
-            </button>
-          </div>
         </div>
         <div className={styles.exercises}>
           {inputFields.map((input, index) => {
@@ -173,6 +214,12 @@ const routine = () => {
               </div>
             );
           })}
+          <div>
+            <button onClick={handleCreate}>Crear Rutina</button>
+            <button onClick={addExercises} className={styles.plus}>
+              Añadir ejercicio
+            </button>
+          </div>
         </div>
       </div>
       <div className={styles.listRoutines}>
@@ -216,7 +263,7 @@ const routine = () => {
             </div>
           ))}
       </div>
-      {showClient && (
+      {/* {showClient && (
         <div className={styles.share}>
           {myData
             .filter((data) => data.role === 'client')
@@ -237,7 +284,7 @@ const routine = () => {
             ))}
           <button onClick={() => setShowClient(false)}>Cerrar</button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

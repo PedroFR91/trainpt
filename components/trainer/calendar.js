@@ -56,10 +56,14 @@ const calendar = () => {
           <button onClick={handleCloseModal}>Cerrar</button>
         </div>
       )}
-      <div>
-        <button onClick={handlePrevMonth}>Prev</button>
+      <div className={styles.controls}>
+        <button onClick={handlePrevMonth} className={styles.button}>
+          Prev
+        </button>
         <span>{currentDate.format('MMMM YYYY')}</span>
-        <button onClick={handleNextMonth}>Next</button>
+        <button onClick={handleNextMonth} className={styles.button}>
+          Next
+        </button>
       </div>
     </div>
   );

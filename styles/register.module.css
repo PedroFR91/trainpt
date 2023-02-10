@@ -1,10 +1,15 @@
 .register {
-  width: 100%;
-  height: 100%;
+  width: 70%;
+  min-height: 80%;
+  margin: auto;
+  padding-bottom: 2rem;
   display: flex;
-
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--light-blue);
+  border-radius: 10px;
+  background-color: var(--transparent-blue);
+  box-shadow: 2px 2px 2px var(--dark-blue);
 }
 .register form {
   width: 100%;
@@ -16,7 +21,7 @@
 }
 
 .register input {
-  width: 300px;
+  width: 250px;
   height: 40px;
   margin: 3px;
 }

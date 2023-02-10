@@ -84,7 +84,6 @@ const userList = () => {
           <div>
             <p>Rutinas:</p>
             <div>
-              {' '}
               {routine
                 .filter((data) => data.link === current.id)
                 .map((routine) => (

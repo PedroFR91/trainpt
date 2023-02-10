@@ -3,6 +3,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/myprofile.module.css';
+import { HiPencil, HiOutlineCheck } from 'react-icons/hi';
 const addText = () => {
   const { myUid } = useContext(AuthContext);
   const [data, setData] = useState([]);
@@ -39,13 +40,13 @@ const addText = () => {
       </div>
       <div className={styles.buttons}>
         {!showinput ? (
-          <button onClick={() => setShowinput(true)}>
-            <h3>Editar</h3>
-          </button>
+          <div onClick={() => setShowinput(true)}>
+            <HiPencil />
+          </div>
         ) : (
-          <button onClick={() => setShowinput(false)}>
-            <h3>Guardar</h3>
-          </button>
+          <div onClick={() => setShowinput(false)}>
+            <HiOutlineCheck />
+          </div>
         )}
       </div>
     </div>
