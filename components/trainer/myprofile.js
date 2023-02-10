@@ -7,12 +7,16 @@ import AuthContext from '../../context/AuthContext';
 import AddText from '../trainer/addText';
 const myprofile = () => {
   const { myData, myUid } = useContext(AuthContext);
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    setData(myData);
+  }, [myData]);
 
   return (
     <>
-      {myData ? (
-        myData
-          .filter((item) => item.trainerId === myUid)
+      {data ? (
+        data
+          .filter((item) => item.id === myUid)
           .map((data) => (
             <div key={data.id} className={styles.myprofile}>
               <img src={data.img} alt={'img'} className={styles.myprofileimg} />
@@ -24,11 +28,8 @@ const myprofile = () => {
           ))
       ) : (
         <div className={styles.myprofile}>
-          <img src={'/face.png'} alt={'img'} className={styles.myprofileimg} />
-          <div className={styles.myprofileinfo}>
-            <p>Cargando...</p>
-            <AddText />
-          </div>
+          <p>Cargando...</p>
+          <AddText />
         </div>
       )}
     </>

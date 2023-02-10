@@ -8,7 +8,7 @@ const userList = () => {
   const [current, setCurrent] = useState('');
   const { myData, myUid } = useContext(AuthContext);
   const [routine, setRoutine] = useState([]);
-
+  const [myForm, setMyForm] = useState([]);
   const showClient = (data) => {
     setShow(true);
     setCurrent(data);
@@ -22,6 +22,24 @@ const userList = () => {
           list.push({ id: doc.id, ...doc.data() });
         });
         setRoutine(list);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+    return () => {
+      unsub();
+    };
+  }, []);
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'forms'),
+      (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setMyForm(list);
       },
       (error) => {
         console.log(error);
@@ -68,7 +86,7 @@ const userList = () => {
             <div>
               {' '}
               {routine
-                .filter((data) => data.routineid === myUid)
+                .filter((data) => data.link === current.id)
                 .map((routine) => (
                   <div key={routine.id} className={styles.routine}>
                     <div>
@@ -76,21 +94,21 @@ const userList = () => {
                         <span>{routine.nameroutine}</span>
                       </p>
                     </div>
-                    <div>
-                      <button onClick={() => handleDelete(routine.id)}>
-                        Borrar
-                      </button>
-                      <button onClick={() => asignRoutine(routine.id)}>
-                        Asignar Rutina
-                      </button>
-                    </div>
                   </div>
                 ))}
             </div>
           </div>
           <div>
             <p>Formularios:</p>
-            <div></div>
+            <div>
+              {myForm
+                .filter((form) => form.link === current.id)
+                .map((form) => (
+                  <div key={form.id}>
+                    <p>{form.name}</p>
+                  </div>
+                ))}
+            </div>
           </div>
           <div>Fotos:</div>
           <button onClick={() => setShow(false)}>X</button>

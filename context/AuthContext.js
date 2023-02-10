@@ -40,9 +40,9 @@ export function ContextAuthProvider({ children }) {
       unsub();
     };
   }, []);
-  useEffect(() => {
-    localStorage.setItem('trainPTUser', JSON.stringify(isLogged));
-  }, [isLogged]);
+  // useEffect(() => {
+  //   localStorage.setItem('trainPTUser', JSON.stringify(isLogged));
+  // }, [isLogged]);
   return (
     <Context.Provider value={{ isLogged, setIsLogged, myData, myUid }}>
       {children}
