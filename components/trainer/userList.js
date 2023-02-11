@@ -53,7 +53,7 @@ const userList = () => {
     <div className={styles.list}>
       {!show &&
         myData
-          .filter((data) => data.role === 'client' && data.link === myUid)
+          .filter((data) => data.role === 'client' )
           .map((data) => (
             <div key={data.id} className={styles.userdata}>
               <div>

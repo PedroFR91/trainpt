@@ -14,8 +14,8 @@ const myprofile = () => {
 
   return (
     <>
-      {data ? (
-        data
+      {myData ? (
+        myData
           .filter((item) => item.id === myUid)
           .map((data) => (
             <div key={data.id} className={styles.myprofile}>
