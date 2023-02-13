@@ -8,6 +8,8 @@ import Register from '../pages/register';
 import AuthContext from '../context/AuthContext';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { useRouter } from 'next/router';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase.config';
 
 export default function Home() {
   useAuthUser();
@@ -15,37 +17,53 @@ export default function Home() {
   const [toggleView, setToggleView] = useState(true);
   const { push } = useRouter();
 
+  const exit = (e) => {
+    e.preventDefault();
+    console.log('signout');
+    signOut(auth)
+      .then(() => {
+        // Sign-out successful.
+      })
+      .catch((error) => {
+        // An error happened.
+      });
+  };
   return (
     <>
-      {!isLogged && (
-        <div className={styles.container}>
-          <div className={styles.leftContainer}>
-            <Image
-              src='/logo.png'
-              width={480}
-              height={160}
-              alt='Logo de Empresa. TrainPT'
-            />
-            <div className={styles.bottomtext}>
-              {toggleView && (
-                <button onClick={() => setToggleView(!toggleView)}>
-                  Accede
-                </button>
-              )}
-              {!toggleView && (
-                <button onClick={() => setToggleView(!toggleView)}>
-                  Regístrate
-                </button>
-              )}
+      <div className={styles.container}>
+        <Header />
+        {!isLogged ? (
+          <>
+            <div className={styles.leftContainer}>
+              <Image
+                src='/logo.png'
+                width={480}
+                height={160}
+                alt='Logo de Empresa. TrainPT'
+              />
+              <div className={styles.bottomtext}>
+                {toggleView && (
+                  <button onClick={() => setToggleView(!toggleView)}>
+                    Accede
+                  </button>
+                )}
+                {!toggleView && (
+                  <button onClick={() => setToggleView(!toggleView)}>
+                    Regístrate
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className={styles.access}>
-            {!toggleView && <Login />}
-            {toggleView && <Register />}
-          </div>
-        </div>
-      )}
+            <div className={styles.access}>
+              {!toggleView && <Login />}
+              {toggleView && <Register />}
+            </div>
+          </>
+        ) : (
+          <div onClick={exit}>Su sesión ha caducado, acceda de nuevo.</div>
+        )}
+      </div>
     </>
   );
 }
