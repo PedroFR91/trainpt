@@ -107,6 +107,20 @@ const routine = () => {
     setInputFields([{ exercise: '', series: '', reps: '' }]);
   };
 
+  const handleCreateTraining = async (e) => {
+    try {
+      await setDoc(doc(db, 'training', data.nametrain), {
+        muscles: data.muscles,
+        description: data.destrain,
+        trainingid: data.nametrain,
+        timeStamp: serverTimestamp(),
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    setInputFields([{ exercise: '', series: '', reps: '' }]);
+  };
+
   const handleDelete = async (id) => {
     try {
       await deleteDoc(doc(db, 'routines', id));
@@ -139,7 +153,6 @@ const routine = () => {
             placeholder='Nombre de la Rutina'
             onChange={(e) => setData({ ...data, nameroutine: e.target.value })}
           />
-
           <input
             type='text'
             placeholder={data.desroutine ? data.desroutine : 'Descripción'}
@@ -151,7 +164,7 @@ const routine = () => {
             {days.map((mydata, item) => (
               <div key={item}>
                 <p
-                  onClick={(e) => {
+                  onClick={() => {
                     setData({ ...data, days: mydata.day });
                     console.log(data.days);
                     console.log(data);
@@ -167,7 +180,13 @@ const routine = () => {
           <input
             type='text'
             placeholder='Nombre del entrenamiento'
-            onChange={(e) => setData({ ...data, nametrain: e.target.value })}
+            onChange={(e) =>
+              setData({
+                ...data,
+                nametrain: e.target.value,
+                trainingDay: days,
+              })
+            }
           />
 
           <input
@@ -216,6 +235,7 @@ const routine = () => {
           })}
           <div>
             <button onClick={handleCreate}>Crear Rutina</button>
+            <button onClick={handleCreateTraining}>Crear Entrenamiento</button>
             <button onClick={addExercises} className={styles.plus}>
               Añadir ejercicio
             </button>
@@ -240,19 +260,24 @@ const routine = () => {
                   <span>Músculos</span>
                   <span>{routine.muscles}</span>
                 </p>
+                <p>
+                  <span>Días de entrenamiento</span>
+                  <span>{routine.days}</span>
+                </p>
               </div>
               <div>
-                {routine.mydata.map((e, i) => (
-                  <div key={i} className={styles.exer}>
-                    <div>
-                      <p>Ejercicio:{e.exercise}</p>
+                {routine.mydata &&
+                  routine.mydata.map((e, i) => (
+                    <div key={i} className={styles.exer}>
+                      <div>
+                        <p>Ejercicio:{e.exercise}</p>
+                      </div>
+                      <div>
+                        <p>Repeticiones:{e.reps}</p>
+                        <p>Series:{e.series}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p>Repeticiones:{e.reps}</p>
-                      <p>Series:{e.series}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
               <div>
                 <button onClick={() => handleDelete(routine.id)}>Borrar</button>

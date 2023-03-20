@@ -4,6 +4,7 @@ import TrainerHeader from '../../components/trainer/trainerHeader';
 import { db, storage } from '../../firebase.config';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import {
+  addDoc,
   collection,
   doc,
   onSnapshot,
@@ -12,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import ReactPlayer from 'react-player';
+import { AiOutlineFile, AiOutlinePlayCircle } from 'react-icons/ai';
 const files = () => {
   const [file, setFile] = useState('');
   const [data, setData] = useState({});
@@ -104,7 +106,7 @@ const files = () => {
   const addVideo = async (e) => {
     e.preventDefault();
     try {
-      await setDoc(doc(db, 'videos', 'video'), {
+      await addDoc(collection(db, 'videos'), {
         url: url,
         trainerId: user.uid,
         timeStamp: serverTimestamp(),
@@ -119,35 +121,48 @@ const files = () => {
       <TrainerHeader />
 
       <div className={styles.uploadFiles}>
-        <div className={styles.videoArea}>
-          <h1>Reproductor de Video</h1>
-          <input
-            type='text'
-            placeholder='Pegue aquí su URL'
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <button onClick={addVideo}>Añadir video</button>
-          <div className={styles.video}>
-            {showvideo && <ReactPlayer url={url} width={'100%'} />}
+        <div className={styles.topArea}>
+          <div className={styles.videoArea}>
+            <h1>Vídeos</h1>
+            <input
+              type='text'
+              placeholder='Pegue aquí su URL'
+              onChange={(e) => setUrl(e.target.value)}
+            />
+
+            <AiOutlinePlayCircle
+              style={{
+                fontSize: '36px',
+                cursor: 'pointer',
+              }}
+              onClick={addVideo}
+            />
+
+            <div className={styles.video}>
+              {showvideo && <ReactPlayer url={url} width={'100%'} />}
+            </div>
+          </div>
+          <div className={styles.uploadArea}>
+            <h1>Suba sus archivos</h1>
+            <input
+              type='file'
+              id='filepicker'
+              accept='image/*,.pdf,.doc,.docx,.xml'
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+            <button onClick={handleUpload}>Subir Archivo</button>
           </div>
         </div>
-        <h1>Suba sus archivos</h1>
-        <div>
-          <input
-            type='file'
-            id='filepicker'
-            accept='image/*,.pdf,.doc,.docx,.xml'
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-          <button onClick={handleUpload}>Subir Archivo</button>
-        </div>
+
         <div className={styles.gallery}>
           {myfiles.map((item) => (
             <div key={item.id}>
-              <img
-                src={item.fileType === 'image/jpeg' ? item.img : '/doc.png'}
+              <AiOutlineFile
+                style={{
+                  fontSize: '60px',
+                }}
               />
-              <p>{item.title.substr(0, 15)}</p>
+              <p>{item.title}</p>
               <a href={item.img}>Ver/Descargar</a>
             </div>
           ))}

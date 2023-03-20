@@ -9,16 +9,13 @@
 .userContainer {
   border: 1px solid black;
   width: 50%;
-  height: 50%;
+  min-height: 50%;
   position: absolute;
   top: 20vh;
   left: 5%;
-  overflow-y: hidden;
   background-color: var(--transparent-blue);
-
   border-radius: 10px;
   border-color: transparent;
-  scrollbar-color: blue;
 }
 .calendar {
   border: 1px solid black;

@@ -7,6 +7,8 @@ import styles from '../../styles/clientForms.module.css';
 const forms = () => {
   const [form, setForm] = useState([]);
   const { myData, myUid } = useContext(AuthContext);
+  const [seconds, setSeconds] = useState(0);
+
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'forms'),
@@ -154,6 +156,10 @@ const forms = () => {
                   </p>
                   <p>
                     <span>Lateral:</span> <span>{form.photos.lateral}</span>
+                  </p>
+                  <p>
+                    Fecha de asignación:
+                    {form.dateform.seconds}
                   </p>
                 </>
               )}

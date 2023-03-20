@@ -11,3 +11,25 @@
   padding: 0;
   margin: 0;
 }
+body {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: var(--dark-blue);
+}
+a {
+  text-decoration: none;
+  color: var(--dark-blue);
+}
+input {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: var(--dark-blue);
+}
+button {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--dark-blue);
+}

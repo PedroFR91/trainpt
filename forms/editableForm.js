@@ -26,6 +26,7 @@ function Form() {
     setInputs([...inputs, { type: 'text', value: '' }]);
     setOptions(['Opción 1', 'Opción 2', 'Opción 3']);
     setView(false);
+    console.log(inputs);
   };
 
   const handleRemoveInput = (index) => {

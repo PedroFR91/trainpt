@@ -27,6 +27,14 @@ const forms = () => {
   const [formData, setFormData] = useState(initialForm);
   const [formDataFollow, setFormDataFollow] = useState(follow);
   //Initial
+
+  const formatDate = (timeStamp) => {
+    const timeStampMillis =
+      timeStamp.seconds * 1000 + timeStamp.nanoseconds / 1000000;
+    const date = new Date(timeStampMillis);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
   const handleChange = (event) => {
     setFormData({
       ...formData,
@@ -148,8 +156,10 @@ const forms = () => {
   const selectTrainer = async (cf, id) => {
     console.log('id', id);
     console.log('MyUid', myUid);
+    const date = new Date();
     await updateDoc(doc(db, 'forms', cf), {
       link: id,
+      dateform: date,
     });
     setShowClient(false);
   };
@@ -158,6 +168,82 @@ const forms = () => {
       <TrainerHeader />
 
       <div className={styles.formLayout}>
+        <div className={styles.myforms}>
+          {myForm.map((form) => (
+            <div key={form.id}>
+              {form.type === 'Inicial' && (
+                <>
+                  <p>
+                    <span>Nombre:</span> <span>{form.name}</span>
+                  </p>
+                  <p>
+                    <span>Sexo:</span> <span>{form.gender}</span>
+                  </p>
+                  <p>
+                    <span>Peso:</span> <span>{form.weight}</span>
+                  </p>
+                  <p>
+                    <span>Altura:</span> <span>{form.height}</span>
+                  </p>
+                </>
+              )}
+              <p>Medidas</p>
+              <p>
+                <span>Pecho:</span> <span>{form.measures.chest}</span>
+              </p>
+              <p>
+                <span>Hombro:</span> <span>{form.measures.shoulders}</span>
+              </p>
+              <p>
+                <span>Biceps:</span> <span>{form.measures.biceps}</span>
+              </p>
+              <p>
+                <span>Cintura:</span> <span>{form.measures.hips}</span>
+              </p>
+              <p>
+                <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
+              </p>
+              <p>
+                <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
+              </p>
+              <p>
+                <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
+              </p>
+              <p>Fotos</p>
+              <p>
+                <span>Frente:</span> <span>{form.photos.front}</span>
+              </p>
+              <p>
+                <span>Espalda:</span> <span>{form.photos.back}</span>
+              </p>
+              <p>
+                <span>Lateral:</span> <span>{form.photos.lateral}</span>
+              </p>
+              {form.type === 'Inicial' && (
+                <>
+                  <p>
+                    <span>Intolerancias:</span> <span>{form.intolerances}</span>
+                  </p>
+                  <p>
+                    <span>Comida preferida:</span>{' '}
+                    <span>{form.preferredFoods}</span>
+                  </p>
+                  <p>
+                    <span>Días de entrenamiento:</span>{' '}
+                    <span>{form.trainingDays}</span>
+                  </p>
+                </>
+              )}
+              <p>
+                <span>Fecha de envío:</span>
+                <span>{formatDate(form.timeStamp)}</span>
+              </p>
+              <button onClick={() => asignForm(form.id)}>
+                Asignar Formulario
+              </button>
+            </div>
+          ))}
+        </div>
         {!show ? (
           <button onClick={() => setShow(true)}>Seguimiento</button>
         ) : (
@@ -473,77 +559,7 @@ const forms = () => {
           </form>
         )}
       </div>
-      <div className={styles.myforms}>
-        {myForm
-          .filter(
-            (data) => data.type === 'Inicial' || data.type === 'Seguimiento'
-          )
-          .map((form) => (
-            <div key={form.id}>
-              <p>
-                <span>Nombre:</span> <span>{form.name}</span>
-              </p>
-              <p>
-                <span>Sexo:</span> <span>{form.gender}</span>
-              </p>
-              <p>
-                <span>Peso:</span> <span>{form.weight}</span>
-              </p>
-              <p>
-                <span>Altura:</span> <span>{form.height}</span>
-              </p>
-              <p>Medidas</p>
-              <p>
-                <span>Pecho:</span> <span>{form.measures.chest}</span>
-              </p>
-              <p>
-                <span>Hombro:</span> <span>{form.measures.shoulders}</span>
-              </p>
-              <p>
-                <span>Biceps:</span> <span>{form.measures.biceps}</span>
-              </p>
-              <p>
-                <span>Cintura:</span> <span>{form.measures.hips}</span>
-              </p>
-              <p>
-                <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
-              </p>
-              <p>
-                <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
-              </p>
-              <p>
-                <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
-              </p>
-              <p>Fotos</p>
-              <p>
-                <span>Frente:</span> <span>{form.photos.front}</span>
-              </p>
-              <p>
-                <span>Espalda:</span> <span>{form.photos.back}</span>
-              </p>
-              <p>
-                <span>Lateral:</span> <span>{form.photos.lateral}</span>
-              </p>
-              <p>
-                <span>Intolerancias:</span> <span>{form.intolerances}</span>
-              </p>
-              <p>
-                <span>Comida preferida:</span>{' '}
-                <span>{form.preferredFoods}</span>
-              </p>
-              <p>
-                <span>Días de entrenamiento:</span>{' '}
-                <span>{form.trainingDays}</span>
-              </p>
-              <button onClick={() => asignForm(form.id)}>
-                Asignar Formulario
-              </button>
-            </div>
-          ))}
-      </div>
-      <div className={styles.editable}>
-        <EditableForm />
-      </div>
+
       {showClient && (
         <div className={styles.share}>
           {myData
