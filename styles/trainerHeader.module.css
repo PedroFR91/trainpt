@@ -3,42 +3,55 @@
   top: 0;
   width: 100%;
   height: 15vh;
-  background-color: var(--transparent-blue);
-  opacity: 1;
   box-shadow: 1px 1px 5px #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 10;
 }
-.menu {
-  width: 80%;
-  height: 100%;
-
-  margin-right: 2rem;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
+.logo {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translate(-50%);
 }
-.button {
-  font-family: 'Roboto';
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  color: #ffffff;
-  background-color: var(--dark-blue);
-  text-decoration: none;
-}
-.button:hover {
-  transform: scale(1.1);
-  color: var(--dark-blue);
-  background-color: transparent;
-  border: 1px solid var(--dark-blue);
+.menuButton {
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  z-index: 15;
+  background: none;
+  border: none;
   cursor: pointer;
 }
-.signOut {
-  margin-right: 2rem;
-  padding: 0.4rem 2rem;
-  border: 1px solid var(--dark-blue);
-  background-color: #172c63;
-  border-radius: 5px;
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 100%;
+  background-color: #afbbd3;
+
+  box-shadow: 1px 1px 5px #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  z-index: 14;
+  padding: 2rem;
+}
+
+.menuItem {
+  padding: 1rem 0;
+  font-size: 1.2rem;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.menuItem:hover {
+  font-size: 1.3rem;
+  color: var(--dark-blue);
+  cursor: pointer;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styles from '../styles/login.module.css';
+import styles from '../styles/formStyles.module.css';
 import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase.config';
 import { useRouter } from 'next/router';
@@ -48,7 +48,7 @@ const login = () => {
   };
 
   return (
-    <div className={styles.login}>
+    <div className={styles.formContainer}>
       <form onSubmit={handleLogin}>
         <input
           type='email'

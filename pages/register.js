@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styles from '../styles/register.module.css';
+import styles from '../styles/formStyles.module.css';
 import {
   doc,
   setDoc,
@@ -24,44 +24,44 @@ const register = () => {
   useEffect(() => {
     setData({ ...data, role: 'trainer' });
   }, []);
-  useEffect(() => {
-    const uploadFile = () => {
-      const name = new Date().getTime() + file.name;
-      const storageRef = ref(storage, file.name);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+  // useEffect(() => {
+  //   const uploadFile = () => {
+  //     const name = new Date().getTime() + file.name;
+  //     const storageRef = ref(storage, file.name);
+  //     const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-          setPer(progress);
-          switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
-              break;
-            case 'running':
-              console.log('Uoload is running');
-              break;
-            default:
-              break;
-          }
-        },
-        (error) => {
-          //Handle unsuccessful uplods
-          console.log(error);
-        },
-        () => {
-          //Handle succesful upload on complete
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setData((prev) => ({ ...prev, img: downloadURL }));
-          });
-        }
-      );
-    };
-    file && uploadFile();
-  }, [file]);
+  //     uploadTask.on(
+  //       'state_changed',
+  //       (snapshot) => {
+  //         const progress =
+  //           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  //         console.log('Upload is ' + progress + '% done');
+  //         setPer(progress);
+  //         switch (snapshot.state) {
+  //           case 'paused':
+  //             console.log('Upload is paused');
+  //             break;
+  //           case 'running':
+  //             console.log('Uoload is running');
+  //             break;
+  //           default:
+  //             break;
+  //         }
+  //       },
+  //       (error) => {
+  //         //Handle unsuccessful uplods
+  //         console.log(error);
+  //       },
+  //       () => {
+  //         //Handle succesful upload on complete
+  //         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+  //           setData((prev) => ({ ...prev, img: downloadURL }));
+  //         });
+  //       }
+  //     );
+  //   };
+  //   file && uploadFile();
+  // }, [file]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -95,9 +95,9 @@ const register = () => {
   };
 
   return (
-    <div className={styles.register}>
+    <div className={styles.formContainer}>
       <form onSubmit={handleAdd}>
-        <div className={styles.divimage}>
+        {/* <div className={styles.divimage}>
           <div className={styles.myimage}>
             <img src={data.img ? data.img : '/face.png'} alt={''} />
           </div>
@@ -111,7 +111,7 @@ const register = () => {
           <label className={styles.label} htmlFor='file'>
             Imagen de Perfil
           </label>
-        </div>
+        </div> */}
         <div>
           {userInputs.map((input) => (
             <div key={input.id}>
@@ -126,33 +126,19 @@ const register = () => {
           ))}
         </div>
         <div className={styles.selectRole}>
-          <div className={styles.roles}>
-            <p
-              className={
-                selected === 'trainer' ? styles.selected : styles.nonselected
-              }
-              onClick={() => {
-                setSelected('trainer');
-                setData({ ...data, role: 'trainer' });
+          <div>
+            <select
+              value={selected}
+              onChange={(e) => {
+                setSelected(e.target.value);
+                setData({ ...data, role: e.target.value });
               }}
             >
-              Entrenador
-            </p>
-            <p
-              className={
-                selected === 'client' ? styles.selected : styles.nonselected
-              }
-              onClick={() => {
-                setSelected('client');
-                setData({ ...data, role: 'client' });
-              }}
-            >
-              Cliente
-            </p>
+              <option value='trainer'>Entrenador</option>
+              <option value='client'>Cliente</option>
+            </select>
           </div>
-          <button disabled={per !== null && per < 100} type='submit'>
-            Registro
-          </button>
+          <button type='submit'>Registro</button>
         </div>
       </form>
     </div>

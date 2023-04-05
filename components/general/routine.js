@@ -8,10 +8,19 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react';
+
+import Step1 from '../Steps/Step1';
+import Step2 from '../Steps/Step2';
+import Step3 from '../Steps/Step3';
+import Step4 from '../Steps/Step4';
 import { db } from '../../firebase.config';
 import styles from '../../styles/routines.module.css';
 import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
+import RoutineDetails from './RoutineDetails';
+import { FaRunning, FaCalendarDay, FaDumbbell, FaList } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { useAnimation, AnimatePresence } from 'framer-motion';
 
 const routine = () => {
   const [data, setData] = useState([]);
@@ -20,7 +29,35 @@ const routine = () => {
   const [visible, setVisible] = useState(false);
   const { myData, myUid } = useContext(AuthContext);
   const [showClient, setShowClient] = useState(false);
-  const [currentRoutine, setCurrentRoutine] = useState([]);
+  const [step, setStep] = useState(1);
+
+  const animation = useAnimation();
+
+  useEffect(() => {
+    const stepsVariants = {
+      step1: { x: 0, opacity: 1 },
+      step2: { x: 100, opacity: 0 },
+      step3: { x: 200, opacity: 0 },
+      step4: { x: 300, opacity: 0 },
+    };
+
+    const transition = {
+      type: 'spring',
+      stiffness: 200,
+      damping: 20,
+    };
+
+    animation.start({ ...stepsVariants[`step${step}`], transition });
+  }, [step]);
+
+  const nextStep = () => {
+    setStep(step + 1);
+  };
+
+  const prevStep = () => {
+    setStep(step - 1);
+  };
+
   const auth = getAuth();
   const user = auth.currentUser;
   const [inputFields, setInputFields] = useState([
@@ -64,17 +101,28 @@ const routine = () => {
     setInputFields(myweek);
     setData({ ...data, myweek });
   };
-  const handleChange = (index, e) => {
+  const handleChange = (index, e, selectedDay) => {
     let mydata = [...inputFields];
     mydata[index][e.target.name] = e.target.value;
     setInputFields(mydata);
-    setData({ ...data, mydata });
+    setData({ ...data, [e.target.name + selectedDay + index]: e.target.value });
   };
 
   const addExercises = () => {
     let newexercise = { exercise: '', series: '', reps: '' };
     setInputFields([...inputFields, newexercise]);
   };
+  const addTraining = () => {
+    setInputFields([
+      ...inputFields,
+      {
+        exercise: '',
+        sets: '',
+        reps: '',
+      },
+    ]);
+  };
+
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'routines'),
@@ -127,10 +175,6 @@ const routine = () => {
     } catch (error) {}
   };
 
-  const handleView = () => {
-    setVisible(true);
-  };
-
   const asignRoutine = (id) => {
     setShowClient(true);
     setCurrentRoutine(id);
@@ -143,106 +187,109 @@ const routine = () => {
     });
     setShowClient(false);
   };
+  const handleSelectDay = (selectedDay, checked) => {
+    if (checked) {
+      setData({ ...data, days: [...(data.days || []), selectedDay] });
+    } else {
+      setData({
+        ...data,
+        days: data.days.filter((day) => day !== selectedDay),
+      });
+    }
+  };
+  const handleView = (id) => {
+    setVisible(true);
+    setRoutineId(id); // Guarde el ID de la rutina seleccionada en el estado
+  };
   return (
     <div className={styles.routinesContainer}>
-      <div className={styles.routineContainer}>
-        <h1 className={styles.title}>Creador de Rutinas</h1>
-        <div className={styles.addroutine}>
-          <input
-            type='text'
-            placeholder='Nombre de la Rutina'
-            onChange={(e) => setData({ ...data, nameroutine: e.target.value })}
-          />
-          <input
-            type='text'
-            placeholder={data.desroutine ? data.desroutine : 'Descripción'}
-            onChange={(e) => setData({ ...data, desroutine: e.target.value })}
-            required
-          />
-          <h2>Selecciones los días de entrenamiento</h2>
-          <div className={styles.week}>
-            {days.map((mydata, item) => (
-              <div key={item}>
-                <p
-                  onClick={() => {
-                    setData({ ...data, days: mydata.day });
-                    console.log(data.days);
-                    console.log(data);
-                  }}
-                >
-                  {mydata.day}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className={styles.addtraining}>
-          <input
-            type='text'
-            placeholder='Nombre del entrenamiento'
-            onChange={(e) =>
-              setData({
-                ...data,
-                nametrain: e.target.value,
-                trainingDay: days,
-              })
-            }
-          />
-
-          <input
-            type='text'
-            placeholder={data.destrain ? data.destrain : 'Descripción'}
-            onChange={(e) => setData({ ...data, destrain: e.target.value })}
-            required
-          />
-
-          <input
-            type='text'
-            placeholder='Músculos trabajados'
-            onChange={(e) => setData({ ...data, muscles: e.target.value })}
-          />
-        </div>
-        <div className={styles.exercises}>
-          {inputFields.map((input, index) => {
-            return (
-              <div key={index}>
-                <div>
-                  <div>
-                    <input
-                      name='exercise'
-                      placeholder='Ejercicio'
-                      value={input.exercise}
-                      onChange={(e) => handleChange(index, e)}
-                    />
-                  </div>
-                  <div className={styles.second}>
-                    <input
-                      name='series'
-                      placeholder='Series'
-                      value={input.series}
-                      onChange={(e) => handleChange(index, e)}
-                    />
-                    <input
-                      name='reps'
-                      placeholder='Repeticiones'
-                      value={input.reps}
-                      onChange={(e) => handleChange(index, e)}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          <div>
-            <button onClick={handleCreate}>Crear Rutina</button>
-            <button onClick={handleCreateTraining}>Crear Entrenamiento</button>
-            <button onClick={addExercises} className={styles.plus}>
-              Añadir ejercicio
-            </button>
-          </div>
-        </div>
+      <div className={styles.iconContainer}>
+        <FaRunning
+          className={step === 1 ? styles.activeIcon : styles.inactiveIcon}
+        />
+        <FaCalendarDay
+          className={step === 2 ? styles.activeIcon : styles.inactiveIcon}
+        />
+        <FaDumbbell
+          className={step === 3 ? styles.activeIcon : styles.inactiveIcon}
+        />
+        <FaList
+          className={step === 4 ? styles.activeIcon : styles.inactiveIcon}
+        />
       </div>
-      <div className={styles.listRoutines}>
+      <div className={styles.mySteps}>
+        <AnimatePresence mode='wait'>
+          {step === 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Step1 setData={setData} data={data} nextStep={nextStep} />
+            </motion.div>
+          )}
+          {step === 2 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Step2
+                data={data}
+                days={days}
+                handleSelectDay={handleSelectDay}
+                nextStep={nextStep}
+                prevStep={prevStep}
+              />
+            </motion.div>
+          )}
+          {step === 3 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Step3
+                data={data}
+                setData={setData}
+                inputFields={inputFields}
+                setInputFields={setInputFields}
+                handleChange={handleChange}
+                addTraining={addTraining}
+                nextStep={nextStep}
+                prevStep={prevStep}
+              />
+            </motion.div>
+          )}
+          {step === 4 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Step4
+                data={data}
+                inputFields={inputFields}
+                setInputFields={setInputFields}
+                handleChange={handleChange}
+                addExercises={addExercises}
+                handleCreate={handleCreate}
+                prevStep={prevStep}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* <div className={styles.listRoutines}>
+        {visible && <RoutineDetails routineId={routineId} />}
+      </div> */}
+
+      {/* <div className={styles.listRoutines}>
         {routine
           .filter((data) => data.routineid === myUid)
           .map((routine) => (
@@ -287,7 +334,7 @@ const routine = () => {
               </div>
             </div>
           ))}
-      </div>
+      </div> */}
       {/* {showClient && (
         <div className={styles.share}>
           {myData

@@ -7,7 +7,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-
+  justify-content: flex-start;
   align-items: center;
   margin-top: 18vh;
 }
@@ -177,4 +177,56 @@
 .share div div img {
   width: 100%;
   border-radius: 50%;
+}
+.routinesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  height: 60vh;
+  min-height: 300px;
+  margin: 0 auto;
+}
+
+.iconContainer {
+  position: absolute;
+  top: 25vh;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding: 1rem;
+}
+.mySteps {
+  position: absolute;
+  top: 25vh;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  height: 60vh;
+  min-height: 300px;
+  margin: 0 auto;
+}
+
+.activeIcon {
+  color: blue;
+}
+
+.inactiveIcon {
+  color: gray;
+}
+
+.inputField {
+  min-width: 250px;
+  height: 40px;
+}
+
+.formWrapper {
+  position: absolute;
 }

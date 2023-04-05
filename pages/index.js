@@ -10,6 +10,7 @@ import { useAuthUser } from '../hooks/useAuthUser';
 import { useRouter } from 'next/router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase.config';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
   useAuthUser();
@@ -31,38 +32,51 @@ export default function Home() {
   return (
     <>
       <div className={styles.container}>
-        <Header />
-        {!isLogged ? (
-          <>
-            <div className={styles.leftContainer}>
-              <Image
-                src='/logo.png'
-                width={480}
-                height={160}
-                alt='Logo de Empresa. TrainPT'
-              />
-              <div className={styles.bottomtext}>
-                {toggleView && (
-                  <button onClick={() => setToggleView(!toggleView)}>
-                    Accede
-                  </button>
-                )}
-                {!toggleView && (
-                  <button onClick={() => setToggleView(!toggleView)}>
-                    Regístrate
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.access}>
-              {!toggleView && <Login />}
-              {toggleView && <Register />}
-            </div>
-          </>
-        ) : (
-          <div onClick={exit}>Su sesión ha caducado, acceda de nuevo.</div>
-        )}
+        <div className={styles.left}>
+          <AnimatePresence>
+            {toggleView ? (
+              <motion.div
+                key='register'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1 }}
+              >
+                <Register />
+              </motion.div>
+            ) : (
+              <motion.div
+                key='login'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1 }}
+              >
+                <Login />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className={styles.right}>
+          <motion.div
+            className={styles.logo}
+            initial={{ y: -50 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <Image
+              src='/logo.png'
+              width={480}
+              height={160}
+              alt='Logo de Empresa. TrainPT'
+            />
+          </motion.div>
+          <div className={styles.toggleButton}>
+            <button onClick={() => setToggleView(!toggleView)}>
+              {toggleView ? 'Accede' : 'Regístrate'}
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );
