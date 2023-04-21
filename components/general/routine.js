@@ -30,6 +30,7 @@ const routine = () => {
   const { myData, myUid } = useContext(AuthContext);
   const [showClient, setShowClient] = useState(false);
   const [step, setStep] = useState(1);
+  const [currentRoutine, setCurrentRoutine] = useState(null);
 
   const animation = useAnimation();
 
@@ -265,31 +266,32 @@ const routine = () => {
             </motion.div>
           )}
           {step === 4 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Step4
-                data={data}
-                inputFields={inputFields}
-                setInputFields={setInputFields}
-                handleChange={handleChange}
-                addExercises={addExercises}
-                handleCreate={handleCreate}
-                prevStep={prevStep}
-              />
-            </motion.div>
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Step4
+                  data={data}
+                  inputFields={inputFields}
+                  setInputFields={setInputFields}
+                  handleChange={handleChange}
+                  addExercises={addExercises}
+                  handleCreate={handleCreate}
+                  prevStep={prevStep}
+                />
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>
 
-      {/* <div className={styles.listRoutines}>
+      <div className={styles.listRoutines}>
         {visible && <RoutineDetails routineId={routineId} />}
-      </div> */}
-
-      {/* <div className={styles.listRoutines}>
+      </div>
+      <div className={styles.listRoutines}>
         {routine
           .filter((data) => data.routineid === myUid)
           .map((routine) => (
@@ -334,8 +336,9 @@ const routine = () => {
               </div>
             </div>
           ))}
-      </div> */}
-      {/* {showClient && (
+      </div>
+
+      {showClient && (
         <div className={styles.share}>
           {myData
             .filter((data) => data.role === 'client')
@@ -356,7 +359,7 @@ const routine = () => {
             ))}
           <button onClick={() => setShowClient(false)}>Cerrar</button>
         </div>
-      )} */}
+      )}
     </div>
   );
 };

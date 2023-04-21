@@ -163,7 +163,9 @@ const files = () => {
                 }}
               />
               <p>{item.title}</p>
-              <a href={item.img}>Ver/Descargar</a>
+              <a href={item.img} target='_blank'>
+                Ver/Descargar
+              </a>
             </div>
           ))}
         </div>

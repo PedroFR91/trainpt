@@ -53,7 +53,7 @@ const userList = () => {
     <div className={styles.list}>
       {!show &&
         myData
-          .filter((data) => data.role === 'client' )
+          .filter((data) => data.role === 'client')
           .map((data) => (
             <div key={data.id} className={styles.userdata}>
               <div>
@@ -81,8 +81,23 @@ const userList = () => {
             )}
           </div>
           <div>{current.username}</div>
+          <div>Medidas</div>
+          <div>Fotos</div>
           <div>
-            <p>Rutinas:</p>
+            <p>Formularios:</p>
+            <div>
+              {myForm
+                .filter((form) => form.link === current.id)
+                .map((form) => (
+                  <div key={form.id}>
+                    <p>{form.name}</p>
+                  </div>
+                ))}
+            </div>
+          </div>
+          <div>Entrenamientos</div>
+          <div>
+            <p>Rutina asignada</p>
             <div>
               {routine
                 .filter((data) => data.link === current.id)
@@ -97,19 +112,8 @@ const userList = () => {
                 ))}
             </div>
           </div>
-          <div>
-            <p>Formularios:</p>
-            <div>
-              {myForm
-                .filter((form) => form.link === current.id)
-                .map((form) => (
-                  <div key={form.id}>
-                    <p>{form.name}</p>
-                  </div>
-                ))}
-            </div>
-          </div>
-          <div>Fotos:</div>
+          <div>Dieta asignada</div>
+
           <button onClick={() => setShow(false)}>X</button>
         </div>
       )}

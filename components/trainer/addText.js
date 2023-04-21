@@ -37,7 +37,9 @@ const AddText = () => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const storedData = docSnap.data().mytext;
-      setData(JSON.parse(storedData));
+      if (storedData) {
+        setData(JSON.parse(storedData));
+      }
     } else {
       console.log('No such document!');
     }

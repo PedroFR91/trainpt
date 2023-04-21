@@ -1,105 +1,13 @@
-.title {
-  font-family: 'Roboto';
-  font-size: 26px;
-}
 .routinesContainer {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   align-items: center;
   margin-top: 18vh;
 }
-.routineContainer {
-  background-color: var(--my-blue);
-  width: 40%;
-  height: fit-content;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  font-family: 'Roboto';
-  margin-top: 2rem;
-  border-radius: 10px;
-}
-.routineContainer div {
-  margin: 1rem;
-}
-.addroutine,
-.addtraining {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.addroutine input,
-.addtraining input {
-  width: 50%;
-  height: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-.week {
-  width: 70%;
-  margin: auto;
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
-  justify-content: space-evenly;
-}
-.week p {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ffffff;
-  border-radius: 5px;
-  background: var(--dark-blue);
-  color: #ffffff;
-}
-.week p:hover {
-  cursor: pointer;
-  border: 1px solid var(--dark-blue);
-  background: #ffffff;
-  color: var(--dark-blue);
-}
-.exercises {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-}
-.exercises div {
-  display: flex;
-  flex-direction: column;
-  width: 30%;
-  margin: 1rem;
-}
 
-.exercises div div {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin: 0.3rem;
-}
-.exercises div div:last-child {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-.exercises div div input {
-  width: 100%;
-  height: 40px;
-  border: 1px solid black;
-}
-.exercises div div .second {
-  width: 100%;
-  display: flex;
-  flex: row;
-}
-.exercises div div .second input {
-  width: 40%;
-}
 .listRoutines {
   background-color: white;
   width: 90%;
@@ -178,16 +86,6 @@
   width: 100%;
   border-radius: 50%;
 }
-.routinesContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 50%;
-  height: 60vh;
-  min-height: 300px;
-  margin: 0 auto;
-}
 
 .iconContainer {
   position: absolute;
@@ -229,4 +127,15 @@
 
 .formWrapper {
   position: absolute;
+}
+.listExercises {
+  width: 50%;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: scroll;
+}
+.myddbb {
+  border: 1px solid orange;
+  margin-bottom: 1rem;
 }

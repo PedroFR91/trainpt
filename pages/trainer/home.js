@@ -16,7 +16,6 @@ const home = () => {
       <div className={styles.calendar}>
         <Calendar />
       </div>
-      {/* <Review /> */}
     </div>
   );
 };

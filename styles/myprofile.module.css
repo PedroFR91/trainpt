@@ -29,7 +29,7 @@
 }
 .myprofile {
   width: 50%;
-  height: 50vh;
+  min-height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
@@ -59,12 +59,7 @@
   font-size: 24px;
   margin-bottom: 1rem;
 }
-.addText {
-  width: 100%;
-  aspect-ratio: 2/1;
-  text-align: center;
-  border: 1px solid black;
-}
+
 .text {
   height: 70%;
   text-align: center;

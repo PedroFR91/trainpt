@@ -29,6 +29,9 @@ const forms = () => {
   //Initial
 
   const formatDate = (timeStamp) => {
+    if (!timeStamp || !timeStamp.seconds) {
+      return null;
+    }
     const timeStampMillis =
       timeStamp.seconds * 1000 + timeStamp.nanoseconds / 1000000;
     const date = new Date(timeStampMillis);
@@ -168,82 +171,6 @@ const forms = () => {
       <TrainerHeader />
 
       <div className={styles.formLayout}>
-        <div className={styles.myforms}>
-          {myForm.map((form) => (
-            <div key={form.id}>
-              {form.type === 'Inicial' && (
-                <>
-                  <p>
-                    <span>Nombre:</span> <span>{form.name}</span>
-                  </p>
-                  <p>
-                    <span>Sexo:</span> <span>{form.gender}</span>
-                  </p>
-                  <p>
-                    <span>Peso:</span> <span>{form.weight}</span>
-                  </p>
-                  <p>
-                    <span>Altura:</span> <span>{form.height}</span>
-                  </p>
-                </>
-              )}
-              <p>Medidas</p>
-              <p>
-                <span>Pecho:</span> <span>{form.measures.chest}</span>
-              </p>
-              <p>
-                <span>Hombro:</span> <span>{form.measures.shoulders}</span>
-              </p>
-              <p>
-                <span>Biceps:</span> <span>{form.measures.biceps}</span>
-              </p>
-              <p>
-                <span>Cintura:</span> <span>{form.measures.hips}</span>
-              </p>
-              <p>
-                <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
-              </p>
-              <p>
-                <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
-              </p>
-              <p>
-                <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
-              </p>
-              <p>Fotos</p>
-              <p>
-                <span>Frente:</span> <span>{form.photos.front}</span>
-              </p>
-              <p>
-                <span>Espalda:</span> <span>{form.photos.back}</span>
-              </p>
-              <p>
-                <span>Lateral:</span> <span>{form.photos.lateral}</span>
-              </p>
-              {form.type === 'Inicial' && (
-                <>
-                  <p>
-                    <span>Intolerancias:</span> <span>{form.intolerances}</span>
-                  </p>
-                  <p>
-                    <span>Comida preferida:</span>{' '}
-                    <span>{form.preferredFoods}</span>
-                  </p>
-                  <p>
-                    <span>Días de entrenamiento:</span>{' '}
-                    <span>{form.trainingDays}</span>
-                  </p>
-                </>
-              )}
-              <p>
-                <span>Fecha de envío:</span>
-                <span>{formatDate(form.timeStamp)}</span>
-              </p>
-              <button onClick={() => asignForm(form.id)}>
-                Asignar Formulario
-              </button>
-            </div>
-          ))}
-        </div>
         {!show ? (
           <button onClick={() => setShow(true)}>Seguimiento</button>
         ) : (
@@ -558,6 +485,82 @@ const forms = () => {
             </div>
           </form>
         )}
+        <div className={styles.myforms}>
+          {myForm.map((form) => (
+            <div key={form.id}>
+              {form.type === 'Inicial' && (
+                <>
+                  <p>
+                    <span>Nombre:</span> <span>{form.name}</span>
+                  </p>
+                  <p>
+                    <span>Sexo:</span> <span>{form.gender}</span>
+                  </p>
+                  <p>
+                    <span>Peso:</span> <span>{form.weight}</span>
+                  </p>
+                  <p>
+                    <span>Altura:</span> <span>{form.height}</span>
+                  </p>
+                </>
+              )}
+              <p>Medidas</p>
+              <p>
+                <span>Pecho:</span> <span>{form.measures.chest}</span>
+              </p>
+              <p>
+                <span>Hombro:</span> <span>{form.measures.shoulders}</span>
+              </p>
+              <p>
+                <span>Biceps:</span> <span>{form.measures.biceps}</span>
+              </p>
+              <p>
+                <span>Cintura:</span> <span>{form.measures.hips}</span>
+              </p>
+              <p>
+                <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
+              </p>
+              <p>
+                <span>Cuadriceps:</span> <span>{form.measures.cuadriceps}</span>
+              </p>
+              <p>
+                <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
+              </p>
+              <p>Fotos</p>
+              <p>
+                <span>Frente:</span> <span>{form.photos.front}</span>
+              </p>
+              <p>
+                <span>Espalda:</span> <span>{form.photos.back}</span>
+              </p>
+              <p>
+                <span>Lateral:</span> <span>{form.photos.lateral}</span>
+              </p>
+              {form.type === 'Inicial' && (
+                <>
+                  <p>
+                    <span>Intolerancias:</span> <span>{form.intolerances}</span>
+                  </p>
+                  <p>
+                    <span>Comida preferida:</span>{' '}
+                    <span>{form.preferredFoods}</span>
+                  </p>
+                  <p>
+                    <span>Días de entrenamiento:</span>{' '}
+                    <span>{form.trainingDays}</span>
+                  </p>
+                </>
+              )}
+              <p>
+                <span>Fecha de envío:</span>
+                <span>{formatDate(form.timeStamp)}</span>
+              </p>
+              <button onClick={() => asignForm(form.id)}>
+                Asignar Formulario
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {showClient && (

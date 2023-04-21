@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from '../../styles/routines.module.css';
+import { ddbb } from '../../components/Steps/exercises';
 const Step4 = ({
   data,
   inputFields,
@@ -35,34 +36,53 @@ const Step4 = ({
           ))}
       </select>
       {selectedDay && (
-        <div>
-          {inputFields.map((input, index) => (
-            <div key={index}>
-              <input
-                name='exercise'
-                placeholder='Ejercicio'
-                value={input.exercise}
-                onChange={(e) => handleChange(index, e, selectedDay)}
-                className={styles.inputField}
-              />
-              <input
-                name='series'
-                placeholder='Series'
-                value={input.series}
-                onChange={(e) => handleChange(index, e, selectedDay)}
-                className={styles.inputField}
-              />
-              <input
-                name='reps'
-                placeholder='Repeticiones'
-                value={input.reps}
-                onChange={(e) => handleChange(index, e, selectedDay)}
-                className={styles.inputField}
-              />
-            </div>
-          ))}
-          <button onClick={addExercises}>Añadir ejercicio</button>
-        </div>
+        <>
+          <div>
+            {inputFields.map((input, index) => (
+              <div key={index}>
+                <input
+                  name='exercise'
+                  placeholder='Ejercicio'
+                  value={input.exercise}
+                  onChange={(e) => handleChange(index, e, selectedDay)}
+                  className={styles.inputField}
+                />
+                <input
+                  name='series'
+                  placeholder='Series'
+                  value={input.series}
+                  onChange={(e) => handleChange(index, e, selectedDay)}
+                  className={styles.inputField}
+                />
+                <input
+                  name='reps'
+                  placeholder='Repeticiones'
+                  value={input.reps}
+                  onChange={(e) => handleChange(index, e, selectedDay)}
+                  className={styles.inputField}
+                />
+              </div>
+            ))}
+            <button onClick={addExercises}>Añadir ejercicio</button>
+          </div>
+          <div className={styles.listExercises}>
+            {ddbb.map((exer) => (
+              <div
+                key={exer.exercise}
+                className={styles.myddbb}
+                onClick={addExercises}
+              >
+                <p>Ejercicio:{exer.exercise}</p>
+                <p>Músculo:{exer.muscle}</p>
+                <p>Series:{exer.series}</p>
+                <p>repeticiones:{exer.reps}</p>
+                <p>Peso:{exer.weight}</p>
+                <p>Descanso:{exer.rest}</p>
+                <p>Notas:{exer.notes}</p>
+              </div>
+            ))}
+          </div>
+        </>
       )}
       <button onClick={prevStep}>Atrás</button>
       <button onClick={handleCreate}>Crear Rutina</button>

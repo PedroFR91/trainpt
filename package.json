@@ -37,6 +37,8 @@
     "react-dom": "18.2.0",
     "react-editor-js": "^2.1.0",
     "react-icons": "^4.8.0",
-    "react-player": "^2.11.0"
+    "react-player": "^2.11.0",
+    "react-quill": "^2.0.0",
+    "slate-react": "^0.93.0"
   }
 }

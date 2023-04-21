@@ -24,44 +24,44 @@ const register = () => {
   useEffect(() => {
     setData({ ...data, role: 'trainer' });
   }, []);
-  // useEffect(() => {
-  //   const uploadFile = () => {
-  //     const name = new Date().getTime() + file.name;
-  //     const storageRef = ref(storage, file.name);
-  //     const uploadTask = uploadBytesResumable(storageRef, file);
+  useEffect(() => {
+    const uploadFile = () => {
+      const name = new Date().getTime() + file.name;
+      const storageRef = ref(storage, file.name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-  //     uploadTask.on(
-  //       'state_changed',
-  //       (snapshot) => {
-  //         const progress =
-  //           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-  //         console.log('Upload is ' + progress + '% done');
-  //         setPer(progress);
-  //         switch (snapshot.state) {
-  //           case 'paused':
-  //             console.log('Upload is paused');
-  //             break;
-  //           case 'running':
-  //             console.log('Uoload is running');
-  //             break;
-  //           default:
-  //             break;
-  //         }
-  //       },
-  //       (error) => {
-  //         //Handle unsuccessful uplods
-  //         console.log(error);
-  //       },
-  //       () => {
-  //         //Handle succesful upload on complete
-  //         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-  //           setData((prev) => ({ ...prev, img: downloadURL }));
-  //         });
-  //       }
-  //     );
-  //   };
-  //   file && uploadFile();
-  // }, [file]);
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          setPer(progress);
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Uoload is running');
+              break;
+            default:
+              break;
+          }
+        },
+        (error) => {
+          //Handle unsuccessful uplods
+          console.log(error);
+        },
+        () => {
+          //Handle succesful upload on complete
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setData((prev) => ({ ...prev, img: downloadURL }));
+          });
+        }
+      );
+    };
+    file && uploadFile();
+  }, [file]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -97,21 +97,31 @@ const register = () => {
   return (
     <div className={styles.formContainer}>
       <form onSubmit={handleAdd}>
-        {/* <div className={styles.divimage}>
+        <div className={styles.divimage}>
           <div className={styles.myimage}>
-            <img src={data.img ? data.img : '/face.png'} alt={''} />
+            <img
+              src={data.img ? data.img : '/face.png'}
+              width='100%'
+              alt={''}
+            />
           </div>
           <input
             type='file'
             id='file'
             onChange={(e) => setFile(e.target.files[0])}
             hidden
-            required
           />
-          <label className={styles.label} htmlFor='file'>
-            Imagen de Perfil
-          </label>
-        </div> */}
+        </div>
+        <button
+          className={styles.label}
+          htmlFor='file'
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('file').click();
+          }}
+        >
+          Subir Foto
+        </button>
         <div>
           {userInputs.map((input) => (
             <div key={input.id}>

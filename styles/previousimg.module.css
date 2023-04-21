@@ -81,3 +81,19 @@
   border: 1px solid var(--dark-blue);
   cursor: pointer;
 }
+.clientImgGroup {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid black;
+}
+
+.clientImg {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 8px;
+}
