@@ -1,11 +1,15 @@
+// AddText.js
+
 import React, { useContext, useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/myprofile.module.css';
+import Modal from './Modal';
+import dynamic from 'next/dynamic';
 
-const DynamicEditorComponent = dynamic(() => import('./EditorComponent'), {
+// Importa el componente RichTextEditor de forma dinámica
+const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
   ssr: false,
 });
 
@@ -13,22 +17,20 @@ const AddText = () => {
   const { myUid } = useContext(AuthContext);
   const [data, setData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [clientSide, setClientSide] = useState(false);
 
   useEffect(() => {
     fetchText();
+    setClientSide(true); // Indicar que estamos en el lado del cliente
   }, []);
 
   const updateText = async () => {
-    if (!data || !data.blocks) {
-      return;
-    }
     const docRef = doc(db, 'users', myUid);
-    const blocks = data.blocks.map((block) => ({
-      type: block.type,
-      data: block.data,
-    }));
+
     await updateDoc(docRef, {
-      mytext: JSON.stringify({ blocks: blocks }),
+      mytext: text,
     });
   };
 
@@ -38,27 +40,39 @@ const AddText = () => {
     if (docSnap.exists()) {
       const storedData = docSnap.data().mytext;
       if (storedData) {
-        setData(JSON.parse(storedData));
+        setData(storedData);
+        setText(storedData);
       }
     } else {
       console.log('No such document!');
     }
-    setIsLoading(false);
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSave = () => {
+    updateText();
+    closeModal();
+  };
 
   return (
     <div className={styles.addText}>
-      <DynamicEditorComponent
-        data={data}
-        onDataChange={(newData) => {
-          setData(newData);
-          updateText();
-        }}
-      />
+      <button onClick={openModal}>Editar texto</button>
+      <Modal isOpen={isModalOpen} closeModal={closeModal}>
+        <h1>Editor de texto enriquecido</h1>
+        {clientSide && <RichTextEditor value={text} onChange={setText} />}
+        <button onClick={handleSave}>Guardar</button>
+      </Modal>
+      <div
+        className={styles.displayText}
+        dangerouslySetInnerHTML={{ __html: text }}
+      ></div>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import moment from 'moment/min/moment-with-locales.js';
 import styles from '../../styles/calendar.module.css';
 import { db } from '../../firebase.config';
 import { collection, onSnapshot } from 'firebase/firestore';
+import CalendarModal from './CalendarModal';
 
 const calendar = () => {
   moment.locale('es');
@@ -83,10 +84,9 @@ const calendar = () => {
     <div className={styles.container}>
       <div className={styles.daysContainer}>{generateCalendar()}</div>
       {modalVisible && (
-        <div>
+        <CalendarModal onClose={handleCloseModal}>
           <p>Fecha seleccionada: {selectedDate}</p>
-          <button onClick={handleCloseModal}>Cerrar</button>
-        </div>
+        </CalendarModal>
       )}
       <div className={styles.controls}>
         <button onClick={handlePrevMonth} className={styles.button}>

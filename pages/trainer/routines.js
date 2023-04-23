@@ -11,7 +11,6 @@ const routines = () => {
   return (
     <div className={styles.container}>
       <TrainerHeader />
-
       <Routine />
     </div>
   );

@@ -254,8 +254,14 @@ const previousClientsImg = () => {
       <div className={styles.divimage}>{renderStep()}</div>
       <div className={styles.clientPhotos}>
         {/* Agrupar las imágenes por cliente */}
-        {Array.from(new Set(photos.map((photo) => photo.clientName))).map(
-          (client) => (
+        {Array.from(new Set(photos.map((photo) => photo.clientName)))
+          .filter((clientName) =>
+            photos.some(
+              (photo) =>
+                photo.clientName === clientName && photo.trainerId === myUid
+            )
+          )
+          .map((client) => (
             <div key={client}>
               <h3>{client}</h3>
               <div className={styles.clientImgGroup}>
@@ -290,8 +296,7 @@ const previousClientsImg = () => {
                 Borrar grupo de imágenes
               </button>
             </div>
-          )
-        )}
+          ))}
       </div>
     </div>
   );
