@@ -14,29 +14,29 @@ const Step3 = ({
   };
 
   return (
-    <div>
+    <div className={styles.stepContainer}>
       {data.days &&
         data.days.map((day, index) => (
-          <div key={index}>
-            <h2>Entrenamiento para {day}</h2>
+          <div key={index} className={styles.column}>
+            <h2>Entrenamiento {day}</h2>
             <input
               type='text'
               name='nametrain'
-              placeholder={`Nombre del entrenamiento para ${day}`}
+              placeholder={`Nombre  `}
               onChange={(e) => handleInputChange(e, day)}
               className={styles.inputField}
             />
             <input
               type='text'
               name='destrain'
-              placeholder={`Descripción del entrenamiento para ${day}`}
+              placeholder={`Descripción `}
               onChange={(e) => handleInputChange(e, day)}
               className={styles.inputField}
             />
             <input
               type='text'
               name='muscles'
-              placeholder={`Músculos trabajados para ${day}`}
+              placeholder={`Músculos trabajados `}
               onChange={(e) => handleInputChange(e, day)}
               className={styles.inputField}
             />

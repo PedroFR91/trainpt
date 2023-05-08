@@ -89,13 +89,16 @@
 
 .iconContainer {
   position: absolute;
-  top: 25vh;
+  top: 10vh;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: space-around;
-  width: 100%;
+  width: 50%;
+  height: 10vh;
   padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
 }
 .mySteps {
   position: absolute;
@@ -107,11 +110,49 @@
   align-items: center;
   justify-content: center;
   width: 50%;
-  height: 60vh;
-  min-height: 300px;
+  min-height: 60vh;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
   margin: 0 auto;
 }
-
+.stepContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  min-height: 60vh;
+}
+.days {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.checkboxField {
+  width: 20px;
+  height: 20px;
+}
+.days div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.stepContainer button {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #000000;
+  border-radius: 5px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.column h2,
+.column input {
+  margin-bottom: 1rem;
+}
 .activeIcon {
   color: blue;
 }
@@ -123,6 +164,8 @@
 .inputField {
   min-width: 250px;
   height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
 }
 
 .formWrapper {

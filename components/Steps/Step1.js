@@ -2,7 +2,8 @@ import React from 'react';
 import styles from '../../styles/routines.module.css';
 const Step1 = ({ setData, data, nextStep }) => {
   return (
-    <div>
+    <div className={styles.stepContainer}>
+      <h2>Creación de rutinas</h2>
       <input
         type='text'
         placeholder='Nombre de la Rutina'

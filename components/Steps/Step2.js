@@ -9,21 +9,20 @@ const Step2 = ({
   handleSelectDay,
 }) => {
   return (
-    <div>
+    <div className={styles.stepContainer}>
       <h2>Selecciones los días de entrenamiento</h2>
-      <div>
+      <div className={styles.days}>
         {days.map((dayObj, index) => (
           <div key={index}>
+            <label htmlFor={dayObj.day}>{dayObj.day}</label>
             <input
               type='checkbox'
               id={dayObj.day}
               name={dayObj.day}
               onChange={(e) => handleSelectDay(dayObj.day, e.target.checked)}
               checked={data.days && data.days.includes(dayObj.day)}
-              className={styles.inputField}
+              className={styles.checkboxField}
             />
-
-            <label htmlFor={dayObj.day}>{dayObj.day}</label>
           </div>
         ))}
       </div>

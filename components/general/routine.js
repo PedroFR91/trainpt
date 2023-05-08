@@ -67,31 +67,31 @@ const routine = () => {
   const [days, setDays] = useState([
     {
       id: '0',
-      day: 'Día 1',
+      day: 'L',
     },
     {
       id: '1',
-      day: 'Día 2',
+      day: 'M',
     },
     {
       id: '2',
-      day: 'Día 3',
+      day: 'X',
     },
     {
       id: '3',
-      day: 'Día 4',
+      day: 'J',
     },
     {
       id: '4',
-      day: 'Día 5',
+      day: 'V',
     },
     {
       id: '5',
-      day: 'Día 6',
+      day: 'S',
     },
     {
       id: '6',
-      day: 'Día 7',
+      day: 'D',
     },
   ]);
   const [sel, setSel] = useState([]);

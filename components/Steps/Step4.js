@@ -17,7 +17,7 @@ const Step4 = ({
   };
 
   return (
-    <div>
+    <div className={styles.stepContainer}>
       <h2>Añadir ejercicios</h2>
       <label htmlFor='daySelect'>Seleccionar día de entrenamiento:</label>
       <select
