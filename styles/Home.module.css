@@ -18,10 +18,67 @@
 }
 
 .left {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.1);
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: #212121;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0 20px;
+}
+.left div {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+.left div form {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+.left div form div {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ffffff;
+  padding: 0.5rem;
+  border-radius: 10px;
+  box-shadow: 1px 1px 1px 1px #f69d2188;
+}
+.left div form div:hover {
+  box-shadow: 1px 1px 1px 1px #ffffff;
+  color: #212121;
+  background-color: #ffffff;
+}
+.left div form input,
+.left div form button,
+.toggleButton div {
+  margin: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+}
+.toggleButton {
+  position: relative;
+}
+
+.toggleButton::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #f69d21;
+  transition: width 1.5s;
+}
+
+.toggleButton:hover::before {
+  width: 100%;
 }
 
 .right {
@@ -32,29 +89,4 @@
   filter: drop-shadow(0 0 10px #00ffff);
   animation: neonGlow 5s infinite;
   animation-direction: alternate;
-}
-
-@keyframes neonGlow {
-  from {
-    filter: drop-shadow(0 0 10px #00ffff);
-  }
-  to {
-    filter: drop-shadow(0 0 20px #00ffff);
-  }
-}
-
-.toggleButton {
-  position: absolute;
-  bottom: 20px;
-}
-
-.toggleButton button {
-  width: 200px;
-  height: 30px;
-  border: none;
-  background-color: var(--dark-blue);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 5px;
 }
