@@ -43,8 +43,8 @@ const TrainerHeader = () => {
         <Image
           src='/logo.png'
           priority
-          width={300}
-          height={100}
+          width={210}
+          height={70}
           alt='Logo de Empresa. TrainPT'
           className={styles.logo}
         />
@@ -57,7 +57,7 @@ const TrainerHeader = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <FiMenu />
+              <FiMenu size={50} />
             </motion.span>
           )}
         </AnimatePresence>
@@ -68,7 +68,7 @@ const TrainerHeader = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <FiX />
+              <FiX size={50} />
             </motion.span>
           )}
         </AnimatePresence>
@@ -85,37 +85,37 @@ const TrainerHeader = () => {
               transition={{ duration: 0.3 }}
             >
               <Link passHref href={'./home'}>
-                <span className={styles.menuItem}>
-                  <FaHome /> Inicio
-                </span>
+                <div className={styles.menuItem}>
+                  <FaHome size={50} /> Inicio
+                </div>
               </Link>
               <Link passHref href={'./profile'}>
-                <span className={styles.menuItem}>
-                  <FaUser /> Perfil
-                </span>
+                <div className={styles.menuItem}>
+                  <FaUser size={50} /> Perfil
+                </div>
               </Link>
               <Link passHref href={'./routines'}>
-                <span className={styles.menuItem}>
-                  <FaDumbbell /> Rutinas
-                </span>
+                <div className={styles.menuItem}>
+                  <FaDumbbell size={50} /> Rutinas
+                </div>
               </Link>
               <Link passHref href={'./forms'}>
-                <span className={styles.menuItem}>
-                  <FaClipboard /> Formularios
-                </span>
+                <div className={styles.menuItem}>
+                  <FaClipboard size={50} /> Formularios
+                </div>
               </Link>
               <Link passHref href={'./files'}>
-                <span className={styles.menuItem}>
-                  <FaFolder /> Archivos
-                </span>
+                <div className={styles.menuItem}>
+                  <FaFolder size={50} /> Archivos
+                </div>
               </Link>
               {isLogged && (
                 <div onClick={exit}>
                   <Link passHref href={'../'}>
-                    <span className={styles.menuItem}>
-                      <FiLogOut />
+                    <div className={styles.menuItem}>
+                      <FiLogOut size={50} />
                       Cerrar Sesión
-                    </span>
+                    </div>
                   </Link>
                 </div>
               )}

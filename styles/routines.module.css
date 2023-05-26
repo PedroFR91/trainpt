@@ -4,181 +4,48 @@
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
-  align-items: center;
-  margin-top: 18vh;
+  align-items: flex-start;
 }
-
-.listRoutines {
-  background-color: white;
-  width: 90%;
-  min-height: 30%;
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 3rem;
-  padding: 1rem;
-  font-family: 'Roboto';
-}
-.routine {
-  border: 1px solid black;
-  width: 300px;
-  height: fit-content;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
-  padding: 2rem;
-}
-.routine div {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
-}
-.routine div p {
-  display: flex;
-  justify-content: space-between;
-}
-
-.exer {
-  margin: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid black;
-}
-.exer div {
-  border: 1px solid black;
+.editor {
   width: 100%;
-}
-.share {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 250px;
-  background: var(--light-blue);
-  min-height: 30vh;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-}
-.share div {
-  width: 80%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--my-blue);
-  color: #ffffff;
-  font-family: 'Roboto';
-  padding: 0.3rem;
-  border-radius: 5px;
-}
-.share div:hover {
-  background: #1a4bac;
-  cursor: pointer;
-}
-.share div div {
-  width: 50px;
-  height: 50px;
-}
-.share div div img {
-  width: 100%;
-  border-radius: 50%;
-}
-
-.iconContainer {
-  position: absolute;
-  top: 10vh;
-  left: 50%;
-  transform: translateX(-50%);
+  min-height: 100vh;
+  margin-top: 15vh;
   display: flex;
   justify-content: space-around;
-  width: 50%;
-  height: 10vh;
-  padding: 1rem;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
 }
-.mySteps {
-  position: absolute;
-  top: 25vh;
-  left: 50%;
-  transform: translateX(-50%);
+.left {
+  width: 60%;
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 50%;
-  min-height: 60vh;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-  margin: 0 auto;
+  justify-content: space-around;
 }
-.stepContainer {
+.right {
+  width: 25%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: space-around;
+}
+.routine,
+.myddbbitem {
+  width: 200px;
+  height: 200px;
+  border: 3px solid #ffffff80;
+  border-radius: 10px;
+  margin: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  min-height: 60vh;
+  color: #ffffff;
 }
-.days {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.routine:hover,
+.myddbbitem:hover {
+  font-size: 1.3rem;
+  color: #212121;
+  cursor: pointer;
+  border-color: #f69d21;
+  background-color: #f69d21dd;
 }
-.checkboxField {
-  width: 20px;
-  height: 20px;
-}
-.days div {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.stepContainer button {
-  width: 100%;
-  height: 40px;
-  border: 1px solid #000000;
-  border-radius: 5px;
-}
-.column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.column h2,
-.column input {
-  margin-bottom: 1rem;
-}
-.activeIcon {
-  color: blue;
-}
-
-.inactiveIcon {
-  color: gray;
-}
-
-.inputField {
-  min-width: 250px;
-  height: 40px;
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
-}
-
-.formWrapper {
-  position: absolute;
-}
-.listExercises {
-  width: 50%;
-  height: 70vh;
-  display: flex;
-  flex-direction: column;
-  overflow: scroll;
-}
-.myddbb {
-  border: 1px solid orange;
-  margin-bottom: 1rem;
+.myddbbitem {
+  height: 50px;
 }

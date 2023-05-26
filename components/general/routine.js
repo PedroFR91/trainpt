@@ -9,55 +9,25 @@ import {
 } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react';
 
-import Step1 from '../Steps/Step1';
-import Step2 from '../Steps/Step2';
-import Step3 from '../Steps/Step3';
-import Step4 from '../Steps/Step4';
 import { db } from '../../firebase.config';
 import styles from '../../styles/routines.module.css';
 import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
-import RoutineDetails from './RoutineDetails';
+
 import { FaRunning, FaCalendarDay, FaDumbbell, FaList } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useAnimation, AnimatePresence } from 'framer-motion';
 
 const routine = () => {
   const [data, setData] = useState([]);
+  const [routines, setRoutines] = useState([]);
+  const [trainings, setTrainings] = useState([]);
   const [exercises, setExercises] = useState([]);
-  const [routine, setRoutine] = useState([]);
   const [visible, setVisible] = useState(false);
   const { myData, myUid } = useContext(AuthContext);
   const [showClient, setShowClient] = useState(false);
-  const [step, setStep] = useState(1);
+
   const [currentRoutine, setCurrentRoutine] = useState(null);
-
-  const animation = useAnimation();
-
-  useEffect(() => {
-    const stepsVariants = {
-      step1: { x: 0, opacity: 1 },
-      step2: { x: 100, opacity: 0 },
-      step3: { x: 200, opacity: 0 },
-      step4: { x: 300, opacity: 0 },
-    };
-
-    const transition = {
-      type: 'spring',
-      stiffness: 200,
-      damping: 20,
-    };
-
-    animation.start({ ...stepsVariants[`step${step}`], transition });
-  }, [step]);
-
-  const nextStep = () => {
-    setStep(step + 1);
-  };
-
-  const prevStep = () => {
-    setStep(step - 1);
-  };
 
   const auth = getAuth();
   const user = auth.currentUser;
@@ -125,29 +95,66 @@ const routine = () => {
   };
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'routines'),
+    const unsubRoutines = onSnapshot(collection(db, 'routines'), (snapShot) => {
+      let list = [];
+      snapShot.docs.forEach((doc) => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
+      setRoutines(list);
+    });
+
+    const unsubTrainings = onSnapshot(
+      collection(db, 'trainings'),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
           list.push({ id: doc.id, ...doc.data() });
         });
-        setRoutine(list);
-      },
-      (error) => {
-        console.log(error);
+        setTrainings(list);
       }
     );
+
+    const unsubExercises = onSnapshot(
+      collection(db, 'exercises'),
+      (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setExercises(list);
+      }
+    );
+
     return () => {
-      unsub();
+      unsubRoutines();
+      unsubTrainings();
+      unsubExercises();
     };
   }, []);
 
+  // Para crear rutinas
   const handleCreate = async (e) => {
     try {
       await setDoc(doc(db, 'routines', data.desroutine), {
         ...data,
         routineid: user.uid,
+        timeStamp: serverTimestamp(),
+        trainings: selectedTrainings.map((training) => training.id), // Agrega las IDs de los entrenamientos seleccionados
+        exercises: selectedExercises.map((exercise) => exercise.id), // Agrega las IDs de los ejercicios seleccionados
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    setInputFields([{ exercise: '', series: '', reps: '' }]);
+  };
+
+  // Para crear entrenamientos
+  const handleCreateTraining = async (e) => {
+    try {
+      await setDoc(doc(db, 'trainings', data.nametrain), {
+        muscles: data.muscles,
+        description: data.destrain,
+        trainingid: data.nametrain,
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -156,12 +163,14 @@ const routine = () => {
     setInputFields([{ exercise: '', series: '', reps: '' }]);
   };
 
-  const handleCreateTraining = async (e) => {
+  // Para crear ejercicios
+  const handleCreateExercise = async (e) => {
     try {
-      await setDoc(doc(db, 'training', data.nametrain), {
-        muscles: data.muscles,
-        description: data.destrain,
-        trainingid: data.nametrain,
+      await setDoc(doc(db, 'exercises', data.nameexercise), {
+        exercise: data.exercise,
+        series: data.series,
+        reps: data.reps,
+        exerciseid: data.nameexercise,
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -204,138 +213,72 @@ const routine = () => {
   };
   return (
     <div className={styles.routinesContainer}>
-      <div className={styles.iconContainer}>
-        <FaRunning
-          className={step === 1 ? styles.activeIcon : styles.inactiveIcon}
-        />
-        <FaCalendarDay
-          className={step === 2 ? styles.activeIcon : styles.inactiveIcon}
-        />
-        <FaDumbbell
-          className={step === 3 ? styles.activeIcon : styles.inactiveIcon}
-        />
-        <FaList
-          className={step === 4 ? styles.activeIcon : styles.inactiveIcon}
-        />
+      <div className={styles.editor}>
+        <div className={styles.left}>
+          <div className={styles.routine}>
+            <FaCalendarDay size={50} />
+            <p>Crear Rutina</p>
+          </div>
+          <div className={styles.routine}>
+            <FaRunning size={50} />
+            <p>Crear Entrenamiento</p>
+          </div>
+          <div className={styles.routine}>
+            <FaDumbbell size={50} />
+            <p>Crear Ejercicio</p>
+          </div>
+        </div>
+        <div className={styles.right}>
+          <div className={styles.myddbb}>
+            <div className={styles.myddbbitem}>Mis rutinas</div>
+            <div className={styles.myddbbitem}>Mis entrenamientos</div>
+            <div className={styles.myddbbitem}>Mis ejercicios</div>
+          </div>
+        </div>
       </div>
-      <div className={styles.mySteps}>
-        <AnimatePresence mode='wait'>
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Step1 setData={setData} data={data} nextStep={nextStep} />
-            </motion.div>
-          )}
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Step2
-                data={data}
-                days={days}
-                handleSelectDay={handleSelectDay}
-                nextStep={nextStep}
-                prevStep={prevStep}
-              />
-            </motion.div>
-          )}
-          {step === 3 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Step3
-                data={data}
-                setData={setData}
-                inputFields={inputFields}
-                setInputFields={setInputFields}
-                handleChange={handleChange}
-                addTraining={addTraining}
-                nextStep={nextStep}
-                prevStep={prevStep}
-              />
-            </motion.div>
-          )}
-          {step === 4 && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Step4
-                  data={data}
-                  inputFields={inputFields}
-                  setInputFields={setInputFields}
-                  handleChange={handleChange}
-                  addExercises={addExercises}
-                  handleCreate={handleCreate}
-                  prevStep={prevStep}
-                />
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
+      <div className={styles.listRoutines}>
+        {routines
+          .filter((routine) => routine.routineid === myUid)
+          .map((routine) => {
+            // Busca los entrenamientos y ejercicios para esta rutina
+            const routineTrainings = trainings.filter((training) =>
+              routine.trainings.includes(training.id)
+            );
+            const routineExercises = exercises.filter((exercise) =>
+              routine.exercises.includes(exercise.id)
+            );
 
-      <div className={styles.listRoutines}>
-        {visible && <RoutineDetails routineId={routineId} />}
-      </div>
-      <div className={styles.listRoutines}>
-        {routine
-          .filter((data) => data.routineid === myUid)
-          .map((routine) => (
-            <div key={routine.id} className={styles.routine}>
-              <div>
-                <p>
-                  <span>Nombre Rutina</span>
-                  <span>{routine.nameroutine}</span>
-                </p>
-                <p>
-                  <span>Descripción Rutina</span>
-                  <span>{routine.desroutine}</span>
-                </p>
-                <p>
-                  <span>Músculos</span>
-                  <span>{routine.muscles}</span>
-                </p>
-                <p>
-                  <span>Días de entrenamiento</span>
-                  <span>{routine.days}</span>
-                </p>
+            return (
+              <div key={routine.id} className={styles.routine}>
+                <div>
+                  <p>
+                    <span>Nombre Rutina</span>
+                    <span>{routine.nameroutine}</span>
+                  </p>
+                  <p>
+                    <span>Descripción Rutina</span>
+                    <span>{routine.desroutine}</span>
+                  </p>
+                  <p>
+                    <span>Entrenamientos</span>
+                    <span>
+                      {routineTrainings.map((training) => (
+                        <p key={training.id}>{training.name}</p>
+                      ))}
+                    </span>
+                  </p>
+                  <p>
+                    <span>Ejercicios</span>
+                    <span>
+                      {routineExercises.map((exercise) => (
+                        <p key={exercise.id}>{exercise.name}</p>
+                      ))}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <div>
-                {routine.mydata &&
-                  routine.mydata.map((e, i) => (
-                    <div key={i} className={styles.exer}>
-                      <div>
-                        <p>Ejercicio:{e.exercise}</p>
-                      </div>
-                      <div>
-                        <p>Repeticiones:{e.reps}</p>
-                        <p>Series:{e.series}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-              <div>
-                <button onClick={() => handleDelete(routine.id)}>Borrar</button>
-                <button onClick={() => asignRoutine(routine.id)}>
-                  Asignar Rutina
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
 
       {showClient && (

@@ -1,15 +1,11 @@
 .containerProfile {
   width: 100%;
   min-height: 100vh;
-  background-image: url('../public/background.jpg');
-  background-size: cover;
-  background-attachment: fixed;
-
-  z-index: -10;
+  background-color: #212121;
 }
 .layout {
   width: 100%;
-  height: 100%;
+
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;

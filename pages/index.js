@@ -86,6 +86,23 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
+      <video
+        src='/background.mp4'
+        autoPlay
+        loop
+        muted
+        style={{
+          position: 'absolute',
+          width: '100%',
+          left: '50%',
+          top: '50%',
+          height: '100%',
+          objectFit: 'cover',
+          transform: 'translate(-50%, -50%)',
+          zIndex: '-1',
+        }}
+      />
+
       <div className={styles.left}>
         {toggleView ? (
           <div>
@@ -100,7 +117,7 @@ export default function Home() {
                 placeholder='Contraseña'
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <div type='submit'>Crear cuenta</div>
+              <button type='submit'>Crear cuenta</button>
               <div onClick={signInWithGoogle}>
                 {' '}
                 <Image
@@ -126,7 +143,7 @@ export default function Home() {
                 placeholder='Contraseña'
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <div type='submit'>Acceder</div>
+              <button type='submit'>Acceder</button>
               <div onClick={signInWithGoogle}>
                 <Image
                   src={'/google.png'}
