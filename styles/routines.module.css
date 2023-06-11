@@ -5,6 +5,8 @@
   flex-direction: column;
   justify-content: space-evenly;
   align-items: flex-start;
+  background-color: #212121;
+  padding-top: 20vh;
 }
 .editor {
   width: 100%;
@@ -26,7 +28,8 @@
   justify-content: space-around;
 }
 .routine,
-.myddbbitem {
+.myddbbitem,
+.modalContent {
   width: 200px;
   height: 200px;
   border: 3px solid #ffffff80;
@@ -39,7 +42,8 @@
   color: #ffffff;
 }
 .routine:hover,
-.myddbbitem:hover {
+.myddbbitem:hover,
+.modalContent:hover {
   font-size: 1.3rem;
   color: #212121;
   cursor: pointer;
@@ -48,4 +52,95 @@
 }
 .myddbbitem {
   height: 50px;
+}
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  /* opcional para darle un fondo oscuro al resto de la página */
+  background: rgba(0, 0, 0, 0.9);
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.modalContent {
+  width: 40%;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.modalContent form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+.modalContent form p {
+  font-size: 1.5rem;
+  color: #ffffff;
+  width: 90%;
+  justify-content: space-between;
+}
+.closebutton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: 1px solid #ffffff;
+  padding: 0.5rem 1rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  cursor: pointer;
+  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.9);
+  margin-bottom: 1rem;
+}
+.create {
+  margin: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  color: #ffffff;
+  cursor: pointer;
+  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+.myweek {
+  width: 100%;
+  min-height: 20vh;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: flex-start;
+}
+.myday {
+  width: 5rem;
+  height: 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid white;
+  border-radius: 10px;
+  margin: 0.5rem 1rem;
+}
+.myday:hover {
+  background-color: #212121;
+  color: #ffffff;
+  border: none;
+  box-shadow: 2px 2px 2px 2px black;
+  cursor: pointer;
+}
+.myday input {
+  width: 2rem;
+  height: 2rem;
 }

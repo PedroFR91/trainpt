@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styles from '../../styles/Home.module.css';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import Routine from '../../components/general/routine';
+import Chat from '../../components/chat/chat';
 const routines = () => {
   const [routines, setRoutines] = useState([]);
   const [trainings, setTrainings] = useState([]);
@@ -12,6 +13,7 @@ const routines = () => {
     <div className={styles.container}>
       <TrainerHeader />
       <Routine />
+      <Chat />
     </div>
   );
 };
