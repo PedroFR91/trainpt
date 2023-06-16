@@ -6,6 +6,7 @@ import {
   collection,
   deleteDoc,
   updateDoc,
+  addDoc,
 } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -19,6 +20,7 @@ import { FaRunning, FaCalendarDay, FaDumbbell, FaList } from 'react-icons/fa';
 const routine = () => {
   const [data, setData] = useState(['']);
   const [exercises, setExercises] = useState([]);
+  const [newexercise, setNewExercise] = useState([]);
   const [trainings, setTrainings] = useState([]);
   const [routines, setRoutines] = useState([]);
   const [visible, setVisible] = useState(false);
@@ -28,16 +30,20 @@ const routine = () => {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showRoutineModal, setShowRoutineModal] = useState(false);
-
+  const [routinesList, setRoutinesList] = useState(false);
+  const [trainingsList, setTrainingsList] = useState(false);
+  const [exercisesList, setExercisesList] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [selectedTrainings, setSelectedTrainings] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
+  const [trainingData, setTrainingData] = useState({
+    name: '',
+    description: '',
+    exercises: [],
+  });
 
   const auth = getAuth();
   const user = auth.currentUser;
-  const [inputFields, setInputFields] = useState([
-    { exercise: '', series: '', reps: '' },
-  ]);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -93,9 +99,9 @@ const routine = () => {
     e.preventDefault();
     console.log(data);
     try {
-      await setDoc(doc(db, 'routines', data.desroutine), {
+      await addDoc(collection(db, 'routines'), {
         ...data,
-        routineid: user.uid,
+        trainerid: user.uid,
         timeStamp: serverTimestamp(),
         trainings: selectedTrainings,
         days: selectedDays,
@@ -111,14 +117,14 @@ const routine = () => {
   const handleCreateTraining = async (e) => {
     e.preventDefault();
     try {
-      await setDoc(doc(db, 'trainings', data.nametrain), {
-        muscles: data.muscles,
-        description: data.destrain,
-        trainingid: data.nametrain,
+      await addDoc(collection(db, 'trainings'), {
+        name: trainingData.name,
+        description: trainingData.description,
         timeStamp: serverTimestamp(),
-        exercises: selectedExercises,
+        exercises: trainingData.exercises,
       });
       setSelectedExercises([]);
+      console.log(trainingData);
     } catch (error) {
       console.log(error);
     }
@@ -126,18 +132,18 @@ const routine = () => {
 
   // Para crear ejercicios
   const handleCreateExercise = async (e) => {
+    console.log(newexercise);
     try {
-      await setDoc(doc(db, 'exercises', data.nameexercise), {
-        exercise: data.exercise,
-        series: data.series,
-        reps: data.reps,
-        exerciseid: data.nameexercise,
+      await addDoc(collection(db, 'exercises'), {
+        exercise_name: newexercise.exercise_name,
+        material: newexercise.material,
+        comments: newexercise.comments,
+
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
       console.log(error);
     }
-    setInputFields([{ exercise: '', series: '', reps: '' }]);
   };
 
   const handleAssignExercise = async (e, trainingId) => {
@@ -212,9 +218,20 @@ const routine = () => {
     // Restablece cualquier estado relacionado con el modal de entrenamiento aquí
   };
 
-  const handleAddExerciseToTraining = (exerciseId) => {
-    setSelectedExercises([...selectedExercises, exerciseId]);
+  const handleAddExerciseToTraining = (exerciseId, checked) => {
+    if (checked) {
+      setTrainingData((prevData) => ({
+        ...prevData,
+        exercises: [...prevData.exercises, exerciseId],
+      }));
+    } else {
+      setTrainingData((prevData) => ({
+        ...prevData,
+        exercises: prevData.exercises.filter((id) => id !== exerciseId),
+      }));
+    }
   };
+
   const handleShowRoutineModal = () => {
     setShowRoutineModal(true);
   };
@@ -237,11 +254,25 @@ const routine = () => {
       setSelectedDays([...selectedDays, day]);
     }
   };
-
+  const viewRoutinesList = () => {
+    setRoutinesList(true);
+    setTrainingsList(false);
+    setExercisesList(false);
+  };
+  const viewTrainingList = () => {
+    setRoutinesList(false);
+    setTrainingsList(true);
+    setExercisesList(false);
+  };
+  const viewExercisesList = () => {
+    setRoutinesList(false);
+    setTrainingsList(false);
+    setExercisesList(true);
+  };
   return (
     <div className={styles.routinesContainer}>
       <div className={styles.editor}>
-        <div className={styles.left}>
+        <div className={styles.top}>
           <div onClick={handleShowRoutineModal} className={styles.routine}>
             <FaCalendarDay size={50} />
             <p>Crear Rutina</p>
@@ -255,15 +286,62 @@ const routine = () => {
             <p>Crear Ejercicio</p>
           </div>
         </div>
-        <div className={styles.right}>
+        <div className={styles.bottom}>
+          <div className={styles.selectmenu}>
+            <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
+            <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
+            <div onClick={viewExercisesList}>Ver Mis Ejercicios</div>
+          </div>
           <div className={styles.myddbb}>
-            <div className={styles.myddbbitem}>Mis rutinas</div>
-            <div className={styles.myddbbitem}>Mis entrenamientos</div>
-            <div className={styles.myddbbitem}>Mis ejercicios</div>
+            {routinesList && (
+              <div className={styles.myddbbitem}>
+                <h3>Mis Rutinas</h3>
+                {routines.map((routine) => (
+                  <button
+                    key={routine.id}
+                    onClick={(e) => handleAssignTraining(e, routine.id)}
+                  >
+                    Asignar Rutina
+                  </button>
+                ))}
+              </div>
+            )}
+            {trainingsList && (
+              <div className={styles.myddbbitem}>
+                <h3>Mis entrenamientos</h3>
+
+                {trainings.map((training) => (
+                  <button
+                    key={training.id}
+                    onClick={(e) => handleAssignTraining(e, training.id)}
+                  >
+                    Asignar Entrenamiento
+                  </button>
+                ))}
+              </div>
+            )}
+            {exercisesList && (
+              <div className={styles.myddbbitem}>
+                <h3>Mis ejercicios</h3>
+                <table>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Material usado</th>
+                    <th>Comentarios</th>
+                  </tr>
+                  {exercises.map((exercise) => (
+                    <tr key={exercise} className={styles.exercise}>
+                      <td>{exercise.exercise_name}</td>
+                      <td>{exercise.material}</td>
+                      <td>{exercise.comments}</td>
+                    </tr>
+                  ))}
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
-
       {showExerciseModal && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
@@ -273,30 +351,43 @@ const routine = () => {
                 <p>Ejercicio:</p>
                 <input
                   type='text'
-                  value={data.exercise}
+                  value={newexercise.exercise_name}
                   onChange={(e) =>
-                    setData({ ...data, exercise: e.target.value })
+                    setNewExercise({
+                      ...newexercise,
+                      exercise_name: e.target.value,
+                    })
                   }
                 />
               </div>
               <div>
-                <p>Repeticiones:</p>
+                <p>Material necesario:</p>
 
                 <input
                   type='text'
-                  value={data.reps}
-                  onChange={(e) => setData({ ...data, reps: e.target.value })}
+                  value={newexercise.material}
+                  onChange={(e) =>
+                    setNewExercise({
+                      ...newexercise,
+                      material: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
-                <p>Series:</p>
-                <input
+                <p>Comentarios:</p>
+                <textarea
                   type='text'
-                  value={data.series}
-                  onChange={(e) => setData({ ...data, series: e.target.value })}
+                  value={newexercise.comments}
+                  onChange={(e) =>
+                    setNewExercise({
+                      ...newexercise,
+                      comments: e.target.value,
+                    })
+                  }
                 />
               </div>
-              <div className={styles.create} type='submit'>
+              <div className={styles.create} onClick={handleCreateExercise}>
                 Crear Ejercicio
               </div>
             </form>
@@ -317,9 +408,9 @@ const routine = () => {
                 <p>Entrenamiento:</p>
                 <input
                   type='text'
-                  value={data.nametrain}
+                  value={trainingData.name}
                   onChange={(e) =>
-                    setData({ ...data, nametrain: e.target.value })
+                    setTrainingData({ ...trainingData, name: e.target.value })
                   }
                 />
               </div>
@@ -328,27 +419,17 @@ const routine = () => {
 
                 <input
                   type='text'
-                  value={data.destrain}
+                  value={trainingData.description}
                   onChange={(e) =>
-                    setData({ ...data, destrain: e.target.value })
+                    setTrainingData({
+                      ...trainingData,
+                      description: e.target.value,
+                    })
                   }
                 />
               </div>
-              <h3>Ejercicios</h3>
-              {exercises.map((exercise) => (
-                <div key={exercise.id}>
-                  <input
-                    type='checkbox'
-                    id={exercise.id}
-                    value={exercise.id}
-                    onChange={(e) =>
-                      handleAddExerciseToTraining(e.target.value)
-                    }
-                  />
-                  <label htmlFor={exercise.id}>{exercise.name}</label>
-                </div>
-              ))}
-              <div className={styles.create} type='submit'>
+
+              <div className={styles.create} onClick={handleCreateTraining}>
                 Crear Entrenamiento
               </div>
             </form>
@@ -358,6 +439,20 @@ const routine = () => {
             >
               X
             </div>
+            <h3>Mis ejercicios</h3>
+            {exercises.map((exercise) => (
+              <div key={exercise.exercise_name}>
+                <p>{exercise.exercise_name}</p>
+                <p>{exercise.material}</p>
+                <p>{exercise.comments}</p>
+                <button
+                  key={exercise.id}
+                  onClick={(e) => handleAssignExercise(e, exercise.id)}
+                >
+                  Asignar Ejercicio
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -414,31 +509,6 @@ const routine = () => {
           </div>
         </div>
       )}
-
-      {exercises.map((exercise) => (
-        <button
-          key={exercise.id}
-          onClick={(e) => handleAssignExercise(e, exercise.id)}
-        >
-          Asignar Ejercicio
-        </button>
-      ))}
-      {trainings.map((training) => (
-        <button
-          key={training.id}
-          onClick={(e) => handleAssignTraining(e, training.id)}
-        >
-          Asignar Entrenamiento
-        </button>
-      ))}
-      {routines.map((routine) => (
-        <button
-          key={routine.id}
-          onClick={(e) => handleAssignTraining(e, routine.id)}
-        >
-          Asignar Rutina
-        </button>
-      ))}
 
       {showClient && (
         <div className={styles.share}>

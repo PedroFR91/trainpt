@@ -117,6 +117,13 @@ export default function Home() {
                 placeholder='Contraseña'
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <select
+                value={selected}
+                onChange={(e) => setSelected(e.target.value)}
+              >
+                <option value='trainer'>Entrenador</option>
+                <option value='client'>Cliente</option>
+              </select>
               <button type='submit'>Crear cuenta</button>
               <div onClick={signInWithGoogle}>
                 {' '}

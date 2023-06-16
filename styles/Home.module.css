@@ -52,6 +52,7 @@
   cursor: pointer;
 }
 .left div form input,
+.left div form select,
 .left div form button,
 .toggleButton div {
   margin: 0.5rem;
