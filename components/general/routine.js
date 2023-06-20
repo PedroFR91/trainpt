@@ -15,7 +15,15 @@ import styles from '../../styles/routines.module.css';
 import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
 
-import { FaRunning, FaCalendarDay, FaDumbbell, FaList } from 'react-icons/fa';
+import {
+  FaRunning,
+  FaCalendarDay,
+  FaDumbbell,
+  FaList,
+  FaShareAlt,
+  FaRegEdit,
+  FaRegTrashAlt,
+} from 'react-icons/fa';
 
 const routine = () => {
   const [data, setData] = useState(['']);
@@ -40,6 +48,15 @@ const routine = () => {
     name: '',
     description: '',
     exercises: [],
+  });
+  const [message, setMessage] = useState(false);
+  const [updateExerciseId, setUpdateExerciseId] = useState(null);
+  const [trainingExercises, setTrainingExercises] = useState([]);
+  const [currentTraining, setCurrentTraining] = useState([]);
+  const [tExercise, setTExercise] = useState({
+    name: '',
+    repetitions: '',
+    sets: '',
   });
 
   const auth = getAuth();
@@ -94,6 +111,21 @@ const routine = () => {
       unsubTrainings();
     };
   }, []);
+  useEffect(() => {
+    if (updateExerciseId) {
+      const exerciseToUpdate = exercises.find(
+        (exercise) => exercise.id === updateExerciseId
+      );
+      setNewExercise(exerciseToUpdate);
+    } else {
+      setNewExercise({
+        exercise_name: '',
+        material: '',
+        comments: '',
+        // etc para todos los campos en el formulario
+      });
+    }
+  }, [updateExerciseId, exercises]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -131,19 +163,77 @@ const routine = () => {
   };
 
   // Para crear ejercicios
-  const handleCreateExercise = async (e) => {
-    console.log(newexercise);
+  const handleCreateExercise = async (exerciseData) => {
+    console.log(exerciseData);
     try {
       await addDoc(collection(db, 'exercises'), {
-        exercise_name: newexercise.exercise_name,
-        material: newexercise.material,
-        comments: newexercise.comments,
-
+        ...exerciseData,
         timeStamp: serverTimestamp(),
       });
+      setMessage(true);
+      setTimeout(() => {
+        setMessage(false);
+      }, 3000);
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleUpdateExercise = async (id, updatedExercise) => {
+    try {
+      const docRef = doc(db, 'exercises', id);
+      await updateDoc(docRef, updatedExercise);
+      console.log('Document updated');
+    } catch (error) {
+      console.error('Error updating document: ', error);
+    }
+  };
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    const exerciseData = {
+      exercise_name: newexercise.exercise_name,
+      material: newexercise.material,
+      comments: newexercise.comments,
+    };
+
+    if (updateExerciseId) {
+      // Estamos en modo "Actualizar"
+      await handleUpdateExercise(updateExerciseId, exerciseData);
+      setUpdateExerciseId(null); // resetear el modo a "Crear"
+    } else {
+      // Estamos en modo "Crear"
+      await handleCreateExercise(exerciseData);
+    }
+
+    // Limpiar el formulario (según tu implementación actual)
+    setNewExercise({
+      exercise_name: '',
+      material: '',
+      comments: '',
+    });
+  };
+
+  const handleDeleteExercise = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'exercises', id));
+      console.log('Document deleted');
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+    }
+  };
+  const handleAddExercise = () => {
+    setCurrentTraining([...currentTraining, tExercise]);
+    setTExercise({
+      name: '',
+      repetitions: '',
+      sets: '',
+    });
+  };
+  const handleRemoveExercise = (index) => {
+    const newTraining = [...currentTraining];
+    newTraining.splice(index, 1);
+    setCurrentTraining(newTraining);
   };
 
   const handleAssignExercise = async (e, trainingId) => {
@@ -285,13 +375,13 @@ const routine = () => {
             <FaDumbbell size={50} />
             <p>Crear Ejercicio</p>
           </div>
-        </div>
-        <div className={styles.bottom}>
           <div className={styles.selectmenu}>
             <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
             <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
             <div onClick={viewExercisesList}>Ver Mis Ejercicios</div>
           </div>
+        </div>
+        <div className={styles.bottom}>
           <div className={styles.myddbb}>
             {routinesList && (
               <div className={styles.myddbbitem}>
@@ -326,14 +416,28 @@ const routine = () => {
                 <table>
                   <tr>
                     <th>Nombre</th>
-                    <th>Material usado</th>
+                    <th>Equipamiento</th>
                     <th>Comentarios</th>
+                    <th>Opciones</th>
                   </tr>
                   {exercises.map((exercise) => (
                     <tr key={exercise} className={styles.exercise}>
                       <td>{exercise.exercise_name}</td>
                       <td>{exercise.material}</td>
                       <td>{exercise.comments}</td>
+                      <td>
+                        <FaRegEdit
+                          size={20}
+                          onClick={() => {
+                            setUpdateExerciseId(exercise.id);
+                            setShowExerciseModal(true);
+                          }}
+                        />
+                        <FaRegTrashAlt
+                          size={20}
+                          onClick={() => handleDeleteExercise(exercise.id)}
+                        />
+                      </td>
                     </tr>
                   ))}
                 </table>
@@ -346,7 +450,7 @@ const routine = () => {
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <FaDumbbell size={50} />
-            <form onSubmit={handleCreateExercise}>
+            <form onSubmit={handleFormSubmit}>
               <div>
                 <p>Ejercicio:</p>
                 <input
@@ -362,7 +466,6 @@ const routine = () => {
               </div>
               <div>
                 <p>Material necesario:</p>
-
                 <input
                   type='text'
                   value={newexercise.material}
@@ -387,9 +490,9 @@ const routine = () => {
                   }
                 />
               </div>
-              <div className={styles.create} onClick={handleCreateExercise}>
-                Crear Ejercicio
-              </div>
+              <button type='submit' className={styles.create}>
+                {updateExerciseId ? 'Actualizar Ejercicio' : 'Crear Ejercicio'}
+              </button>
             </form>
             <div
               className={styles.closebutton}
@@ -397,6 +500,9 @@ const routine = () => {
             >
               X
             </div>
+            {message && (
+              <div className={styles.message}>Ejercicio creado con éxito</div>
+            )}
           </div>
         </div>
       )}
@@ -428,6 +534,40 @@ const routine = () => {
                   }
                 />
               </div>
+              <div>
+                <p>Ejercicio:</p>
+                <input
+                  type='text'
+                  value={tExercise.name}
+                  onChange={(e) =>
+                    setTExercise({ ...tExercise, name: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <p>Repeticiones:</p>
+                <input
+                  type='text'
+                  value={tExercise.repetitions}
+                  onChange={(e) =>
+                    setTExercise({
+                      ...tExercise,
+                      repetitions: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <p>Series:</p>
+                <input
+                  type='text'
+                  value={tExercise.sets}
+                  onChange={(e) =>
+                    setTExercise({ ...tExercise, sets: e.target.value })
+                  }
+                />
+              </div>
+              <button onClick={handleAddExercise}>Añadir Ejercicio</button>
 
               <div className={styles.create} onClick={handleCreateTraining}>
                 Crear Entrenamiento
@@ -439,20 +579,47 @@ const routine = () => {
             >
               X
             </div>
-            <h3>Mis ejercicios</h3>
-            {exercises.map((exercise) => (
-              <div key={exercise.exercise_name}>
-                <p>{exercise.exercise_name}</p>
-                <p>{exercise.material}</p>
-                <p>{exercise.comments}</p>
-                <button
-                  key={exercise.id}
-                  onClick={(e) => handleAssignExercise(e, exercise.id)}
-                >
-                  Asignar Ejercicio
-                </button>
-              </div>
-            ))}
+            <div>
+              <h3>Entrenamiento en Proceso</h3>
+              {currentTraining.map((exercise, index) => (
+                <div key={index}>
+                  <p>Nombre: {exercise.name}</p>
+                  <p>Repeticiones: {exercise.repetitions}</p>
+                  <p>Series: {exercise.sets}</p>
+                  <button onClick={() => handleRemoveExercise(index)}>
+                    Eliminar Ejercicio
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.myddbbitem}>
+              <h3>Mis ejercicios</h3>
+              <table>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Equipamiento</th>
+                  <th>Comentarios</th>
+                  <th>Opciones</th>
+                </tr>
+                {exercises.map((exercise) => (
+                  <tr key={exercise} className={styles.exercise}>
+                    <td>{exercise.exercise_name}</td>
+                    <td>{exercise.material}</td>
+                    <td>{exercise.comments}</td>
+                    <td>
+                      <FaRegEdit size={20} />
+                      <FaRegTrashAlt size={20} />
+                      <FaShareAlt
+                        size={20}
+                        key={exercise.id}
+                        onClick={(e) => handleAssignExercise(e, exercise.id)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -509,7 +676,6 @@ const routine = () => {
           </div>
         </div>
       )}
-
       {showClient && (
         <div className={styles.share}>
           {myData
