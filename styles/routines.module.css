@@ -71,6 +71,7 @@
   color: #ffffff;
   text-align: center;
 }
+
 .routine:hover,
 .selectmenu div:hover {
   font-size: 1.3rem;
@@ -128,20 +129,22 @@
   /* opcional para darle un fondo oscuro al resto de la página */
   background: rgba(0, 0, 0, 0.9);
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
-.modalContent {
+.exContent {
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   position: relative;
 }
-.modalContent form {
+.exContent form {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -149,11 +152,94 @@
   align-items: center;
   padding: 1rem;
 }
-.modalContent form p {
+.exContent form div {
+  width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem;
+}
+.exContent form div:hover {
+  cursor: pointer;
+}
+
+.exContent form p {
   font-size: 1.5rem;
   color: #ffffff;
   width: 90%;
   justify-content: space-between;
+}
+.exContent form div input {
+  width: 60%;
+  height: 30px;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 0.5rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+.exContent form div textarea {
+  width: 60%;
+  height: 90px;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 0.5rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+.tContent {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+.tContent form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 1rem;
+}
+.tContent form div {
+  width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem;
+}
+.tContent form div:hover {
+  cursor: pointer;
+}
+
+.tContent form p {
+  font-size: 1.5rem;
+  color: #ffffff;
+  width: 90%;
+  justify-content: space-between;
+}
+.tContent form div input {
+  width: 60%;
+  height: 30px;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 0.5rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+.tContent form div textarea {
+  width: 60%;
+  height: 90px;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 0.5rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.9);
 }
 .closebutton {
   position: absolute;
@@ -178,6 +264,9 @@
   cursor: pointer;
   z-index: 20;
   background-color: rgba(0, 0, 0, 0.9);
+}
+.create:hover {
+  border-color: #f69d21;
 }
 .myweek {
   width: 100%;
@@ -248,4 +337,14 @@
   height: 2px;
   background-color: #f69d21;
   animation: underline 3s forwards;
+}
+.myCurrent {
+  width: 30%;
+  height: 100vh;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
 }

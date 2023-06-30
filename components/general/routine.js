@@ -58,6 +58,8 @@ const routine = () => {
     repetitions: '',
     sets: '',
   });
+  const [showExerciseFields, setShowExerciseFields] = useState(false);
+  const [isExerciseFromList, setIsExerciseFromList] = useState(false);
 
   const auth = getAuth();
   const user = auth.currentUser;
@@ -359,6 +361,25 @@ const routine = () => {
     setTrainingsList(false);
     setExercisesList(true);
   };
+
+  const handleSelectExercise = (exercise) => {
+    setIsExerciseFromList(true);
+    setShowExerciseFields(true);
+    setTExercise({
+      name: exercise.exercise_name,
+      repetitions: '',
+      sets: '',
+    });
+  };
+
+  const handleAddExerciseClick = (e) => {
+    e.preventDefault();
+    setCurrentTraining([...currentTraining, tExercise]);
+    setTExercise({ name: '', repetitions: '', sets: '' });
+    setShowExerciseFields(false);
+    setIsExerciseFromList(false);
+  };
+
   return (
     <div className={styles.routinesContainer}>
       <div className={styles.editor}>
@@ -448,11 +469,11 @@ const routine = () => {
       </div>
       {showExerciseModal && (
         <div className={styles.modal}>
-          <div className={styles.modalContent}>
+          <div className={styles.exContent}>
             <FaDumbbell size={50} />
             <form onSubmit={handleFormSubmit}>
               <div>
-                <p>Ejercicio:</p>
+                <p>Ejercicio</p>
                 <input
                   type='text'
                   value={newexercise.exercise_name}
@@ -465,7 +486,7 @@ const routine = () => {
                 />
               </div>
               <div>
-                <p>Material necesario:</p>
+                <p>Material necesario</p>
                 <input
                   type='text'
                   value={newexercise.material}
@@ -478,7 +499,7 @@ const routine = () => {
                 />
               </div>
               <div>
-                <p>Comentarios:</p>
+                <p>Comentarios</p>
                 <textarea
                   type='text'
                   value={newexercise.comments}
@@ -508,8 +529,12 @@ const routine = () => {
       )}
       {showTrainingModal && (
         <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <form onSubmit={handleCreateTraining}>
+          <div className={styles.tContent}>
+            <form
+              onSubmit={handleCreateTraining}
+              className={styles.trainingForm}
+              style={{ border: '1px solid red' }}
+            >
               <div>
                 <p>Entrenamiento:</p>
                 <input
@@ -534,41 +559,56 @@ const routine = () => {
                   }
                 />
               </div>
-              <div>
-                <p>Ejercicio:</p>
-                <input
-                  type='text'
-                  value={tExercise.name}
-                  onChange={(e) =>
-                    setTExercise({ ...tExercise, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <p>Repeticiones:</p>
-                <input
-                  type='text'
-                  value={tExercise.repetitions}
-                  onChange={(e) =>
-                    setTExercise({
-                      ...tExercise,
-                      repetitions: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <p>Series:</p>
-                <input
-                  type='text'
-                  value={tExercise.sets}
-                  onChange={(e) =>
-                    setTExercise({ ...tExercise, sets: e.target.value })
-                  }
-                />
-              </div>
-              <button onClick={handleAddExercise}>Añadir Ejercicio</button>
-
+              <button
+                onClick={() => {
+                  setShowExerciseFields(true);
+                  setIsExerciseFromList(false);
+                }}
+              >
+                Añadir Ejercicio
+              </button>
+              {showExerciseFields && (
+                <>
+                  <div>
+                    <p>Ejercicio:</p>
+                    {isExerciseFromList ? (
+                      <p>{tExercise.name}</p>
+                    ) : (
+                      <input
+                        type='text'
+                        value={tExercise.name}
+                        onChange={(e) =>
+                          setTExercise({ ...tExercise, name: e.target.value })
+                        }
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <p>Repeticiones:</p>
+                    <input
+                      type='text'
+                      value={tExercise.repetitions}
+                      onChange={(e) =>
+                        setTExercise({
+                          ...tExercise,
+                          repetitions: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <p>Series:</p>
+                    <input
+                      type='text'
+                      value={tExercise.sets}
+                      onChange={(e) =>
+                        setTExercise({ ...tExercise, sets: e.target.value })
+                      }
+                    />
+                  </div>
+                  <button onClick={handleAddExerciseClick}>Confirmar</button>
+                </>
+              )}
               <div className={styles.create} onClick={handleCreateTraining}>
                 Crear Entrenamiento
               </div>
@@ -579,10 +619,16 @@ const routine = () => {
             >
               X
             </div>
-            <div>
+            <div className={styles.myCurrent}>
               <h3>Entrenamiento en Proceso</h3>
+              <div>
+                {trainingData.name && <p>Nombre: {trainingData.name}</p>}
+                {trainingData.description && (
+                  <p>Descripción: {trainingData.description}</p>
+                )}
+              </div>
               {currentTraining.map((exercise, index) => (
-                <div key={index}>
+                <div key={index} className={styles.thisTraining}>
                   <p>Nombre: {exercise.name}</p>
                   <p>Repeticiones: {exercise.repetitions}</p>
                   <p>Series: {exercise.sets}</p>
@@ -592,8 +638,10 @@ const routine = () => {
                 </div>
               ))}
             </div>
-
-            <div className={styles.myddbbitem}>
+            <div
+              className={styles.myddbbitem}
+              style={{ border: '1px solid red' }}
+            >
               <h3>Mis ejercicios</h3>
               <table>
                 <tr>
@@ -613,7 +661,7 @@ const routine = () => {
                       <FaShareAlt
                         size={20}
                         key={exercise.id}
-                        onClick={(e) => handleAssignExercise(e, exercise.id)}
+                        onClick={() => handleSelectExercise(exercise)}
                       />
                     </td>
                   </tr>
@@ -625,7 +673,7 @@ const routine = () => {
       )}
       {showRoutineModal && (
         <div className={styles.modal}>
-          <div className={styles.modalContent}>
+          <div>
             <form onSubmit={handleCreate}>
               <div>
                 <p>Descripción:</p>
