@@ -23,6 +23,7 @@ import {
   FaShareAlt,
   FaRegEdit,
   FaRegTrashAlt,
+  FaPlus,
 } from 'react-icons/fa';
 
 const routine = () => {
@@ -41,26 +42,25 @@ const routine = () => {
   const [routinesList, setRoutinesList] = useState(false);
   const [trainingsList, setTrainingsList] = useState(false);
   const [exercisesList, setExercisesList] = useState(false);
-  const [selectedExercises, setSelectedExercises] = useState([]);
+  const [selectExercises, setSelectExercises] = useState(false);
   const [selectedTrainings, setSelectedTrainings] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
-  const [trainingData, setTrainingData] = useState({
+  const [newTrain, setNewTrain] = useState({
     name: '',
     description: '',
     exercises: [],
   });
   const [message, setMessage] = useState(false);
   const [updateExerciseId, setUpdateExerciseId] = useState(null);
+  const [updateTrainingId, setUpdateTrainingId] = useState(null);
   const [trainingExercises, setTrainingExercises] = useState([]);
+  const [addExercise, setAddExercise] = useState(false);
   const [currentTraining, setCurrentTraining] = useState([]);
-  const [tExercise, setTExercise] = useState({
-    name: '',
-    repetitions: '',
-    sets: '',
-  });
+  const [tExercise, setTExercise] = useState([]);
   const [showExerciseFields, setShowExerciseFields] = useState(false);
   const [isExerciseFromList, setIsExerciseFromList] = useState(false);
-
+  const [current, setCurrent] = useState(false);
+  const [addNewEx, setAddNewEx] = useState(false);
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -113,88 +113,12 @@ const routine = () => {
       unsubTrainings();
     };
   }, []);
-  useEffect(() => {
-    if (updateExerciseId) {
-      const exerciseToUpdate = exercises.find(
-        (exercise) => exercise.id === updateExerciseId
-      );
-      setNewExercise(exerciseToUpdate);
-    } else {
-      setNewExercise({
-        exercise_name: '',
-        material: '',
-        comments: '',
-        // etc para todos los campos en el formulario
-      });
-    }
-  }, [updateExerciseId, exercises]);
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    console.log(data);
-    try {
-      await addDoc(collection(db, 'routines'), {
-        ...data,
-        trainerid: user.uid,
-        timeStamp: serverTimestamp(),
-        trainings: selectedTrainings,
-        days: selectedDays,
-      });
-      setSelectedTrainings([]);
-      setSelectedDays([]);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // Para crear entrenamientos
-  const handleCreateTraining = async (e) => {
-    e.preventDefault();
-    try {
-      await addDoc(collection(db, 'trainings'), {
-        name: trainingData.name,
-        description: trainingData.description,
-        timeStamp: serverTimestamp(),
-        exercises: trainingData.exercises,
-      });
-      setSelectedExercises([]);
-      console.log(trainingData);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   // Para crear ejercicios
-  const handleCreateExercise = async (exerciseData) => {
-    console.log(exerciseData);
-    try {
-      await addDoc(collection(db, 'exercises'), {
-        ...exerciseData,
-        timeStamp: serverTimestamp(),
-      });
-      setMessage(true);
-      setTimeout(() => {
-        setMessage(false);
-      }, 3000);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleUpdateExercise = async (id, updatedExercise) => {
-    try {
-      const docRef = doc(db, 'exercises', id);
-      await updateDoc(docRef, updatedExercise);
-      console.log('Document updated');
-    } catch (error) {
-      console.error('Error updating document: ', error);
-    }
-  };
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     const exerciseData = {
-      exercise_name: newexercise.exercise_name,
+      name: newexercise.name,
       material: newexercise.material,
       comments: newexercise.comments,
     };
@@ -210,12 +134,34 @@ const routine = () => {
 
     // Limpiar el formulario (según tu implementación actual)
     setNewExercise({
-      exercise_name: '',
+      name: '',
       material: '',
       comments: '',
     });
   };
-
+  const handleCreateExercise = async (exerciseData) => {
+    try {
+      await addDoc(collection(db, 'exercises'), {
+        ...exerciseData,
+        timeStamp: serverTimestamp(),
+      });
+      setMessage(true);
+      setTimeout(() => {
+        setMessage(false);
+      }, 3000);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleUpdateExercise = async (id, updatedExercise) => {
+    try {
+      const docRef = doc(db, 'exercises', id);
+      await updateDoc(docRef, updatedExercise);
+      console.log('Document updated');
+    } catch (error) {
+      console.error('Error updating document: ', error);
+    }
+  };
   const handleDeleteExercise = async (id) => {
     try {
       await deleteDoc(doc(db, 'exercises', id));
@@ -225,7 +171,7 @@ const routine = () => {
     }
   };
   const handleAddExercise = () => {
-    setCurrentTraining([...currentTraining, tExercise]);
+    setCurrentTraining([...currentTraining, exerciseData]);
     setTExercise({
       name: '',
       repetitions: '',
@@ -237,21 +183,55 @@ const routine = () => {
     newTraining.splice(index, 1);
     setCurrentTraining(newTraining);
   };
+  useEffect(() => {
+    if (updateExerciseId) {
+      const exerciseToUpdate = exercises.find(
+        (exercise) => exercise.id === updateExerciseId
+      );
+      setNewExercise(exerciseToUpdate);
+    } else {
+      setNewExercise({
+        exercise_name: '',
+        material: '',
+        comments: '',
+      });
+    }
+  }, [updateExerciseId, exercises]);
+
+  // Para crear entrenamientos
+
+  const handleCreateTraining = async (e) => {
+    e.preventDefault();
+
+    const trainingData = {
+      name: newTrain.name,
+      description: newTrain.description,
+      // exercises: trainingData.exerciseData,
+    };
+    try {
+      await addDoc(collection(db, 'trainings'), {
+        ...trainingData,
+        exercises: currentTraining,
+        timeStamp: serverTimestamp(),
+      });
+      setMessage(true);
+      setTimeout(() => {
+        setMessage(false);
+      }, 3000);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleAssignExercise = async (e, trainingId) => {
     e.preventDefault();
-    const exerciseId = e.target.value; // Aquí asumo que el id del ejercicio se encuentra en el valor del botón
+    const exerciseId = e.target.value;
     try {
-      const exerciseRef = doc(db, 'exercises', exerciseId);
       const trainingRef = doc(db, 'trainings', trainingId);
       const trainingData = (await getDoc(trainingRef)).data();
 
-      const updatedTraining = {
-        ...trainingData,
-        exercises: [...trainingData.exercises, { ...exerciseRef }],
-      };
-
-      await setDoc(trainingRef, updatedTraining);
+      const updatedExercises = [...trainingData.exercises, exerciseId];
+      await updateDoc(trainingRef, { exercises: updatedExercises });
     } catch (error) {
       console.error('Error al asignar el ejercicio al entrenamiento: ', error);
     }
@@ -294,19 +274,16 @@ const routine = () => {
   };
 
   //Modales
-  const handleShowExerciseModal = () => {
-    setShowExerciseModal(true);
-  };
+
   const handleCloseExerciseModal = () => {
     setShowExerciseModal(false);
     // Restablece cualquier estado relacionado con el modal de ejercicio aquí
   };
-  const handleShowTrainingModal = () => {
-    setShowTrainingModal(true);
-  };
 
   const handleCloseTrainingModal = () => {
     setShowTrainingModal(false);
+    setCurrent(false);
+    // setTrainingData('');
     // Restablece cualquier estado relacionado con el modal de entrenamiento aquí
   };
 
@@ -322,10 +299,6 @@ const routine = () => {
         exercises: prevData.exercises.filter((id) => id !== exerciseId),
       }));
     }
-  };
-
-  const handleShowRoutineModal = () => {
-    setShowRoutineModal(true);
   };
 
   const handleCloseRoutineModal = () => {
@@ -372,100 +345,140 @@ const routine = () => {
     });
   };
 
-  const handleAddExerciseClick = (e) => {
+  const handleAddExerciseClick = (e, ex) => {
     e.preventDefault();
+    if (ex) {
+      setTExercise(ex);
+      console.log('ex', ex);
+    }
     setCurrentTraining([...currentTraining, tExercise]);
-    setTExercise({ name: '', repetitions: '', sets: '' });
-    setShowExerciseFields(false);
-    setIsExerciseFromList(false);
+    setAddExercise(false);
+    setSelectExercises(false);
+    setTExercise([]);
   };
 
   return (
     <div className={styles.routinesContainer}>
       <div className={styles.editor}>
-        <div className={styles.top}>
-          <div onClick={handleShowRoutineModal} className={styles.routine}>
-            <FaCalendarDay size={50} />
-            <p>Crear Rutina</p>
+        {!routinesList && !trainingsList && !exercisesList && (
+          <div className={styles.top}>
+            <div
+              onClick={() => setShowRoutineModal(true)}
+              className={styles.routine}
+            >
+              <FaCalendarDay size={50} />
+              <p>Crear Rutina</p>
+            </div>
+            <div
+              onClick={() => setShowTrainingModal(true)}
+              className={styles.routine}
+            >
+              <FaRunning size={50} />
+              <p>Crear Entrenamiento</p>
+            </div>
+            <div
+              onClick={() => setShowExerciseModal(true)}
+              className={styles.routine}
+            >
+              <FaDumbbell size={50} />
+              <p>Crear Ejercicio</p>
+            </div>
+            <div className={styles.selectmenu}>
+              <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
+              <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
+              <div onClick={viewExercisesList}>Ver Mis Ejercicios</div>
+            </div>
           </div>
-          <div onClick={handleShowTrainingModal} className={styles.routine}>
-            <FaRunning size={50} />
-            <p>Crear Entrenamiento</p>
-          </div>
-          <div onClick={handleShowExerciseModal} className={styles.routine}>
-            <FaDumbbell size={50} />
-            <p>Crear Ejercicio</p>
-          </div>
-          <div className={styles.selectmenu}>
-            <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
-            <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
-            <div onClick={viewExercisesList}>Ver Mis Ejercicios</div>
-          </div>
-        </div>
-        <div className={styles.bottom}>
-          <div className={styles.myddbb}>
-            {routinesList && (
-              <div className={styles.myddbbitem}>
-                <h3>Mis Rutinas</h3>
-                {routines.map((routine) => (
-                  <button
-                    key={routine.id}
-                    onClick={(e) => handleAssignTraining(e, routine.id)}
-                  >
-                    Asignar Rutina
-                  </button>
-                ))}
-              </div>
-            )}
-            {trainingsList && (
-              <div className={styles.myddbbitem}>
-                <h3>Mis entrenamientos</h3>
-
-                {trainings.map((training) => (
-                  <button
-                    key={training.id}
-                    onClick={(e) => handleAssignTraining(e, training.id)}
-                  >
-                    Asignar Entrenamiento
-                  </button>
-                ))}
-              </div>
-            )}
-            {exercisesList && (
-              <div className={styles.myddbbitem}>
-                <h3>Mis ejercicios</h3>
-                <table>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Equipamiento</th>
-                    <th>Comentarios</th>
-                    <th>Opciones</th>
-                  </tr>
-                  {exercises.map((exercise) => (
-                    <tr key={exercise} className={styles.exercise}>
-                      <td>{exercise.exercise_name}</td>
-                      <td>{exercise.material}</td>
-                      <td>{exercise.comments}</td>
-                      <td>
-                        <FaRegEdit
-                          size={20}
-                          onClick={() => {
-                            setUpdateExerciseId(exercise.id);
-                            setShowExerciseModal(true);
-                          }}
-                        />
-                        <FaRegTrashAlt
-                          size={20}
-                          onClick={() => handleDeleteExercise(exercise.id)}
-                        />
-                      </td>
-                    </tr>
+        )}
+        {(routinesList || trainingsList || exercisesList) && (
+          <div className={styles.bottom}>
+            <div className={styles.myddbb}>
+              {routinesList && (
+                <div className={styles.myddbbitem}>
+                  <h3>Mis Rutinas</h3>
+                  {routines.map((routine) => (
+                    <button
+                      key={routine.id}
+                      onClick={(e) => handleAssignTraining(e, routine.id)}
+                    >
+                      Asignar Rutina
+                    </button>
                   ))}
-                </table>
-              </div>
-            )}
+                </div>
+              )}
+              {trainingsList && (
+                <div className={styles.myddbbitem}>
+                  <h3>Mis entrenamientos</h3>
+                  <table>
+                    <tr>
+                      <th>Nombre del Entrenamiento</th>
+                      <th>Descripción</th>
+                      <th>Ejercicios</th>
+                    </tr>
+                    {trainings.map((training) => (
+                      <tr key={training.id}>
+                        <td>{training.name}</td>
+                        <td>{training.description}</td>
+                        <td>
+                          {training.exercises.map((exercise) => (
+                            <div key={exercise.id}>
+                              <p>Nombre: {exercise.name}</p>
+                              <p>Repeticiones: {exercise.repetitions}</p>
+                              <p>Series: {exercise.sets}</p>
+                            </div>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </table>
+                </div>
+              )}
+              {exercisesList && (
+                <div className={styles.myddbbitem}>
+                  <h3>Mis ejercicios</h3>
+                  <table>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Equipamiento</th>
+                      <th>Comentarios</th>
+                      <th>Opciones</th>
+                    </tr>
+                    {exercises.map((exercise) => (
+                      <tr key={exercise} className={styles.exercise}>
+                        <td>{exercise.name}</td>
+                        <td>{exercise.material}</td>
+                        <td>{exercise.comments}</td>
+                        <td>
+                          <FaRegEdit
+                            size={20}
+                            onClick={() => {
+                              setUpdateExerciseId(exercise.id);
+                              setShowExerciseModal(true);
+                            }}
+                          />
+                          <FaRegTrashAlt
+                            size={20}
+                            onClick={() => handleDeleteExercise(exercise.id)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </table>
+                </div>
+              )}
+            </div>
+            <div
+              className={styles.closebutton}
+              onClick={() => {
+                setRoutinesList(false);
+                setTrainingsList(false);
+                setExercisesList(false);
+              }}
+            >
+              X
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {showExerciseModal && (
         <div className={styles.modal}>
@@ -476,11 +489,11 @@ const routine = () => {
                 <p>Ejercicio</p>
                 <input
                   type='text'
-                  value={newexercise.exercise_name}
+                  value={newexercise.name}
                   onChange={(e) =>
                     setNewExercise({
                       ...newexercise,
-                      exercise_name: e.target.value,
+                      name: e.target.value,
                     })
                   }
                 />
@@ -529,89 +542,38 @@ const routine = () => {
       )}
       {showTrainingModal && (
         <div className={styles.modal}>
-          <div className={styles.tContent}>
-            <form
-              onSubmit={handleCreateTraining}
-              className={styles.trainingForm}
-              style={{ border: '1px solid red' }}
-            >
+          <div className={styles.exContent}>
+            <FaRunning size={50} />
+            <form onSubmit={handleCreateTraining}>
               <div>
                 <p>Entrenamiento:</p>
                 <input
                   type='text'
-                  value={trainingData.name}
-                  onChange={(e) =>
-                    setTrainingData({ ...trainingData, name: e.target.value })
-                  }
+                  value={newTrain.name}
+                  onChange={(e) => {
+                    setNewTrain({ ...newTrain, name: e.target.value });
+                    setCurrent(true);
+                  }}
                 />
               </div>
               <div>
                 <p>Descripción:</p>
-
-                <input
+                <textarea
                   type='text'
-                  value={trainingData.description}
+                  value={newTrain.description}
                   onChange={(e) =>
-                    setTrainingData({
-                      ...trainingData,
+                    setNewTrain({
+                      ...newTrain,
                       description: e.target.value,
                     })
                   }
                 />
               </div>
-              <button
-                onClick={() => {
-                  setShowExerciseFields(true);
-                  setIsExerciseFromList(false);
-                }}
-              >
-                Añadir Ejercicio
+              <button type='submit' className={styles.create}>
+                {updateTrainingId
+                  ? 'Actualizar Entrenamiento'
+                  : 'Crear Entrenamiento'}
               </button>
-              {showExerciseFields && (
-                <>
-                  <div>
-                    <p>Ejercicio:</p>
-                    {isExerciseFromList ? (
-                      <p>{tExercise.name}</p>
-                    ) : (
-                      <input
-                        type='text'
-                        value={tExercise.name}
-                        onChange={(e) =>
-                          setTExercise({ ...tExercise, name: e.target.value })
-                        }
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <p>Repeticiones:</p>
-                    <input
-                      type='text'
-                      value={tExercise.repetitions}
-                      onChange={(e) =>
-                        setTExercise({
-                          ...tExercise,
-                          repetitions: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <p>Series:</p>
-                    <input
-                      type='text'
-                      value={tExercise.sets}
-                      onChange={(e) =>
-                        setTExercise({ ...tExercise, sets: e.target.value })
-                      }
-                    />
-                  </div>
-                  <button onClick={handleAddExerciseClick}>Confirmar</button>
-                </>
-              )}
-              <div className={styles.create} onClick={handleCreateTraining}>
-                Crear Entrenamiento
-              </div>
             </form>
             <div
               className={styles.closebutton}
@@ -619,57 +581,181 @@ const routine = () => {
             >
               X
             </div>
-            <div className={styles.myCurrent}>
-              <h3>Entrenamiento en Proceso</h3>
-              <div>
-                {trainingData.name && <p>Nombre: {trainingData.name}</p>}
-                {trainingData.description && (
-                  <p>Descripción: {trainingData.description}</p>
-                )}
+            {message && (
+              <div className={styles.message}>
+                Entrenamiento creado con éxito
               </div>
-              {currentTraining.map((exercise, index) => (
-                <div key={index} className={styles.thisTraining}>
-                  <p>Nombre: {exercise.name}</p>
-                  <p>Repeticiones: {exercise.repetitions}</p>
-                  <p>Series: {exercise.sets}</p>
-                  <button onClick={() => handleRemoveExercise(index)}>
-                    Eliminar Ejercicio
-                  </button>
+            )}
+            {current && (
+              <div className={styles.myCurrent}>
+                <h3>Entrenamiento en Proceso</h3>
+                <div
+                  className={styles.create}
+                  onClick={() => {
+                    setAddNewEx(true);
+                    setSelectExercises(false);
+                  }}
+                >
+                  Añadir Nuevo ejercicio
                 </div>
-              ))}
-            </div>
-            <div
-              className={styles.myddbbitem}
-              style={{ border: '1px solid red' }}
-            >
-              <h3>Mis ejercicios</h3>
-              <table>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Equipamiento</th>
-                  <th>Comentarios</th>
-                  <th>Opciones</th>
-                </tr>
-                {exercises.map((exercise) => (
-                  <tr key={exercise} className={styles.exercise}>
-                    <td>{exercise.exercise_name}</td>
-                    <td>{exercise.material}</td>
-                    <td>{exercise.comments}</td>
-                    <td>
-                      <FaRegEdit size={20} />
-                      <FaRegTrashAlt size={20} />
-                      <FaShareAlt
-                        size={20}
-                        key={exercise.id}
-                        onClick={() => handleSelectExercise(exercise)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </table>
-            </div>
+                <div
+                  className={styles.create}
+                  onClick={() => {
+                    setSelectExercises(true);
+                    setAddNewEx(false);
+                  }}
+                >
+                  Seleccionar desde mi banco de ejercicios
+                </div>
+
+                <div>
+                  {newTrain.name && <p>Nombre: {newTrain.name}</p>}
+                  {newTrain.description && (
+                    <p>Descripción: {newTrain.description}</p>
+                  )}
+                  {currentTraining.map((exercise, index) => (
+                    <div key={index} className={styles.thisTraining}>
+                      <div>
+                        <p>Nombre: </p>
+                        <p>{exercise.name}</p>
+                      </div>
+                      <div>
+                        <p>Repeticiones: </p>
+                        <p>{exercise.repetitions}</p>
+                      </div>
+                      <div>
+                        <p>Series: </p>
+                        <p>{exercise.sets}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveExercise(index)}
+                        className={styles.create}
+                      >
+                        <FaRegTrashAlt size={20} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div></div>
+              </div>
+            )}
           </div>
         </div>
+      )}
+      {addNewEx && (
+        <form className={styles.secondWidth}>
+          <div>
+            <p>Ejercicio:</p>
+            {isExerciseFromList ? (
+              <p>{tExercise.name}</p>
+            ) : (
+              <input
+                type='text'
+                value={tExercise.name}
+                onChange={(e) =>
+                  setTExercise({ ...tExercise, name: e.target.value })
+                }
+              />
+            )}
+          </div>
+          <div>
+            <p>Repeticiones:</p>
+            <input
+              type='text'
+              value={tExercise.repetitions}
+              onChange={(e) =>
+                setTExercise({
+                  ...tExercise,
+                  repetitions: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div>
+            <p>Series:</p>
+            <input
+              type='text'
+              value={tExercise.sets}
+              onChange={(e) =>
+                setTExercise({ ...tExercise, sets: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <p>Comentarios:</p>
+            <textarea
+              type='text'
+              value={tExercise.comments}
+              onChange={(e) =>
+                setTExercise({ ...tExercise, comments: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <p>Materiales:</p>
+            <input
+              type='text'
+              value={tExercise.materials}
+              onChange={(e) =>
+                setTExercise({ ...tExercise, materials: e.target.value })
+              }
+            />
+          </div>
+          <button onClick={handleAddExerciseClick} className={styles.create}>
+            Confirmar
+          </button>
+          <span
+            className={styles.closebuttontwo}
+            onClick={() => {
+              setAddNewEx(false);
+            }}
+          >
+            X
+          </span>
+        </form>
+      )}
+      {selectExercises && (
+        <form className={styles.secondWidth}>
+          <h3>Mis ejercicios</h3>
+          <table>
+            <tr>
+              <th>Nombre</th>
+              <th>Equipamiento</th>
+              <th>Comentarios</th>
+              <th>Opciones</th>
+            </tr>
+            {exercises.map((exercise) => (
+              <tr key={exercise} className={styles.exercise}>
+                <td>{exercise.name}</td>
+                <td>{exercise.material}</td>
+                <td>{exercise.comments}</td>
+                <td>
+                  <FaPlus
+                    size={20}
+                    onClick={(e) => {
+                      setSelectExercises(false);
+                      setTExercise({
+                        ...exercise,
+                        name: exercise.name,
+                        repetitions: '',
+                        sets: '',
+                      });
+                      setAddNewEx(true);
+                    }}
+                  />
+                </td>
+              </tr>
+            ))}
+          </table>
+          <span
+            className={styles.closebuttontwo}
+            onClick={() => {
+              setSelectExercises(false);
+            }}
+          >
+            X
+          </span>
+        </form>
       )}
       {showRoutineModal && (
         <div className={styles.modal}>
