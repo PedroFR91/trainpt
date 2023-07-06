@@ -14,7 +14,8 @@ import { db } from '../../firebase.config';
 import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
 import { follow, initialForm } from '../../forms/initialForm';
-import EditableForm from '../../forms/editableForm';
+import { FaArrowAltCircleRight } from 'react-icons/fa';
+
 const forms = () => {
   const [data, setData] = useState([]);
   const [myForm, setMyForm] = useState([]);
@@ -169,31 +170,55 @@ const forms = () => {
   return (
     <div className={styles.container}>
       <TrainerHeader />
-
       <div className={styles.formLayout}>
-        {!show ? (
-          <button onClick={() => setShow(true)}>Seguimiento</button>
-        ) : (
-          <button onClick={() => setShow(false)}>Initial</button>
-        )}
+        <div className={styles.mybuttons}>
+          {!show ? (
+            <h2>Formulario Inicial</h2>
+          ) : (
+            <h2>Formulario de seguimiento</h2>
+          )}
+          {!show ? (
+            <button
+              className={styles.mybuttonmini}
+              onClick={() => setShow(true)}
+            >
+              <FaArrowAltCircleRight />
+              Seguimiento
+            </button>
+          ) : (
+            <button
+              className={styles.mybuttonmini}
+              onClick={() => setShow(false)}
+            >
+              <FaArrowAltCircleRight />
+              Inicial
+            </button>
+          )}
+        </div>
+        <div>
+          <button onClick={handleSubmit} className={styles.mybutton}>
+            Enviar Formulario
+          </button>
+        </div>
+
         {!show && (
-          <form onSubmit={handleSubmit} className={styles.initial}>
+          <form className={styles.initial}>
             <div className={styles.initialLeft}>
               <div>
                 <h3>Datos generales</h3>
-                <label>
-                  <span> Nombre:</span>
-
+                <div>
+                  <p>Nombre:</p>
                   <input
                     type='text'
                     name='name'
+                    placeholder='Pedro'
                     value={formData.name}
                     onChange={handleChange}
                   />
-                </label>
-                <br />
-                <label>
-                  Sexo:
+                </div>
+
+                <div>
+                  <p>Sexo:</p>
                   <select
                     name='gender'
                     value={formData.gender}
@@ -202,174 +227,170 @@ const forms = () => {
                     <option value='man'>Hombre</option>
                     <option value='woman'>Mujer</option>
                   </select>
-                </label>
-                <br />
-                <label>
-                  Peso
+                </div>
+
+                <div>
+                  <p>Peso</p>
                   <input
                     type='text'
                     name='weight'
                     value={formData.weight}
                     onChange={handleChange}
                   />
-                </label>
-                <br />
-                <label>
-                  Altura
+                </div>
+
+                <div>
+                  <p>Altura</p>
                   <input
                     type='text'
                     name='height'
                     value={formData.height}
                     onChange={handleChange}
                   />
-                </label>
-                <br />
+                </div>
               </div>
               <div>
-                <h3>Fotos</h3>
-                <label>
-                  Frente:
-                  <input
-                    type='file'
-                    name='front'
-                    onChange={handlePhotosChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Espalda:
-                  <input
-                    type='file'
-                    name='back'
-                    onChange={handlePhotosChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Lateral:
-                  <input
-                    type='file'
-                    name='lateral'
-                    onChange={handlePhotosChange}
-                  />
-                </label>
-                <br />
-              </div>
-              <div>
-                <h3>Dieta</h3>
-                <label>
-                  Intolerancias:
-                  <textarea
-                    name='intolerances'
-                    value={formData.intolerances}
-                    onChange={handleChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Comida preferida:
-                  <textarea
-                    name='preferredFoods'
-                    value={formData.preferredFoods}
-                    onChange={handleChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Días de entrenamiento:
-                  <select
-                    name='trainingDays'
-                    value={formData.trainingDays}
-                    onChange={handleChange}
-                  >
-                    <option value=''>Días de entrenamiento</option>
-                    <option value='1'>1 día a la semana</option>
-                    <option value='2'>2 días a la semana</option>
-                    <option value='3'>3 días a la semana</option>
-                    <option value='4'>4 días a la semana</option>
-                    <option value='5'>5 días a la semana</option>
-                    <option value='6'>6 días a la semana</option>
-                    <option value='7'>7 días a la semana</option>
-                  </select>
-                </label>
-                <br />
+                <div>
+                  <h3>Fotos</h3>
+                  <div>
+                    <p>Frente:</p>
+                    <input
+                      type='file'
+                      name='front'
+                      onChange={handlePhotosChange}
+                    />
+                  </div>
+
+                  <div>
+                    <p>Espalda:</p>
+                    <input
+                      type='file'
+                      name='back'
+                      onChange={handlePhotosChange}
+                    />
+                  </div>
+
+                  <div>
+                    <p>Lateral:</p>
+                    <input
+                      type='file'
+                      name='lateral'
+                      onChange={handlePhotosChange}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h3>Dieta</h3>
+                  <div>
+                    <p>Intolerancias:</p>
+                    <textarea
+                      name='intolerances'
+                      value={formData.intolerances}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div>
+                    <p>Comida preferida:</p>
+                    <textarea
+                      name='preferredFoods'
+                      value={formData.preferredFoods}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div>
+                    <p>Días de entrenamiento:</p>
+                    <select
+                      name='trainingDays'
+                      value={formData.trainingDays}
+                      onChange={handleChange}
+                    >
+                      <option value=''>Días de entrenamiento</option>
+                      <option value='1'>1 día a la semana</option>
+                      <option value='2'>2 días a la semana</option>
+                      <option value='3'>3 días a la semana</option>
+                      <option value='4'>4 días a la semana</option>
+                      <option value='5'>5 días a la semana</option>
+                      <option value='6'>6 días a la semana</option>
+                      <option value='7'>7 días a la semana</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
+
             <div className={styles.initialRight}>
+              <h3>Medidas</h3>
               <div>
-                <h3>Medidas</h3>
-                <label>
-                  Pecho:
-                  <input
-                    type='text'
-                    name='chest'
-                    value={formData.measures.chest}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Hombros:
-                  <input
-                    type='text'
-                    name='shoulders'
-                    value={formData.measures.shoulders}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Biceps:
-                  <input
-                    type='text'
-                    name='biceps'
-                    value={formData.measures.biceps}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Cintura:
-                  <input
-                    type='text'
-                    name='hips'
-                    value={formData.measures.hips}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Abdomen:
-                  <input
-                    type='text'
-                    name='abdomen'
-                    value={formData.measures.abdomen}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Cuadriceps:
-                  <input
-                    type='text'
-                    name='cuadriceps'
-                    value={formData.measures.cuadriceps}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
-                <label>
-                  Gemelos:
-                  <input
-                    type='text'
-                    name='gemelos'
-                    value={formData.measures.gemelos}
-                    onChange={handleMeasuresChange}
-                  />
-                </label>
-                <br />
+                <p>Pecho:</p>
+                <input
+                  type='text'
+                  name='chest'
+                  value={formData.measures.chest}
+                  onChange={handleMeasuresChange}
+                />
               </div>
-              <button type='submit'>Submit</button>
+
+              <div>
+                <p>Hombros:</p>
+                <input
+                  type='text'
+                  name='shoulders'
+                  value={formData.measures.shoulders}
+                  onChange={handleMeasuresChange}
+                />
+              </div>
+
+              <div>
+                <p>Biceps:</p>
+                <input
+                  type='text'
+                  name='biceps'
+                  value={formData.measures.biceps}
+                  onChange={handleMeasuresChange}
+                />
+              </div>
+
+              <div>
+                <p>Cintura:</p>
+                <input
+                  type='text'
+                  name='hips'
+                  value={formData.measures.hips}
+                  onChange={handleMeasuresChange}
+                />
+              </div>
+
+              <div>
+                <p>Abdomen:</p>
+                <input
+                  type='text'
+                  name='abdomen'
+                  value={formData.measures.abdomen}
+                  onChange={handleMeasuresChange}
+                />
+              </div>
+
+              <div>
+                <p>Cuadriceps:</p>
+                <input
+                  type='text'
+                  name='cuadriceps'
+                  value={formData.measures.cuadriceps}
+                  onChange={handleMeasuresChange}
+                />
+              </div>
+
+              <div>
+                <p>Gemelos:</p>
+                <input
+                  type='text'
+                  name='gemelos'
+                  value={formData.measures.gemelos}
+                  onChange={handleMeasuresChange}
+                />
+              </div>
             </div>
           </form>
         )}
@@ -485,7 +506,7 @@ const forms = () => {
             </div>
           </form>
         )}
-        <div className={styles.myforms}>
+        {/* <div className={styles.myforms}>
           {myForm.map((form) => (
             <div key={form.id}>
               {form.type === 'Inicial' && (
@@ -560,7 +581,7 @@ const forms = () => {
               </button>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {showClient && (

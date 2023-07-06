@@ -63,19 +63,20 @@ const myprofile = () => {
                 onChange={(e) => setFile(e.target.files[0])}
                 hidden
               />
-              <button
-                className={styles.label}
-                htmlFor='file'
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('file').click();
-                }}
-              >
-                Cambiar imagen de perfil
-              </button>
-              <div className={styles.myprofileinfo}>
-                <p>{data.username}</p>
-                <AddText />
+              <div className={styles.profilesection}>
+                <button
+                  className={styles.label}
+                  htmlFor='file'
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('file').click();
+                  }}
+                >
+                  Cambiar imagen de perfil
+                </button>
+                <div className={styles.myprofileinfo}>
+                  <AddText />
+                </div>
               </div>
             </div>
           ))}

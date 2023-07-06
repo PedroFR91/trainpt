@@ -18,6 +18,7 @@ import { db, storage } from '../../firebase.config';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import AuthContext from '../../context/AuthContext';
 import { HiOutlineFolderAdd, HiOutlineUpload } from 'react-icons/hi';
+import { FaPhotoVideo } from 'react-icons/fa';
 
 const previousClientsImg = () => {
   const { myUid } = useContext(AuthContext);
@@ -192,7 +193,7 @@ const previousClientsImg = () => {
     switch (step) {
       case 1:
         return (
-          <>
+          <div className={styles.mystep}>
             <input
               type='text'
               placeholder='Nombre del cliente'
@@ -201,11 +202,11 @@ const previousClientsImg = () => {
               required
             />
             <button onClick={() => setStep(2)}>Siguiente</button>
-          </>
+          </div>
         );
       case 2:
         return (
-          <>
+          <div className={styles.mystep}>
             <input
               type='file'
               id='fileBefore'
@@ -216,13 +217,16 @@ const previousClientsImg = () => {
               hidden
               required
             />
-            <label htmlFor='fileBefore'>Seleccionar foto antes</label>
+            <label htmlFor='fileBefore'>
+              <FaPhotoVideo />
+              Antes
+            </label>
             <button onClick={() => setStep(3)}>Siguiente</button>
-          </>
+          </div>
         );
       case 3:
         return (
-          <>
+          <div className={styles.mystep}>
             <input
               type='file'
               id='fileAfter'
@@ -232,7 +236,10 @@ const previousClientsImg = () => {
               hidden
               required
             />
-            <label htmlFor='fileAfter'>Seleccionar foto después</label>
+            <label htmlFor='fileAfter'>
+              <FaPhotoVideo />
+              Después
+            </label>
             <button
               onClick={() => {
                 setFileBefore(tempFileBefore);
@@ -242,7 +249,7 @@ const previousClientsImg = () => {
             >
               Subir imágenes
             </button>
-          </>
+          </div>
         );
       default:
         return null;
@@ -251,7 +258,8 @@ const previousClientsImg = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.divimage}>{renderStep()}</div>
+      <h2>Imágenes de mis clientes</h2>
+      <div>{renderStep()}</div>
       <div className={styles.clientPhotos}>
         {/* Agrupar las imágenes por cliente */}
         {Array.from(new Set(photos.map((photo) => photo.clientName)))

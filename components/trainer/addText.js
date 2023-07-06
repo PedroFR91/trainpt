@@ -63,7 +63,9 @@ const AddText = () => {
 
   return (
     <div className={styles.addText}>
-      <button onClick={openModal}>Editar texto</button>
+      <button onClick={openModal} className={styles.label}>
+        Editar texto
+      </button>
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h1>Editor de texto enriquecido</h1>
         {clientSide && <RichTextEditor value={text} onChange={setText} />}
