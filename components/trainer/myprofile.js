@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import styles from '../../styles/myprofile.module.css';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db, storage } from '../../firebase.config';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import AuthContext from '../../context/AuthContext';
 import AddText from '../../components/trainer/addText';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -15,7 +14,9 @@ const myprofile = () => {
   useEffect(() => {
     setData(myData);
   }, [myData]);
-
+  useEffect(() => {
+    file && handleImageUpload();
+  }, [file]);
   const handleImageUpload = async () => {
     if (!file) return;
 
@@ -40,11 +41,6 @@ const myprofile = () => {
       }
     );
   };
-
-  useEffect(() => {
-    file && handleImageUpload();
-  }, [file]);
-
   return (
     <>
       {myData &&

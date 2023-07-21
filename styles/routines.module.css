@@ -385,6 +385,8 @@
   color: #212121;
   background-color: rgba(255, 255, 255, 0.9);
   z-index: 20;
+
+  overflow-y: scroll;
 }
 
 .secondWidth div {

@@ -10,11 +10,22 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase.config';
+import Modal from './Modal';
+import dynamic from 'next/dynamic';
+
+// Importa el componente RichTextEditor de forma dinámica
+const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
+  ssr: false,
+});
 const myrates = () => {
   const { myUid } = useContext(AuthContext);
   const [data, setData] = useState([]);
   const [rates, setRates] = useState([]);
   const [view, setView] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [clientSide, setClientSide] = useState(false);
+
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'rates'),
@@ -29,6 +40,9 @@ const myrates = () => {
         console.log(error);
       }
     );
+
+    setClientSide(true);
+
     return () => {
       unsub();
     };
@@ -40,6 +54,7 @@ const myrates = () => {
       await setDoc(doc(db, 'rates', data.ratename), {
         ...data,
         rateid: myUid,
+        rateinfo: text,
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -47,6 +62,7 @@ const myrates = () => {
     }
 
     setData([]);
+    setText('');
   };
 
   const handleDelete = async (id) => {
@@ -57,6 +73,14 @@ const myrates = () => {
     } catch (error) {}
   };
 
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setText('');
+  };
   return (
     <div className={styles.container}>
       <div className={styles.addrate}>
@@ -76,11 +100,23 @@ const myrates = () => {
               placeholder='Precio'
               onChange={(e) => setData({ ...data, rateprice: e.target.value })}
             />
-            <input
-              type='text'
-              placeholder='Frecuencia'
-              onChange={(e) => setData({ ...data, ratefre: e.target.value })}
-            />
+            <Modal
+              isOpen={isModalOpen}
+              closeModal={closeModal}
+              className={styles.modal}
+            >
+              <h3>Detalles de la oferta</h3>
+              {clientSide && <RichTextEditor value={text} onChange={setText} />}
+              <button onClick={handleSave}>Guardar</button>
+            </Modal>
+            <div
+              className={styles.displayText}
+              dangerouslySetInnerHTML={{ __html: text }}
+            ></div>
+            <button onClick={openModal} className={styles.label}>
+              Información
+            </button>
+
             <button
               className={styles.add}
               onClick={() => {
@@ -100,7 +136,10 @@ const myrates = () => {
             <div key={rate.ratename} className={styles.rate}>
               <p>Tipo:{rate.ratename}</p>
               <p>Precio:{rate.rateprice}</p>
-              <p>Frecuencia:{rate.ratefre}</p>
+              <div
+                className={styles.displayTextTwo}
+                dangerouslySetInnerHTML={{ __html: text }}
+              ></div>
               <button
                 onClick={() => handleDelete(rate.ratename)}
                 className={styles.add}

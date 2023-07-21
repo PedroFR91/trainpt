@@ -24,6 +24,7 @@ import {
   FaRegEdit,
   FaRegTrashAlt,
   FaPlus,
+  FaCopy,
 } from 'react-icons/fa';
 
 const routine = () => {
@@ -53,6 +54,7 @@ const routine = () => {
   const [message, setMessage] = useState(false);
   const [updateExerciseId, setUpdateExerciseId] = useState(null);
   const [updateTrainingId, setUpdateTrainingId] = useState(null);
+  const [copyTrainingId, setCopyTrainingId] = useState(null);
   const [trainingExercises, setTrainingExercises] = useState([]);
   const [addExercise, setAddExercise] = useState(false);
   const [currentTraining, setCurrentTraining] = useState([]);
@@ -63,7 +65,8 @@ const routine = () => {
   const [addNewEx, setAddNewEx] = useState(false);
   const auth = getAuth();
   const user = auth.currentUser;
-
+  const [seriesData, setSeriesData] = useState([{ repetitions: '', sets: '' }]);
+  const [myMessage, setMyMessage] = useState('');
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'routines'),
@@ -153,10 +156,10 @@ const routine = () => {
       console.log(error);
     }
   };
-  const handleUpdateExercise = async (id, updatedExercise) => {
+  const handleUpdateExercise = async (id, updateData) => {
     try {
       const docRef = doc(db, 'exercises', id);
-      await updateDoc(docRef, updatedExercise);
+      await updateDoc(docRef, updateData);
       console.log('Document updated');
     } catch (error) {
       console.error('Error updating document: ', error);
@@ -214,12 +217,54 @@ const routine = () => {
         exercises: currentTraining,
         timeStamp: serverTimestamp(),
       });
+      setMyMessage('creado');
       setMessage(true);
       setTimeout(() => {
         setMessage(false);
       }, 3000);
     } catch (error) {
       console.log(error);
+    }
+  };
+  const handleDeleteTraining = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'trainings', id));
+      console.log('Document deleted');
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+    }
+  };
+  const handleUpdateTraining = async (e, id, updatedTraining) => {
+    e.preventDefault();
+    const trainingData = {
+      name: newTrain.name,
+      description: newTrain.description,
+      // exercises: trainingData.exerciseData,
+    };
+    try {
+      const docRef = doc(db, 'trainings', id);
+      await updateDoc(docRef, {
+        updatedTraining,
+        ...trainingData,
+        exercises: currentTraining,
+      });
+      console.log('Document updated');
+      setMyMessage('actualizado');
+      setMessage(true);
+      setTimeout(() => {
+        setMessage(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error updating document: ', error);
+    }
+  };
+  const handleCopyTraining = async (id, updatedTraining) => {
+    try {
+      const docRef = doc(db, 'trainings', id);
+      await addDoc(docRef, updatedTraining);
+      console.log('Document updated');
+    } catch (error) {
+      console.error('Error updating document: ', error);
     }
   };
 
@@ -345,16 +390,25 @@ const routine = () => {
     });
   };
 
-  const handleAddExerciseClick = (e, ex) => {
+  const handleAddExerciseClick = (e) => {
     e.preventDefault();
-    if (ex) {
-      setTExercise(ex);
-      console.log('ex', ex);
-    }
     setCurrentTraining([...currentTraining, tExercise]);
-    setAddExercise(false);
+    setAddNewEx(false);
     setSelectExercises(false);
     setTExercise([]);
+  };
+
+  const handleAddSeries = () => {
+    setSeriesData([...seriesData, { repetitions: '', sets: '' }]);
+  };
+  const handleInputChange = (index, event) => {
+    const values = [...seriesData];
+    if (event.target.name === 'repetitions') {
+      values[index].repetitions = event.target.value;
+    } else {
+      values[index].sets = event.target.value;
+    }
+    setSeriesData(values);
   };
 
   return (
@@ -370,7 +424,10 @@ const routine = () => {
               <p>Crear Rutina</p>
             </div>
             <div
-              onClick={() => setShowTrainingModal(true)}
+              onClick={() => {
+                setShowTrainingModal(true);
+                setCurrent(true);
+              }}
               className={styles.routine}
             >
               <FaRunning size={50} />
@@ -414,6 +471,7 @@ const routine = () => {
                       <th>Nombre del Entrenamiento</th>
                       <th>Descripción</th>
                       <th>Ejercicios</th>
+                      <th>Opciones</th>
                     </tr>
                     {trainings.map((training) => (
                       <tr key={training.id}>
@@ -427,6 +485,27 @@ const routine = () => {
                               <p>Series: {exercise.sets}</p>
                             </div>
                           ))}
+                        </td>
+                        <td>
+                          <FaRegEdit
+                            size={20}
+                            onClick={() => {
+                              setUpdateTrainingId(training.id);
+                              setShowTrainingModal(true);
+                              setCurrent(true);
+                            }}
+                          />
+                          <FaCopy
+                            size={20}
+                            onClick={() => {
+                              setCopyTrainingId(training.id);
+                              setShowTrainingModal(true);
+                            }}
+                          />
+                          <FaRegTrashAlt
+                            size={20}
+                            onClick={() => handleDeleteTraining(training.id)}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -544,7 +623,7 @@ const routine = () => {
         <div className={styles.modal}>
           <div className={styles.exContent}>
             <FaRunning size={50} />
-            <form onSubmit={handleCreateTraining}>
+            <form>
               <div>
                 <p>Entrenamiento:</p>
                 <input
@@ -552,7 +631,6 @@ const routine = () => {
                   value={newTrain.name}
                   onChange={(e) => {
                     setNewTrain({ ...newTrain, name: e.target.value });
-                    setCurrent(true);
                   }}
                 />
               </div>
@@ -569,7 +647,14 @@ const routine = () => {
                   }
                 />
               </div>
-              <button type='submit' className={styles.create}>
+              <button
+                onClick={(e) =>
+                  updateTrainingId
+                    ? handleUpdateTraining(e, updateTrainingId, newTrain)
+                    : handleCreateTraining(e)
+                }
+                className={styles.create}
+              >
                 {updateTrainingId
                   ? 'Actualizar Entrenamiento'
                   : 'Crear Entrenamiento'}
@@ -583,7 +668,7 @@ const routine = () => {
             </div>
             {message && (
               <div className={styles.message}>
-                Entrenamiento creado con éxito
+                Entrenamiento {myMessage} con éxito
               </div>
             )}
             {current && (
@@ -627,6 +712,14 @@ const routine = () => {
                         <p>Series: </p>
                         <p>{exercise.sets}</p>
                       </div>
+                      <div>
+                        <p>Materiales: </p>
+                        <p>{exercise.materials}</p>
+                      </div>
+                      <div>
+                        <p>Comentarios: </p>
+                        <p>{exercise.comments}</p>
+                      </div>
                       <button
                         onClick={() => handleRemoveExercise(index)}
                         className={styles.create}
@@ -659,28 +752,30 @@ const routine = () => {
             )}
           </div>
           <div>
-            <p>Repeticiones:</p>
-            <input
-              type='text'
-              value={tExercise.repetitions}
-              onChange={(e) =>
-                setTExercise({
-                  ...tExercise,
-                  repetitions: e.target.value,
-                })
-              }
-            />
+            <div>
+              <p>Repeticiones:</p>
+              <input
+                type='text'
+                name='repetitions'
+                value={tExercise.repetitions}
+                onChange={(e) =>
+                  setTExercise({ ...tExercise, repetitions: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <p>Series:</p>
+              <input
+                type='text'
+                name='sets'
+                value={tExercise.sets}
+                onChange={(e) =>
+                  setTExercise({ ...tExercise, sets: e.target.value })
+                }
+              />
+            </div>
           </div>
-          <div>
-            <p>Series:</p>
-            <input
-              type='text'
-              value={tExercise.sets}
-              onChange={(e) =>
-                setTExercise({ ...tExercise, sets: e.target.value })
-              }
-            />
-          </div>
+
           <div>
             <p>Comentarios:</p>
             <textarea

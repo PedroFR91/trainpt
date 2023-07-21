@@ -7,6 +7,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -21,6 +22,10 @@ const files = () => {
   const [myfiles, setMyFiles] = useState([]);
   const [showvideo, setShowvideo] = useState(false);
   const [url, setUrl] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoList, setVideoList] = useState([]); // [{id:1, title:'video1', url:'https://www.youtube.com/watch?v=1'}
+  const [fileTitle, setFileTitle] = useState('');
+
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -65,6 +70,24 @@ const files = () => {
     };
     file && uploadFile();
   }, [file]);
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'videos'),
+      (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setVideoList(list);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+    return () => {
+      unsub();
+    };
+  }, []);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -92,7 +115,7 @@ const files = () => {
       await setDoc(doc(db, 'files', name), {
         ...data,
         fileType: file.type,
-        title: file.name,
+        title: fileTitle,
         size: file.size,
         trainerId: user.uid,
         timeStamp: serverTimestamp(),
@@ -105,55 +128,82 @@ const files = () => {
 
   const addVideo = async (e) => {
     e.preventDefault();
+    const videoData = {
+      url: url,
+      title: videoTitle,
+      trainerId: user.uid,
+      timeStamp: serverTimestamp(),
+    };
     try {
-      await addDoc(collection(db, 'videos'), {
-        url: url,
-        trainerId: user.uid,
-        timeStamp: serverTimestamp(),
-      });
-      setShowvideo(true);
+      const videoDocRef = await addDoc(collection(db, 'videos'), videoData);
+      const videoDoc = await getDoc(videoDocRef);
+      setVideoList((prevState) => [
+        ...prevState,
+        { id: videoDoc.id, title: videoTitle, url },
+      ]);
     } catch (error) {
       console.log(error);
     }
   };
+
+  const selectVideo = (url) => {
+    setUrl(url);
+    setShowvideo(true);
+  };
   return (
     <div className={styles.container}>
       <TrainerHeader />
-
       <div className={styles.uploadFiles}>
-        <div className={styles.topArea}>
-          <div className={styles.videoArea}>
-            <h1>Vídeos</h1>
-            <input
-              type='text'
-              placeholder='Pegue aquí su URL'
-              onChange={(e) => setUrl(e.target.value)}
-            />
-
-            <AiOutlinePlayCircle
-              style={{
-                fontSize: '36px',
-                cursor: 'pointer',
-              }}
-              onClick={addVideo}
-            />
-
-            <div className={styles.video}>
-              {showvideo && <ReactPlayer url={url} width={'100%'} />}
-            </div>
+        <div className={styles.videoArea}>
+          <h1>Vídeos</h1>
+          <input
+            type='text'
+            placeholder='Título del video'
+            onChange={(e) => setVideoTitle(e.target.value)}
+          />
+          <input
+            type='text'
+            placeholder='Pegue aquí su URL'
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <AiOutlinePlayCircle
+            style={{
+              fontSize: '36px',
+              cursor: 'pointer',
+            }}
+            onClick={addVideo}
+          />
+          <div className={styles.video}>
+            {showvideo && <ReactPlayer url={url} width={'100%'} />}
           </div>
-          <div className={styles.uploadArea}>
-            <h1>Suba sus archivos</h1>
-            <input
-              type='file'
-              id='filepicker'
-              accept='image/*,.pdf,.doc,.docx,.xml'
-              onChange={(e) => setFile(e.target.files[0])}
-            />
-            <button onClick={handleUpload}>Subir Archivo</button>
+          <div className={styles.videoList}>
+            {videoList.map((video) => (
+              <div key={video.id}>
+                <p
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => selectVideo(video.url)}
+                >
+                  {video.title}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
-
+        <div className={styles.uploadArea}>
+          <h1>Suba sus archivos</h1>
+          <input
+            type='text'
+            placeholder='Ingrese el título de su archivo aquí'
+            onChange={(e) => setFileTitle(e.target.value)}
+          />
+          <input
+            type='file'
+            id='filepicker'
+            accept='image/*,.pdf,.doc,.docx,.xml'
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+          <button onClick={handleUpload}>Subir Archivo</button>
+        </div>
         <div className={styles.gallery}>
           {myfiles.map((item) => (
             <div key={item.id}>

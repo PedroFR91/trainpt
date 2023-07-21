@@ -28,7 +28,6 @@ const AddText = () => {
 
   const updateText = async () => {
     const docRef = doc(db, 'users', myUid);
-
     await updateDoc(docRef, {
       mytext: text,
     });
@@ -63,11 +62,12 @@ const AddText = () => {
 
   return (
     <div className={styles.addText}>
-      <button onClick={openModal} className={styles.label}>
-        Editar texto
-      </button>
-      <Modal isOpen={isModalOpen} closeModal={closeModal}>
-        <h1>Editor de texto enriquecido</h1>
+      <Modal
+        isOpen={isModalOpen}
+        closeModal={closeModal}
+        className={styles.modal}
+      >
+        <h3>Añade tu información personal</h3>
         {clientSide && <RichTextEditor value={text} onChange={setText} />}
         <button onClick={handleSave}>Guardar</button>
       </Modal>
@@ -75,6 +75,9 @@ const AddText = () => {
         className={styles.displayText}
         dangerouslySetInnerHTML={{ __html: text }}
       ></div>
+      <button onClick={openModal} className={styles.label}>
+        Editar texto
+      </button>
     </div>
   );
 };

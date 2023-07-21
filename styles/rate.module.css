@@ -52,6 +52,9 @@
   background-color: #ffffff;
   cursor: pointer;
 }
+.addrate input {
+  color: #ffffff;
+}
 .addrate input,
 .addrate button {
   width: 100%;
