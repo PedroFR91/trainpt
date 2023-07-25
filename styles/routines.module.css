@@ -22,10 +22,10 @@
   justify-content: space-around;
 }
 .bottom {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   width: 100%;
-  height: 100vh;
+  height: 85vh;
   display: flex;
   justify-content: space-around;
 }
@@ -90,11 +90,11 @@
   justify-content: flex-start;
   align-items: center;
   background-color: #212121;
-  overflow-y: scroll;
+
   z-index: 10;
 }
 .myddbbitem table {
-  width: 100%;
+  width: 90%;
 }
 .myddbbitem table tr:first-child {
   background-color: #f69d21dd;
@@ -102,8 +102,21 @@
   font-size: 1.3rem;
   font-weight: bold;
 }
+.myddbbitem table div tr:first-child {
+  background-color: #212121;
+  font-size: 1.3rem;
+  font-weight: normal;
+}
+.exercise {
+  width: 100%;
+  height: 55vh;
+  overflow-y: scroll;
+}
+.exercise div {
+  width: 100%;
+}
 .myddbbitem table tr {
-  width: 90%;
+  width: 100%;
   height: 15vh;
   display: flex;
   justify-content: space-between;
@@ -125,14 +138,11 @@
 }
 .modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: 0;
   z-index: 10;
-  /* opcional para darle un fondo oscuro al resto de la página */
   background: rgba(0, 0, 0, 0.9);
   width: 100%;
-  min-height: 100%;
+  height: 85vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -246,7 +256,7 @@
 }
 .closebutton {
   position: absolute;
-  top: 1rem;
+  top: 5vh;
   right: 1rem;
   border: 1px solid #ffffff;
   padding: 0.5rem 1rem;

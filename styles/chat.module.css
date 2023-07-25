@@ -1,24 +1,130 @@
-.chat {
-  width: 200px;
+.buttonchat {
+  width: 120px;
   height: 40px;
   position: fixed;
-  bottom: 0;
-  right: 0;
+  bottom: 10px;
+  right: 10px;
   border: 2px solid #ffffff;
   border-radius: 10px;
-  color: #212121;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 1rem;
-  background-color: #f69d21;
+
+  z-index: 200;
 }
-.chat:hover {
+.buttonchat:hover {
   cursor: pointer;
+  background-color: #f69d21;
+  color: #212121;
 }
 .circle {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
   background-color: green;
+}
+.chat {
+  position: fixed;
+  bottom: 5px;
+  width: 100%;
+  height: 85vh;
+  z-index: 200;
+  background-color: #212121;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+.chatcontainer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 70vh;
+  display: flex;
+  padding: 0.5rem;
+}
+.left {
+  width: 25%;
+  height: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ffffff;
+  margin: 0.5rem;
+}
+.clients,
+.files {
+  width: 100%;
+  height: 50%;
+  margin: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: scroll;
+}
+.right {
+  width: 75%;
+  height: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ffffff;
+  margin: 0.5rem;
+}
+.messages {
+  width: 100%;
+  height: 80%;
+  overflow-y: scroll;
+}
+.messages p {
+  border: 1px solid #ffffff;
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  margin: 0.5rem;
+  border-radius: 10px;
+}
+.mymessage {
+  width: 100%;
+  height: 20%;
+
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mymessage input {
+  width: 85%;
+  height: 80%;
+  border-radius: 10px;
+  background-color: #212121;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+.mymessage button {
+  width: 10%;
+  height: 80%;
+  color: #ffffff;
+  background-color: #212121;
+  border: none;
+  border-radius: 10px;
+}
+.mymessage button:hover {
+  background-color: #f69d21;
+  color: #212121;
+}
+.closebutton {
+  position: absolute;
+  top: 5vh;
+  right: 1rem;
+  border: 1px solid #ffffff;
+  padding: 0.5rem 1rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  cursor: pointer;
+  z-index: 110;
+  background-color: rgba(0, 0, 0, 0.9);
+  margin-bottom: 1rem;
+}
+.mychatimg {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
 }

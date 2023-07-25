@@ -148,6 +148,7 @@ const routine = () => {
         ...exerciseData,
         timeStamp: serverTimestamp(),
       });
+
       setMessage(true);
       setTimeout(() => {
         setMessage(false);
@@ -522,26 +523,28 @@ const routine = () => {
                       <th>Comentarios</th>
                       <th>Opciones</th>
                     </tr>
-                    {exercises.map((exercise) => (
-                      <tr key={exercise} className={styles.exercise}>
-                        <td>{exercise.name}</td>
-                        <td>{exercise.material}</td>
-                        <td>{exercise.comments}</td>
-                        <td>
-                          <FaRegEdit
-                            size={20}
-                            onClick={() => {
-                              setUpdateExerciseId(exercise.id);
-                              setShowExerciseModal(true);
-                            }}
-                          />
-                          <FaRegTrashAlt
-                            size={20}
-                            onClick={() => handleDeleteExercise(exercise.id)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    <div className={styles.exercise}>
+                      {exercises.map((exercise) => (
+                        <tr key={exercise}>
+                          <td>{exercise.name}</td>
+                          <td>{exercise.material}</td>
+                          <td>{exercise.comments}</td>
+                          <td>
+                            <FaRegEdit
+                              size={20}
+                              onClick={() => {
+                                setUpdateExerciseId(exercise.id);
+                                setShowExerciseModal(true);
+                              }}
+                            />
+                            <FaRegTrashAlt
+                              size={20}
+                              onClick={() => handleDeleteExercise(exercise.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </div>
                   </table>
                 </div>
               )}

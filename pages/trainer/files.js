@@ -22,6 +22,7 @@ import {
   FaTrashAlt,
   FaUpload,
 } from 'react-icons/fa';
+import Chat from '../../components/chat/chat';
 const files = () => {
   const [file, setFile] = useState('');
   const [data, setData] = useState({});
@@ -287,6 +288,7 @@ const files = () => {
           )}
         </div>
       )}
+      <Chat />
     </div>
   );
 };
