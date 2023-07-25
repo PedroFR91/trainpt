@@ -138,7 +138,7 @@ const myrates = () => {
               <p>Precio:{rate.rateprice}</p>
               <div
                 className={styles.displayTextTwo}
-                dangerouslySetInnerHTML={{ __html: text }}
+                dangerouslySetInnerHTML={{ __html: rate.rateinfo }}
               ></div>
               <button
                 onClick={() => handleDelete(rate.ratename)}
