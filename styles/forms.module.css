@@ -30,6 +30,8 @@
   flex-wrap: wrap;
   justify-content: space-evenly;
   align-items: center;
+  background-color: #212121;
+  z-index: 20;
 }
 .initialLeft {
   width: 55%;
@@ -107,26 +109,30 @@
 }
 
 .myforms {
-  background-color: var(--light-blue);
-  margin-top: 5rem;
-  width: 90%;
-  min-height: 60vh;
+  position: fixed;
+  bottom: 0;
+  margin-top: 1rem;
+  width: 100%;
+  height: 85vh;
   display: flex;
+  flex-wrap: wrap;
+  z-index: 20;
+  overflow-y: scroll;
+  background-color: #212121;
 }
 .myforms div {
   width: 400px;
   min-height: fit-content;
-  background: #ffffff;
   margin: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: stretch;
   align-items: center;
   padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 .myforms div p {
   width: 80%;
-
   display: flex;
   justify-content: space-around;
   margin-bottom: 0.5rem;
@@ -188,4 +194,53 @@
 }
 .editable li {
   list-style: none;
+}
+.menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 85vh;
+  background-color: #212121f0;
+  box-shadow: 1px 1px 5px #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  z-index: 14;
+}
+
+.menuItem {
+  width: 200px;
+  height: 200px;
+  padding: 1rem 0;
+  font-size: 1.2rem;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s;
+  border: 1px solid #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.menuItem:hover {
+  font-size: 1.3rem;
+  color: #212121;
+  cursor: pointer;
+  border-color: #f69d21;
+  background-color: #f69d21dd;
+}
+.closebutton {
+  position: absolute;
+  top: 5vh;
+  right: 1rem;
+  border: 1px solid #ffffff;
+  padding: 0.5rem 1rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  cursor: pointer;
+  z-index: 110;
+  background-color: rgba(0, 0, 0, 0.9);
+  margin-bottom: 1rem;
 }

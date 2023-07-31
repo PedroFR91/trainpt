@@ -103,3 +103,43 @@
   animation: neonGlow 5s infinite;
   animation-direction: alternate;
 }
+.message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  /* opcional para darle un fondo oscuro al resto de la página */
+  background: rgb(0, 0, 0, 0.97);
+  width: 50%;
+  height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeout 1.5s 3s forwards;
+}
+@keyframes underline {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.message:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: #f69d21;
+  animation: underline 3s forwards;
+}

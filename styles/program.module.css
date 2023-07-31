@@ -1,11 +1,9 @@
 .programContainer {
   width: 100%;
   min-height: 100vh;
-  background-image: url('../public/background.jpg');
-  background-size: cover;
-  background-attachment: fixed;
   font-family: 'Roboto';
   font-weight: 400;
+  background-color: #212121;
   z-index: -10;
 }
 .programlayout {
@@ -13,11 +11,6 @@
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
-}
-.horizontal {
-  width: 90%;
-  display: flex;
-  justify-content: space-between;
 }
 .nextrevision {
   width: 400px;

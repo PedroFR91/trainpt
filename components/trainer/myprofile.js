@@ -8,12 +8,8 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const myprofile = () => {
   const { myData, myUid } = useContext(AuthContext);
-  const [data, setData] = useState([]);
   const [file, setFile] = useState(null); // Estado para almacenar el archivo de imagen seleccionado
 
-  useEffect(() => {
-    setData(myData);
-  }, [myData]);
   useEffect(() => {
     file && handleImageUpload();
   }, [file]);
@@ -43,39 +39,36 @@ const myprofile = () => {
   };
   return (
     <>
-      {myData &&
-        myData
-          .filter((item) => item.id === myUid)
-          .map((data) => (
-            <div key={data.id} className={styles.myprofile}>
-              <img
-                src={data.img ? data.img : '/face.jpg'}
-                alt={'img'}
-                className={styles.myprofileimg}
-              />
-              <input
-                type='file'
-                id='file'
-                onChange={(e) => setFile(e.target.files[0])}
-                hidden
-              />
-              <div className={styles.profilesection}>
-                <button
-                  className={styles.label}
-                  htmlFor='file'
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('file').click();
-                  }}
-                >
-                  Cambiar imagen de perfil
-                </button>
-                <div className={styles.myprofileinfo}>
-                  <AddText />
-                </div>
-              </div>
+      {myData && (
+        <div className={styles.myprofile}>
+          <img
+            src={myData.img ? myData.img : '/face.jpg'}
+            alt={'img'}
+            className={styles.myprofileimg}
+          />
+          <input
+            type='file'
+            id='file'
+            onChange={(e) => setFile(e.target.files[0])}
+            hidden
+          />
+          <div className={styles.profilesection}>
+            <button
+              className={styles.label}
+              htmlFor='file'
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('file').click();
+              }}
+            >
+              Cambiar imagen de perfil
+            </button>
+            <div className={styles.myprofileinfo}>
+              <AddText />
             </div>
-          ))}
+          </div>
+        </div>
+      )}
     </>
   );
 };

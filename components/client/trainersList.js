@@ -13,8 +13,8 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
 const trainersList = (props) => {
   const [data, setData] = useState([]);
-  const [select, setSelect] = useState(false);
   const [show, setShow] = useState(false);
+  const [select, setSelect] = useState(false);
   const { myData, myUid } = useContext(AuthContext);
   useEffect(() => {
     const unsub = onSnapshot(
@@ -30,15 +30,20 @@ const trainersList = (props) => {
         console.log(error);
       }
     );
+
     return () => {
       unsub();
     };
   }, []);
-
+  //useEffect para verificar si hay algún entrenador con selected: true
+  useEffect(() => {
+    const hasSelectedTrainer = data.some(
+      (trainer) => trainer.selected === true
+    );
+    setSelect(hasSelectedTrainer);
+  }, [data]);
+  console.log(myData);
   const selectTrainer = async (id) => {
-    console.log(id);
-    console.log(myUid);
-    setSelect(true);
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, {
       link: myUid,
@@ -46,13 +51,10 @@ const trainersList = (props) => {
     });
   };
   const deselectTrainer = async (id) => {
-    console.log(id);
-    console.log(myUid);
-    setSelect(true);
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, {
       link: '',
-      selected: true,
+      selected: false,
     });
   };
 
@@ -62,33 +64,33 @@ const trainersList = (props) => {
 
   return (
     <>
-      {!select ? (
-        <div>
-          <h2>Entrenadores Disponibles</h2>
-        </div>
-      ) : (
+      {select ? (
         <div>
           <h2>Mi Entrenador</h2>
         </div>
+      ) : (
+        <div>
+          <h2>Entrenadores Disponibles</h2>
+        </div>
       )}
       <div className={styles.trainersList}>
-        {!select
+        {select
           ? data
-              .filter((data) => data.role === 'trainer')
-              .map((data) => (
-                <div key={data.id} className={styles.userdata}>
+              .filter((trainer) => trainer.link === myUid)
+              .map((trainer) => (
+                <div key={trainer.id} className={styles.userdata}>
                   <div>
-                    {data.img ? (
-                      <img src={data.img} alt={'myprofileimg'} />
+                    {trainer.img ? (
+                      <img src={trainer.img} alt={'myprofileimg'} />
                     ) : (
                       <img src='/face.jpg' alt={'myprofileimg'} />
                     )}
                   </div>
-                  <div>{data.username}</div>
+                  <div>{trainer.username}</div>
                   {!show ? (
                     <div
                       className={styles.button}
-                      onClick={() => showTrainer(data)}
+                      onClick={() => showTrainer(trainer)}
                     >
                       Ver Perfil
                     </div>
@@ -99,50 +101,48 @@ const trainersList = (props) => {
                   <div
                     className={styles.button}
                     onClick={() => {
-                      selectTrainer(data.id);
-                      setSelect(true);
-                    }}
-                  >
-                    Seleccionar
-                  </div>
-                </div>
-              ))
-          : data
-              .filter((data) => data.role === 'trainer' && data.link === myUid)
-              .map((data) => (
-                <div key={data.id} className={styles.userdata}>
-                  <div>
-                    {data.img ? (
-                      <img src={data.img} alt={'myprofileimg'} />
-                    ) : (
-                      <img src='/face.jpg' alt={'myprofileimg'} />
-                    )}
-                  </div>
-                  <div>{data.username}</div>
-
-                  {!show ? (
-                    <div
-                      className={styles.button}
-                      onClick={() => showTrainer(data)}
-                    >
-                      Ver Perfil
-                    </div>
-                  ) : (
-                    <div className={styles.trainerInfo}>INFO</div>
-                  )}
-
-                  <div
-                    className={styles.button}
-                    onClick={() => {
-                      deselectTrainer(data.id);
+                      deselectTrainer(trainer.id);
                       setSelect(false);
                     }}
                   >
                     Cambiar
                   </div>
                 </div>
+              ))
+          : data
+              .filter((trainer) => trainer.role === 'trainer')
+              .map((trainer) => (
+                <div key={trainer.id} className={styles.userdata}>
+                  <div>
+                    {trainer.img ? (
+                      <img src={trainer.img} alt={'myprofileimg'} />
+                    ) : (
+                      <img src='/face.jpg' alt={'myprofileimg'} />
+                    )}
+                  </div>
+                  <div>{trainer.username}</div>
+                  {!show ? (
+                    <div
+                      className={styles.button}
+                      onClick={() => showTrainer(trainer)}
+                    >
+                      Ver Perfil
+                    </div>
+                  ) : (
+                    <div className={styles.trainerInfo}>INFO</div>
+                  )}
+
+                  <div
+                    className={styles.button}
+                    onClick={() => {
+                      selectTrainer(trainer.id);
+                      setSelect(true);
+                    }}
+                  >
+                    Seleccionar
+                  </div>
+                </div>
               ))}
-        <div></div>
       </div>
     </>
   );

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import styles from '../../styles/userList.module.css';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
 const userList = () => {
@@ -9,10 +9,13 @@ const userList = () => {
   const { myData, myUid } = useContext(AuthContext);
   const [routine, setRoutine] = useState([]);
   const [myForm, setMyForm] = useState([]);
+  const [clients, setClients] = useState([]);
+
   const showClient = (data) => {
     setShow(true);
     setCurrent(data);
   };
+
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'routines'),
@@ -49,27 +52,54 @@ const userList = () => {
       unsub();
     };
   }, []);
+
+  useEffect(() => {
+    if (myData) {
+      console.log('Use effect de clients fuera');
+      console.log(myData.link);
+      if (myData.link) {
+        // Realizar la consulta para obtener los clientes vinculados al entrenador actual
+        const q = query(
+          collection(db, 'users'),
+          where('id', '==', myData.link)
+        );
+        const unsub = onSnapshot(q, (snapShot) => {
+          let list = [];
+          snapShot.docs.forEach((doc) => {
+            list.push({ id: doc.id, ...doc.data() });
+          });
+          // Actualizar el estado con los clientes vinculados
+          setClients(list);
+          console.log('Use effect de clients dentro');
+        });
+
+        return () => {
+          unsub();
+        };
+      }
+    }
+  }, [myData]);
+
   return (
     <div className={styles.list}>
       {!show &&
-        myData
-          .filter((data) => data.role === 'client')
-          .map((data) => (
-            <div key={data.id} className={styles.userdata}>
-              <div>
-                {data.img ? (
-                  <img src={data.img} alt={'myprofileimg'} />
-                ) : (
-                  <img src='/face.jpg' alt={'myprofileimg'} />
-                )}
-              </div>
-              <div>{data.username}</div>
-              <div>{data.status}</div>
-              <div className={styles.button} onClick={() => showClient(data)}>
-                Ver
-              </div>
+        clients &&
+        clients.map((data) => (
+          <div key={data.id} className={styles.userdata}>
+            <div>
+              {data.img ? (
+                <img src={data.img} alt={'myprofileimg'} />
+              ) : (
+                <img src='/face.jpg' alt={'myprofileimg'} />
+              )}
             </div>
-          ))}
+            <div>{data.username}</div>
+            <div>{data.status}</div>
+            <div className={styles.button} onClick={() => showClient(data)}>
+              Ver
+            </div>
+          </div>
+        ))}
       {show && (
         <div className={styles.client}>
           <div>

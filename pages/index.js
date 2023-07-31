@@ -12,7 +12,7 @@ import {
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { auth, db } from '../firebase.config';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 
 const provider = new GoogleAuthProvider();
 
@@ -24,21 +24,44 @@ export default function Home() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [usernamename, setUserName] = useState('');
   const [selected, setSelected] = useState('trainer');
   const [error, setError] = useState(false);
+  const [message, setMessage] = useState(null);
 
   const signInWithGoogle = async () => {
     try {
       const res = await signInWithPopup(auth, provider);
       const user = res.user;
-      const userData = {
-        id: user.uid,
-        email: user.email,
-        role: selected,
-        img: user.photoURL,
-        timeStamp: serverTimestamp(),
-      };
-      await setDoc(doc(db, 'users', user.uid), userData);
+
+      // Verificar si el usuario ya ha iniciado sesión con correo/contraseña
+      const existingUserDoc = await getDoc(doc(db, 'users', user.uid));
+      const existingUserData = existingUserDoc.data();
+      if (existingUserData && existingUserData.email) {
+        // El usuario ha iniciado sesión previamente con correo/contraseña
+        // Asociar la cuenta de Google con la cuenta de correo/contraseña
+        const updatedUserData = {
+          ...existingUserData,
+          googleLinked: true,
+        };
+        await setDoc(doc(db, 'users', user.uid), updatedUserData);
+        setMessage(
+          'Ya has accedido con correo y contraseña. Ahora puedes acceder con Google también.'
+        );
+      } else {
+        // El usuario está iniciando sesión con Google por primera vez
+        // Crear un nuevo registro en Firestore
+        const userData = {
+          id: user.uid,
+          email: user.email,
+          username: user.displayName,
+          role: selected,
+          img: user.photoURL,
+          timeStamp: serverTimestamp(),
+          googleLinked: true,
+        };
+        await setDoc(doc(db, 'users', user.uid), userData);
+      }
       if (selected === 'trainer') {
         push('/trainer/home');
       } else {
@@ -59,6 +82,17 @@ export default function Home() {
       } else {
         push('/client/program');
       }
+
+      // Consultar el campo "googleLinked" en Firestore
+      const userDoc = doc(db, 'users', user.uid);
+      const userSnapshot = await getDoc(userDoc);
+      const userData = userSnapshot.data();
+      if (userData && userData.googleLinked) {
+        // Mostrar el aviso al usuario de que puede acceder con Google también
+        setMessage(
+          'Ya has accedido con Google. Ahora puedes acceder con correo y contraseña también.'
+        );
+      }
     } catch (error) {
       setError(true);
     }
@@ -66,11 +100,20 @@ export default function Home() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // Verificar que todos los campos estén completos
+    if (!email || !password || !userName) {
+      setError(true);
+      return;
+    }
+
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, 'users', res.user.uid), {
         id: res.user.uid,
         email,
+        userName,
+        password,
         role: selected,
         timeStamp: serverTimestamp(),
       });
@@ -108,6 +151,11 @@ export default function Home() {
           <div>
             <form onSubmit={handleRegister}>
               <input
+                type='text'
+                placeholder='Nombre'
+                onChange={(e) => setUserName(e.target.value)}
+              />
+              <input
                 type='email'
                 placeholder='Correo'
                 onChange={(e) => setEmail(e.target.value)}
@@ -125,7 +173,15 @@ export default function Home() {
                 <option value='client'>Cliente</option>
               </select>
               <button type='submit'>Crear cuenta</button>
-              <div onClick={signInWithGoogle}>
+              <button
+                type='button'
+                onClick={signInWithGoogle}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {' '}
                 <Image
                   src={'/google.png'}
@@ -134,7 +190,7 @@ export default function Home() {
                   height={40}
                 />
                 <p>Accede con Google</p>
-              </div>
+              </button>
             </form>
           </div>
         ) : (
@@ -181,6 +237,7 @@ export default function Home() {
           />
         </div>
       </div>
+      {message && <div className={styles.message}>{message}</div>}
     </div>
   );
 }
