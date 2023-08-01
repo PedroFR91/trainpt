@@ -6,6 +6,8 @@
   font-family: 'Roboto';
   font-size: 16px;
   font-weight: 600;
+  border: 3px solid red;
+  z-index: 20;
 }
 .userdata {
   width: 90%;
@@ -48,16 +50,23 @@
   cursor: pointer;
 }
 .client {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: 85vh;
+  border: 1px solid red;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  background-color: #212121;
+  z-index: 20;
+  overflow-y: scroll;
 }
 .client div {
-  width: 20%;
-  min-height: 20vh;
+  width: 90%;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -65,25 +74,21 @@
   text-align: center;
   margin-bottom: 1rem;
 }
-.client button {
-  width: 30px;
-  height: 30px;
-  background: var(--dark-blue);
-  color: #ffffff;
-  border: #ffffff;
-  border-radius: 6px;
-  position: absolute;
-  top: -70px;
-  left: 20px;
-  border: 2px solid red;
-}
-.client button:hover {
-  color: var(--dark-blue);
-  background: #ffffff;
-  font-weight: 900;
-  border: 1px solid var(--dark-blue);
-}
+
 .client div img {
-  width: 100%;
+  width: 200px;
   border-radius: 50%;
+}
+.closeButton {
+  width: 40px;
+  height: 40px;
+  color: #ffffff;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: 1px solid #ffffff;
+  background-color: transparent;
+  font-size: 1.5rem;
+  font-weight: 200;
+  cursor: pointer;
 }

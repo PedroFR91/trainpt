@@ -19,7 +19,49 @@
   color: #ffffff;
 }
 
-.initial,
+.initial {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  overflow-y: scroll;
+
+  width: 100%;
+  height: 85vh;
+
+  font-family: 'Roboto';
+  font-size: 1.2rem;
+  color: #ffffff;
+  font-weight: 600;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+
+  background-color: #212121;
+
+  z-index: 20;
+}
+.initial h3 {
+  margin: 1rem;
+}
+.initial > div {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 1rem;
+}
+.initial div > div {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+}
+.initial div:last-child > div input {
+  width: 50px;
+}
 .follow {
   width: 100%;
   font-family: 'Roboto';
@@ -33,30 +75,7 @@
   background-color: #212121;
   z-index: 20;
 }
-.initialLeft {
-  width: 55%;
-  padding: 1rem;
-  height: 70vh;
-  display: flex;
-  justify-content: space-between;
-  border: 1px solid #ffffff;
-  border-radius: 10px;
-}
-.initialRight {
-  width: 35%;
-  height: 70vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
-  border: 1px solid #ffffff;
-  border-radius: 10px;
-}
-.initialRight div {
-  width: 80%;
-  display: flex;
-  justify-content: space-between;
-}
+
 .mybuttons {
   width: 50%;
   display: flex;
@@ -89,16 +108,6 @@
   display: flex;
   justify-content: space-evenly;
   align-items: center;
-}
-.initialLeft div input,
-.initialLeft div textarea,
-.initialLeft div select,
-.initialRight div input {
-  background-color: transparent;
-  border: 1px solid #ffffff;
-  border-radius: 10px;
-  color: #ffffff;
-  padding: 0 0.5rem;
 }
 
 .initial label,

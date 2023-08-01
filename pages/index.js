@@ -24,7 +24,7 @@ export default function Home() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [usernamename, setUserName] = useState('');
+  const [userName, setUserName] = useState('');
   const [selected, setSelected] = useState('trainer');
   const [error, setError] = useState(false);
   const [message, setMessage] = useState(null);
@@ -77,21 +77,26 @@ export default function Home() {
     try {
       const res = await signInWithEmailAndPassword(auth, email, password);
       const user = res.user;
-      if (user.role === 'trainer') {
-        push('/trainer/home');
-      } else {
-        push('/client/program');
-      }
 
-      // Consultar el campo "googleLinked" en Firestore
+      // Consultar el documento del usuario en Firestore
       const userDoc = doc(db, 'users', user.uid);
       const userSnapshot = await getDoc(userDoc);
       const userData = userSnapshot.data();
-      if (userData && userData.googleLinked) {
-        // Mostrar el aviso al usuario de que puede acceder con Google también
-        setMessage(
-          'Ya has accedido con Google. Ahora puedes acceder con correo y contraseña también.'
-        );
+
+      if (userData && userData.role) {
+        // Redireccionar al usuario según su rol
+        if (userData.role === 'trainer') {
+          push('/trainer/home');
+        } else {
+          push('/client/program');
+        }
+
+        // Consultar el campo "googleLinked" en Firestore y mostrar el mensaje si es necesario
+        if (userData.googleLinked) {
+          setMessage(
+            'Ya has accedido con Google. Ahora puedes acceder con correo y contraseña también.'
+          );
+        }
       }
     } catch (error) {
       setError(true);

@@ -3,6 +3,7 @@ import styles from '../../styles/userList.module.css';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
+import Link from 'next/link';
 const userList = () => {
   const [show, setShow] = useState(false);
   const [current, setCurrent] = useState('');
@@ -120,7 +121,7 @@ const userList = () => {
                 .filter((form) => form.link === current.id)
                 .map((form) => (
                   <div key={form.id}>
-                    <p>{form.name}</p>
+                    <Link href={`/share/${form.id}`}>Ver</Link>
                   </div>
                 ))}
             </div>
@@ -144,7 +145,7 @@ const userList = () => {
           </div>
           <div>Dieta asignada</div>
 
-          <button onClick={() => setShow(false)}>X</button>
+          <button onClick={() => setShow(false)}className={styles.closeButton}>X</button>
         </div>
       )}
     </div>

@@ -16,6 +16,8 @@ import { getAuth } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
 import { follow, initialForm } from '../../forms/initialForm';
 import { FaArrowAltCircleRight, FaFile } from 'react-icons/fa';
+import Initial from '../../components/client/Initial';
+import Link from 'next/link';
 
 const forms = () => {
   const [data, setData] = useState([]);
@@ -64,32 +66,12 @@ const forms = () => {
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
-  const handleChange = (event) => {
-    setFormData({
-      ...formData,
-      [event.target.name]:
-        event.target.type === 'file'
-          ? event.target.files[0]
-          : event.target.value,
-    });
-  };
-
   const handleMeasuresChange = (event) => {
     setFormData({
       ...formData,
       measures: {
         ...formData.measures,
         [event.target.name]: event.target.value,
-      },
-    });
-  };
-
-  const handlePhotosChange = (event) => {
-    setFormData({
-      ...formData,
-      photos: {
-        ...formData.photos,
-        [event.target.name]: event.target.files[0],
       },
     });
   };
@@ -149,18 +131,6 @@ const forms = () => {
     };
   }, []);
 
-  const handleCreate = async (e) => {
-    try {
-      await addDoc(collection(db, 'forms'), {
-        ...formData,
-        formid: myUid,
-        type: 'Inicial',
-        timeStamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
   const handleCreateFollow = async (e) => {
     try {
       await addDoc(collection(db, 'forms'), {
@@ -191,219 +161,36 @@ const forms = () => {
     <div className={styles.container}>
       <TrainerHeader />
       <div className={styles.formLayout}>
-        <div className={styles.menu}>
-          <div className={styles.menuItem} onClick={() => setShowInitial(true)}>
-            <FaFile size={50} />
-            Inicial
-          </div>
-          <div className={styles.menuItem} onClick={() => setShowFollow(true)}>
-            <FaFile size={50} />
-            Seguimiento
-          </div>
-          <div className={styles.menuItem} onClick={() => setShowMyForms(true)}>
-            <FaFile size={50} /> Ver Formularios
-          </div>
-        </div>
-        {showinitial && (
-          <>
-            <form className={styles.initial} onSubmit={handleCreate}>
-              <div className={styles.initialLeft}>
-                <div>
-                  <h3>Datos generales</h3>
-                  <div>
-                    <p>Nombre:</p>
-                    <input
-                      type='text'
-                      name='name'
-                      placeholder='Pedro'
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <p>Sexo:</p>
-                    <select
-                      name='gender'
-                      value={formData.gender}
-                      onChange={handleChange}
-                    >
-                      <option value='man'>Hombre</option>
-                      <option value='woman'>Mujer</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <p>Peso</p>
-                    <input
-                      type='text'
-                      name='weight'
-                      value={formData.weight}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <p>Altura</p>
-                    <input
-                      type='text'
-                      name='height'
-                      value={formData.height}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div>
-                    <h3>Fotos</h3>
-                    <div>
-                      <p>Frente:</p>
-                      <input
-                        type='file'
-                        name='front'
-                        onChange={handlePhotosChange}
-                      />
-                    </div>
-
-                    <div>
-                      <p>Espalda:</p>
-                      <input
-                        type='file'
-                        name='back'
-                        onChange={handlePhotosChange}
-                      />
-                    </div>
-
-                    <div>
-                      <p>Lateral:</p>
-                      <input
-                        type='file'
-                        name='lateral'
-                        onChange={handlePhotosChange}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <h3>Dieta</h3>
-                    <div>
-                      <p>Intolerancias:</p>
-                      <textarea
-                        name='intolerances'
-                        value={formData.intolerances}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div>
-                      <p>Comida preferida:</p>
-                      <textarea
-                        name='preferredFoods'
-                        value={formData.preferredFoods}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div>
-                      <p>Días de entrenamiento:</p>
-                      <select
-                        name='trainingDays'
-                        value={formData.trainingDays}
-                        onChange={handleChange}
-                      >
-                        <option value=''>Días de entrenamiento</option>
-                        <option value='1'>1 día a la semana</option>
-                        <option value='2'>2 días a la semana</option>
-                        <option value='3'>3 días a la semana</option>
-                        <option value='4'>4 días a la semana</option>
-                        <option value='5'>5 días a la semana</option>
-                        <option value='6'>6 días a la semana</option>
-                        <option value='7'>7 días a la semana</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.initialRight}>
-                <h3>Medidas</h3>
-                <div>
-                  <p>Pecho:</p>
-                  <input
-                    type='text'
-                    name='chest'
-                    value={formData.measures.chest}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-
-                <div>
-                  <p>Hombros:</p>
-                  <input
-                    type='text'
-                    name='shoulders'
-                    value={formData.measures.shoulders}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-
-                <div>
-                  <p>Biceps:</p>
-                  <input
-                    type='text'
-                    name='biceps'
-                    value={formData.measures.biceps}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-
-                <div>
-                  <p>Cintura:</p>
-                  <input
-                    type='text'
-                    name='hips'
-                    value={formData.measures.hips}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-
-                <div>
-                  <p>Abdomen:</p>
-                  <input
-                    type='text'
-                    name='abdomen'
-                    value={formData.measures.abdomen}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-
-                <div>
-                  <p>Cuadriceps:</p>
-                  <input
-                    type='text'
-                    name='cuadriceps'
-                    value={formData.measures.cuadriceps}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-
-                <div>
-                  <p>Gemelos:</p>
-                  <input
-                    type='text'
-                    name='gemelos'
-                    value={formData.measures.gemelos}
-                    onChange={handleMeasuresChange}
-                  />
-                </div>
-              </div>
-              <button type='submit'>Enviar</button>
-            </form>
+        {!showinitial && !showfollow && !showmyforms && !showClient && (
+          <div className={styles.menu}>
             <div
-              className={styles.closebutton}
-              onClick={() => setShowInitial(false)}
+              className={styles.menuItem}
+              onClick={() => setShowInitial(true)}
             >
-              X
+              <FaFile size={50} />
+              Inicial
             </div>
-          </>
+            <div
+              className={styles.menuItem}
+              onClick={() => setShowFollow(true)}
+            >
+              <FaFile size={50} />
+              Seguimiento
+            </div>
+            <div
+              className={styles.menuItem}
+              onClick={() => setShowMyForms(true)}
+            >
+              <FaFile size={50} /> Ver Formularios
+            </div>
+          </div>
+        )}
+        {showinitial && (
+          <Initial
+            showinitial={showinitial}
+            setShowInitial={setShowInitial}
+            myUid={myUid}
+          />
         )}
         {showfollow && (
           <>
@@ -528,87 +315,28 @@ const forms = () => {
         {showmyforms && (
           <>
             <div className={styles.myforms}>
-              {myForm.map((form) => (
-                <div key={form.id}>
-                  {form.type === 'Inicial' && (
-                    <div>
-                      <h2>Datos Personales</h2>
-                      <p>
-                        <span>Nombre:</span> <span>{form.name}</span>
-                      </p>
-                      <p>
-                        <span>Sexo:</span> <span>{form.gender}</span>
-                      </p>
-                      <p>
-                        <span>Peso:</span> <span>{form.weight}</span>
-                      </p>
-                      <p>
-                        <span>Altura:</span> <span>{form.height}</span>
-                      </p>
-                    </div>
-                  )}
-                  <div>
-                    <h2>Medidas</h2>
-                    <p>
-                      <span>Pecho:</span> <span>{form.measures.chest}</span>
-                    </p>
-                    <p>
-                      <span>Hombro:</span>{' '}
-                      <span>{form.measures.shoulders}</span>
-                    </p>
-                    <p>
-                      <span>Biceps:</span> <span>{form.measures.biceps}</span>
-                    </p>
-                    <p>
-                      <span>Cintura:</span> <span>{form.measures.hips}</span>
-                    </p>
-                    <p>
-                      <span>Abdomen:</span> <span>{form.measures.abdomen}</span>
-                    </p>
-                    <p>
-                      <span>Cuadriceps:</span>{' '}
-                      <span>{form.measures.cuadriceps}</span>
-                    </p>
-                    <p>
-                      <span>Gemelos:</span> <span>{form.measures.gemelos}</span>
-                    </p>
-                    <h2>Fotos</h2>
-                    <p>
-                      <span>Frente:</span> <span>{form.photos.front}</span>
-                    </p>
-                    <p>
-                      <span>Espalda:</span> <span>{form.photos.back}</span>
-                    </p>
-                    <p>
-                      <span>Lateral:</span> <span>{form.photos.lateral}</span>
-                    </p>
-                  </div>
-                  {form.type === 'Inicial' && (
-                    <div>
-                      <h2>Más información</h2>
-                      <p>
-                        <span>Intolerancias:</span>{' '}
-                        <span>{form.intolerances}</span>
-                      </p>
-                      <p>
-                        <span>Comida preferida:</span>{' '}
-                        <span>{form.preferredFoods}</span>
-                      </p>
-                      <p>
-                        <span>Días de entrenamiento:</span>{' '}
-                        <span>{form.trainingDays}</span>
-                      </p>
-                    </div>
-                  )}
-                  <p>
-                    <span>Fecha de envío:</span>
-                    <span>{formatDate(form.timeStamp)}</span>
-                  </p>
-                  <button onClick={() => asignForm(form.id)}>
-                    Asignar Formulario
-                  </button>
-                </div>
-              ))}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>ID</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {myForm.map((form) => (
+                    <tr key={form.id}>
+                      <td>{form.name}</td>
+                      <td>{form.type}</td>
+                      <td>{form.id}</td>
+                      <td>
+                        <Link href={`/share/${form.id}`}>Ver</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
             <div
               className={styles.closebutton}

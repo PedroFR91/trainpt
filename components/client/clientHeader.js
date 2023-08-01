@@ -6,7 +6,15 @@ import AuthContext from '../../context/AuthContext';
 import { useAuthUser } from '../../hooks/useAuthUser';
 import { auth } from '../../firebase.config';
 import { signOut } from 'firebase/auth';
-import { FaSignOutAlt } from 'react-icons/fa';
+import {
+  FaCamera,
+  FaChartLine,
+  FaFile,
+  FaMale,
+  FaProcedures,
+  FaRunning,
+  FaSignOutAlt,
+} from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -89,27 +97,27 @@ const clientHeader = () => {
             >
               <Link passHref href={'./program'}>
                 <div className={styles.menuItem}>
-                  <FaHome size={50} /> Programa
+                  <FaMale size={50} /> Programa
                 </div>
               </Link>
               <Link passHref href={'./train'}>
                 <div className={styles.menuItem}>
-                  <FaUser size={50} /> Entrenamiento
+                  <FaRunning size={50} /> Entrenamiento
                 </div>
               </Link>
               <Link passHref href={'./forms'}>
                 <div className={styles.menuItem}>
-                  <FaDumbbell size={50} /> Formularios
+                  <FaFile size={50} /> Formularios
                 </div>
               </Link>
               <Link passHref href={'./photos'}>
                 <div className={styles.menuItem}>
-                  <FaClipboard size={50} /> Fotos
+                  <FaCamera size={50} /> Fotos
                 </div>
               </Link>
               <Link passHref href={'./measures'}>
                 <div className={styles.menuItem}>
-                  <FaFolder size={50} /> Medidas
+                  <FaChartLine size={50} /> Medidas
                 </div>
               </Link>
               {isLogged && (

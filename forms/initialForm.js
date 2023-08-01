@@ -18,8 +18,21 @@ export const initialForm = {
     lateral: '',
   },
   intolerances: '',
-  preferredFoods: '',
-  trainingDays: '',
+
+  preferredFoods: {
+    type: 'textarea',
+    value: '', // Valor inicial del textarea
+  },
+
+  trainingDays: {
+    type: 'select',
+    label: 'Días de entrenamiento:',
+    options: Array.from({ length: 7 }, (_, index) => ({
+      value: (index + 1).toString(),
+      label: index + 1,
+    })),
+    value: '', // Valor inicial del select
+  },
 };
 export const follow = {
   measures: {
