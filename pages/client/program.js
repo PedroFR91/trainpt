@@ -83,7 +83,6 @@ const program = () => {
         <ClientProfile />
         <MyImages />
         <div className={styles.nextrevision}>Próxima revisión:{revision}</div>
-
         <TrainersList />
       </div>
     </div>

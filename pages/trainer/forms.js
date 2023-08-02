@@ -3,8 +3,10 @@ import styles from '../../styles/forms.module.css';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
+  getDoc,
   onSnapshot,
   query,
   serverTimestamp,
@@ -150,13 +152,43 @@ const forms = () => {
   const selectTrainer = async (cf, id) => {
     console.log('id', id);
     console.log('MyUid', myUid);
+    console.log(cf);
     const date = new Date();
     await updateDoc(doc(db, 'forms', cf), {
       link: id,
       dateform: date,
     });
+
+    const docRef = doc(db, 'users', myUid);
+    const userSnap = await getDoc(docRef);
+    const userData = userSnap.data();
+
+    const existingStatusIndex = userData.status.findIndex(
+      (status) => status.id === id
+    );
+
+    if (existingStatusIndex !== -1) {
+      // If the trainer already has a status with the same id, update only the name
+      const updatedStatus = userData.status.map((status, index) => {
+        if (index === existingStatusIndex) {
+          return { ...status, name: 'inicial' }; // Replace 'inicial' with the desired name
+        } else {
+          return status;
+        }
+      });
+      await updateDoc(docRef, {
+        status: updatedStatus,
+      });
+    } else {
+      // If the trainer doesn't have a status with the same id, add a new status
+      await updateDoc(docRef, {
+        status: arrayUnion({ name: 'inicial', id: id }),
+      });
+    }
+
     setShowClient(false);
   };
+
   return (
     <div className={styles.container}>
       <TrainerHeader />
@@ -333,6 +365,13 @@ const forms = () => {
                       <td>
                         <Link href={`/share/${form.id}`}>Ver</Link>
                       </td>
+                      <td
+                        onClick={() => {
+                          setShowClient(true), setCurrentForm(form);
+                        }}
+                      >
+                        Asignar formulario Inicial
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -354,7 +393,7 @@ const forms = () => {
             .map((data) => (
               <div
                 key={data.id}
-                onClick={() => selectTrainer(currentForm, data.id)}
+                onClick={() => selectTrainer(currentForm.id, data.id)}
               >
                 <div>
                   {data.img ? (

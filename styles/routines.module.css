@@ -383,10 +383,10 @@
 }
 .secondWidth {
   position: fixed;
-  top: 0;
+  bottom: 0;
   left: 0;
   width: 30%;
-  height: 100vh;
+  height: 85vh;
   padding: 3rem 1rem;
   display: flex;
   flex-direction: column;

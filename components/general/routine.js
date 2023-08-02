@@ -67,6 +67,7 @@ const routine = () => {
   const user = auth.currentUser;
   const [seriesData, setSeriesData] = useState([{ repetitions: '', sets: '' }]);
   const [myMessage, setMyMessage] = useState('');
+
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'routines'),
@@ -353,18 +354,28 @@ const routine = () => {
   };
 
   const handleAddTrainingToRoutine = (trainingId) => {
-    setSelectedTrainings([...selectedTrainings, trainingId]);
+    setSelectedDays((prevSelectedDays) => {
+      const updatedDays = { ...prevSelectedDays };
+      for (const day of Object.keys(updatedDays)) {
+        if (updatedDays[day] === trainingId) {
+          updatedDays[day] = null;
+        }
+      }
+      if (!updatedDays[selectedDays[0]]) {
+        updatedDays[selectedDays[0]] = trainingId;
+      }
+      return updatedDays;
+    });
   };
 
   const handleSelectDay = (day) => {
-    if (selectedDays.includes(day)) {
-      setSelectedDays(
-        selectedDays.filter((selectedDay) => selectedDay !== day)
-      );
-    } else {
-      setSelectedDays([...selectedDays, day]);
-    }
+    setSelectedDays((prevSelectedDays) =>
+      prevSelectedDays.includes(day)
+        ? prevSelectedDays.filter((selectedDay) => selectedDay !== day)
+        : [...prevSelectedDays, day]
+    );
   };
+
   const viewRoutinesList = () => {
     setRoutinesList(true);
     setTrainingsList(false);

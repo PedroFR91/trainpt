@@ -137,5 +137,15 @@
   display: flex;
   flex-direction: column;
 }
-.trainerInfo {
+
+.yellowStatus {
+  background-color: yellow;
+}
+
+.blueStatus {
+  background-color: blue;
+}
+
+.greenStatus {
+  background-color: green;
 }

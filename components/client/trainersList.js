@@ -2,12 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import styles from '../../styles/program.module.css';
 import {
   arrayUnion,
+  arrayRemove,
   collection,
   deleteDoc,
   doc,
   onSnapshot,
   updateDoc,
 } from 'firebase/firestore';
+
 import { db } from '../../firebase.config';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
@@ -35,25 +37,28 @@ const trainersList = (props) => {
       unsub();
     };
   }, []);
-  //useEffect para verificar si hay algún entrenador con selected: true
   useEffect(() => {
-    const hasSelectedTrainer = data.some(
-      (trainer) => trainer.selected === true
-    );
+    const hasSelectedTrainer = data.some((trainer) => {
+      return trainer.selected === true && trainer.link.includes(myUid);
+    });
     setSelect(hasSelectedTrainer);
-  }, [data]);
+  }, [data, myUid]);
+
   console.log(myData);
+
   const selectTrainer = async (id) => {
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, {
-      link: myUid,
+      link: arrayUnion(myUid),
+      status: arrayUnion({ name: 'pendiente', id: myUid }),
       selected: true,
     });
   };
+
   const deselectTrainer = async (id) => {
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, {
-      link: '',
+      link: arrayRemove(myUid),
       selected: false,
     });
   };
@@ -76,7 +81,10 @@ const trainersList = (props) => {
       <div className={styles.trainersList}>
         {select
           ? data
-              .filter((trainer) => trainer.link === myUid)
+              .filter(
+                (trainer) =>
+                  Array.isArray(trainer.link) && trainer.link.includes(myUid)
+              )
               .map((trainer) => (
                 <div key={trainer.id} className={styles.userdata}>
                   <div>
@@ -87,16 +95,32 @@ const trainersList = (props) => {
                     )}
                   </div>
                   <div>{trainer.username}</div>
-                  {!show ? (
-                    <div
-                      className={styles.button}
-                      onClick={() => showTrainer(trainer)}
-                    >
-                      Ver Perfil
-                    </div>
-                  ) : (
-                    <div className={styles.trainerInfo}>INFO</div>
-                  )}
+                  <div
+                    className={`${styles.status} ${
+                      trainer.status.name === 'pendiente'
+                        ? styles.yellowStatus
+                        : ''
+                    } 
+                                ${
+                                  trainer.status.name === 'Inicial'
+                                    ? styles.blueStatus
+                                    : ''
+                                } 
+                                ${
+                                  trainer.status.name === 'archivos'
+                                    ? styles.greenStatus
+                                    : ''
+                                }`}
+                  >
+                    {trainer.status.name}
+                  </div>
+
+                  <div
+                    className={styles.button}
+                    onClick={() => showTrainer(trainer)}
+                  >
+                    Ver Perfil
+                  </div>
 
                   <div
                     className={styles.button}

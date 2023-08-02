@@ -13,8 +13,10 @@ const userList = () => {
   const [clients, setClients] = useState([]);
 
   const showClient = (data) => {
-    setShow(true);
-    setCurrent(data);
+    if (myData.link && myData.link.includes(data.id)) {
+      setShow(true);
+      setCurrent(data);
+    }
   };
 
   useEffect(() => {
@@ -58,11 +60,11 @@ const userList = () => {
     if (myData) {
       console.log('Use effect de clients fuera');
       console.log(myData.link);
-      if (myData.link) {
+      if (myData.link && myData.link.length > 0) {
         // Realizar la consulta para obtener los clientes vinculados al entrenador actual
         const q = query(
           collection(db, 'users'),
-          where('id', '==', myData.link)
+          where('id', 'in', myData.link)
         );
         const unsub = onSnapshot(q, (snapShot) => {
           let list = [];
@@ -71,7 +73,7 @@ const userList = () => {
           });
           // Actualizar el estado con los clientes vinculados
           setClients(list);
-          console.log('Use effect de clients dentro');
+          console.log(list);
         });
 
         return () => {
@@ -83,28 +85,48 @@ const userList = () => {
 
   return (
     <div className={styles.list}>
+      <h1>Mis Clientes</h1>
       {!show &&
         clients &&
         clients.map((data) => (
-          <div key={data.id} className={styles.userdata}>
-            <div>
-              {data.img ? (
-                <img src={data.img} alt={'myprofileimg'} />
-              ) : (
-                <img src='/face.jpg' alt={'myprofileimg'} />
-              )}
-            </div>
-            <div>{data.username}</div>
-            <div>{data.status}</div>
-            <div className={styles.button} onClick={() => showClient(data)}>
-              Ver
+          <div>
+            <div key={data.id} className={styles.userdata}>
+              <div>
+                {data.img ? (
+                  <img src={data.img} alt={'myprofileimg'} />
+                ) : (
+                  <img src='/face.jpg' alt={'myprofileimg'} />
+                )}
+              </div>
+              <div>{data.username}</div>
+              {myData.status &&
+                myData.status.find((status) => status.id === data.id) && (
+                  <div
+                    className={`${styles.status} ${
+                      myData.status.find((status) => status.id === data.id)
+                        .name === 'pendiente'
+                        ? styles.yellowStatus
+                        : myData.status.find((status) => status.id === data.id)
+                            .name === 'inicial'
+                        ? styles.blueStatus
+                        : myData.status.find((status) => status.id === data.id)
+                            .name === 'archivos'
+                        ? styles.greenStatus
+                        : ''
+                    }`}
+                  >
+                    {myData.status.find((status) => status.id === data.id).name}
+                  </div>
+                )}
+              <div className={styles.button}>
+                <span onClick={() => showClient(data)}>Ver</span>
+              </div>
             </div>
           </div>
         ))}
       {show && (
         <div className={styles.client}>
           <div>
-            {' '}
             {current.img ? (
               <img src={current.img} alt={'myprofileimg'} />
             ) : (
@@ -145,7 +167,9 @@ const userList = () => {
           </div>
           <div>Dieta asignada</div>
 
-          <button onClick={() => setShow(false)}className={styles.closeButton}>X</button>
+          <button onClick={() => setShow(false)} className={styles.closeButton}>
+            X
+          </button>
         </div>
       )}
     </div>
