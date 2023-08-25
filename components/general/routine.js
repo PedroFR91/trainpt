@@ -7,6 +7,7 @@ import {
   deleteDoc,
   updateDoc,
   addDoc,
+  getDoc,
 } from 'firebase/firestore';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -30,7 +31,7 @@ import {
 const routine = () => {
   const [data, setData] = useState(['']);
   const [exercises, setExercises] = useState([]);
-  const [newexercise, setNewExercise] = useState([]);
+  const [newexercise, setNewExercise] = useState({});
   const [trainings, setTrainings] = useState([]);
   const [routines, setRoutines] = useState([]);
   const [visible, setVisible] = useState(false);
@@ -661,6 +662,49 @@ const routine = () => {
                   }
                 />
               </div>
+            </form>
+            <div className={styles.myCurrent}>
+              <h3>Entrenamiento en Proceso</h3>
+              <div>
+                {newTrain.name && <p>Nombre: {newTrain.name}</p>}
+                {newTrain.description && (
+                  <p>Descripción: {newTrain.description}</p>
+                )}
+              </div>
+              <div className={styles.myexs}>
+                {currentTraining.map((exercise, index) => (
+                  <div key={index} className={styles.thisTraining}>
+                    <div>
+                      <p>Nombre: </p>
+                      <p>{exercise.name}</p>
+                    </div>
+                    <div>
+                      <p>Repeticiones: </p>
+                      <p>{exercise.repetitions}</p>
+                    </div>
+                    <div>
+                      <p>Series: </p>
+                      <p>{exercise.sets}</p>
+                    </div>
+                    <div>
+                      <p>Materiales: </p>
+                      <p>{exercise.materials}</p>
+                    </div>
+                    <div>
+                      <p>Comentarios: </p>
+                      <p>{exercise.comments}</p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveExercise(index)}
+                      className={styles.create}
+                    >
+                      <FaRegTrashAlt size={20} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.trainingButton}>
               <button
                 onClick={(e) =>
                   updateTrainingId
@@ -668,12 +712,31 @@ const routine = () => {
                     : handleCreateTraining(e)
                 }
                 className={styles.create}
+                disabled={!tExercise}
               >
                 {updateTrainingId
                   ? 'Actualizar Entrenamiento'
                   : 'Crear Entrenamiento'}
               </button>
-            </form>
+              <button
+                className={styles.create}
+                onClick={() => {
+                  setAddNewEx(true);
+                  setSelectExercises(false);
+                }}
+              >
+                Nuevo ejercicio
+              </button>
+              <button
+                className={styles.create}
+                onClick={() => {
+                  setSelectExercises(true);
+                  setAddNewEx(false);
+                }}
+              >
+                Añadir desde BBDD
+              </button>
+            </div>
             <div
               className={styles.closebutton}
               onClick={handleCloseTrainingModal}
@@ -685,7 +748,7 @@ const routine = () => {
                 Entrenamiento {myMessage} con éxito
               </div>
             )}
-            {current && (
+            {/* {current && (
               <div className={styles.myCurrent}>
                 <h3>Entrenamiento en Proceso</h3>
                 <div
@@ -745,83 +808,86 @@ const routine = () => {
                 </div>
                 <div></div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       )}
       {addNewEx && (
-        <form className={styles.secondWidth}>
-          <div>
-            <p>Ejercicio:</p>
-            {isExerciseFromList ? (
-              <p>{tExercise.name}</p>
-            ) : (
-              <input
-                type='text'
-                value={tExercise.name}
-                onChange={(e) =>
-                  setTExercise({ ...tExercise, name: e.target.value })
-                }
-              />
-            )}
-          </div>
-          <div>
+        <>
+          <form className={styles.secondWidth}>
+            <FaDumbbell size={50} />
             <div>
-              <p>Repeticiones:</p>
-              <input
+              <p>Ejercicio:</p>
+              {isExerciseFromList ? (
+                <p>{tExercise.name}</p>
+              ) : (
+                <input
+                  type='text'
+                  value={tExercise.name}
+                  onChange={(e) =>
+                    setTExercise({ ...tExercise, name: e.target.value })
+                  }
+                />
+              )}
+            </div>
+            <div className={styles.superset}>
+              <div>
+                <p>Repeticiones:</p>
+                <input
+                  type='text'
+                  name='repetitions'
+                  value={tExercise.repetitions}
+                  onChange={(e) =>
+                    setTExercise({ ...tExercise, repetitions: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <p>Series:</p>
+                <input
+                  type='text'
+                  name='sets'
+                  value={tExercise.sets}
+                  onChange={(e) =>
+                    setTExercise({ ...tExercise, sets: e.target.value })
+                  }
+                />
+              </div>
+              <button className={styles.add}>+</button>
+            </div>
+            <div>
+              <p>Comentarios:</p>
+              <textarea
                 type='text'
-                name='repetitions'
-                value={tExercise.repetitions}
+                value={tExercise.comments}
                 onChange={(e) =>
-                  setTExercise({ ...tExercise, repetitions: e.target.value })
+                  setTExercise({ ...tExercise, comments: e.target.value })
                 }
               />
             </div>
             <div>
-              <p>Series:</p>
+              <p>Materiales:</p>
               <input
                 type='text'
-                name='sets'
-                value={tExercise.sets}
+                value={tExercise.materials}
                 onChange={(e) =>
-                  setTExercise({ ...tExercise, sets: e.target.value })
+                  setTExercise({ ...tExercise, materials: e.target.value })
                 }
               />
             </div>
-          </div>
-
-          <div>
-            <p>Comentarios:</p>
-            <textarea
-              type='text'
-              value={tExercise.comments}
-              onChange={(e) =>
-                setTExercise({ ...tExercise, comments: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <p>Materiales:</p>
-            <input
-              type='text'
-              value={tExercise.materials}
-              onChange={(e) =>
-                setTExercise({ ...tExercise, materials: e.target.value })
-              }
-            />
-          </div>
-          <button onClick={handleAddExerciseClick} className={styles.create}>
-            Confirmar
-          </button>
-          <span
-            className={styles.closebuttontwo}
-            onClick={() => {
-              setAddNewEx(false);
-            }}
-          >
-            X
-          </span>
-        </form>
+            <button onClick={handleAddExerciseClick} className={styles.create}>
+              Confirmar
+            </button>
+            <span
+              className={styles.closebutton}
+              onClick={() => {
+                setAddNewEx(false);
+              }}
+            >
+              X
+            </span>
+          </form>
+        </>
       )}
       {selectExercises && (
         <form className={styles.secondWidth}>

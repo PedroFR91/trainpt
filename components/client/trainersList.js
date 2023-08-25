@@ -39,7 +39,8 @@ const trainersList = (props) => {
   }, []);
   useEffect(() => {
     const hasSelectedTrainer = data.some((trainer) => {
-      return trainer.selected === true && trainer.link.includes(myUid);
+      // Verificar si trainer.link es un array y si contiene myUid
+      return Array.isArray(trainer.link) && trainer.link.includes(myUid);
     });
     setSelect(hasSelectedTrainer);
   }, [data, myUid]);
