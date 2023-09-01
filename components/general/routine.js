@@ -68,6 +68,7 @@ const routine = () => {
   const user = auth.currentUser;
   const [seriesData, setSeriesData] = useState([{ repetitions: '', sets: '' }]);
   const [myMessage, setMyMessage] = useState('');
+  const [toggle,setToggle]=useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -493,9 +494,8 @@ const routine = () => {
                         <td>
                           {training.exercises.map((exercise) => (
                             <div key={exercise.id}>
-                              <p>Nombre: {exercise.name}</p>
-                              <p>Repeticiones: {exercise.repetitions}</p>
-                              <p>Series: {exercise.sets}</p>
+                              <p>{exercise.name}</p>
+                        
                             </div>
                           ))}
                         </td>
@@ -663,7 +663,7 @@ const routine = () => {
                 />
               </div>
             </form>
-            <div className={styles.myCurrent}>
+            {toggle&&<div className={styles.myCurrent}>
               <h3>Entrenamiento en Proceso</h3>
               <div>
                 {newTrain.name && <p>Nombre: {newTrain.name}</p>}
@@ -703,7 +703,7 @@ const routine = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div>}
             <div className={styles.trainingButton}>
               <button
                 onClick={(e) =>
@@ -736,6 +736,7 @@ const routine = () => {
               >
                 Añadir desde BBDD
               </button>
+              <button className={styles.create} onClick={()=>setToggle(!toggle)}>Ver Actual</button>
             </div>
             <div
               className={styles.closebutton}
@@ -748,67 +749,7 @@ const routine = () => {
                 Entrenamiento {myMessage} con éxito
               </div>
             )}
-            {/* {current && (
-              <div className={styles.myCurrent}>
-                <h3>Entrenamiento en Proceso</h3>
-                <div
-                  className={styles.create}
-                  onClick={() => {
-                    setAddNewEx(true);
-                    setSelectExercises(false);
-                  }}
-                >
-                  Añadir Nuevo ejercicio
-                </div>
-                <div
-                  className={styles.create}
-                  onClick={() => {
-                    setSelectExercises(true);
-                    setAddNewEx(false);
-                  }}
-                >
-                  Seleccionar desde mi banco de ejercicios
-                </div>
-
-                <div>
-                  {newTrain.name && <p>Nombre: {newTrain.name}</p>}
-                  {newTrain.description && (
-                    <p>Descripción: {newTrain.description}</p>
-                  )}
-                  {currentTraining.map((exercise, index) => (
-                    <div key={index} className={styles.thisTraining}>
-                      <div>
-                        <p>Nombre: </p>
-                        <p>{exercise.name}</p>
-                      </div>
-                      <div>
-                        <p>Repeticiones: </p>
-                        <p>{exercise.repetitions}</p>
-                      </div>
-                      <div>
-                        <p>Series: </p>
-                        <p>{exercise.sets}</p>
-                      </div>
-                      <div>
-                        <p>Materiales: </p>
-                        <p>{exercise.materials}</p>
-                      </div>
-                      <div>
-                        <p>Comentarios: </p>
-                        <p>{exercise.comments}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveExercise(index)}
-                        className={styles.create}
-                      >
-                        <FaRegTrashAlt size={20} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div></div>
-              </div>
-            )} */}
+          
           </div>
         </div>
       )}

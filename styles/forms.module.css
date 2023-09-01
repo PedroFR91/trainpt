@@ -52,6 +52,10 @@
   justify-content: space-evenly;
   align-items: center;
   margin: 1rem;
+
+  padding: 1rem;
+  border: 1px solid #f69d21;
+  border-radius: 10px;
 }
 .initial div > div {
   width: 100%;
@@ -59,9 +63,18 @@
   justify-content: space-between;
   margin: 0.5rem 0;
 }
-.initial div:last-child > div input {
-  width: 50px;
+.initial div:last-child  {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
 }
+.initial div:last-child:hover{
+  background-color: #f69d21;
+  color: #212121;
+
+}
+
+
 .follow {
   width: 100%;
   font-family: 'Roboto';
@@ -82,9 +95,9 @@
   justify-content: space-evenly;
 }
 .mybutton {
-  width: 200px;
-  height: 40px;
-  background-color: #ffffff;
+  max-width: 100px;
+  height: 60px;
+  background-color: #f69d21;
   color: #212121;
   border: 1px solid #ffffff;
   border-radius: 5px;
@@ -92,11 +105,15 @@
   font-size: 1.2rem;
   font-weight: 600;
 }
+
 .mybutton:hover {
   cursor: pointer;
+  background-color: #212121;
+  border: 1px solid #f69d21;
+  color: #ffffff;
 }
 .mybuttonmini {
-  width: 200px;
+  width: 10px;
   height: 40px;
   background-color: #ffffff;
   color: #212121;

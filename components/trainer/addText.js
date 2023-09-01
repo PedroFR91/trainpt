@@ -7,6 +7,7 @@ import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/myprofile.module.css';
 import Modal from './Modal';
 import dynamic from 'next/dynamic';
+import { AiFillEdit } from 'react-icons/ai';
 
 // Importa el componente RichTextEditor de forma dinámica
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
@@ -68,15 +69,17 @@ const AddText = () => {
         className={styles.modal}
       >
         <h3>Añade tu información personal</h3>
-        {clientSide && <RichTextEditor value={text} onChange={setText} />}
+        {clientSide && <RichTextEditor value={text} onChange={setText} className={styles.RichTextEditor}/>}
         <button onClick={handleSave}>Guardar</button>
       </Modal>
-      <div
+      {text===' '?'Introduzca su información':<div
         className={styles.displayText}
         dangerouslySetInnerHTML={{ __html: text }}
-      ></div>
-      <button onClick={openModal} className={styles.label}>
-        Editar texto
+      >
+      </div>}
+      
+      <button onClick={openModal} className={styles.profilesectionttwo}>
+        <AiFillEdit size={30} />
       </button>
     </div>
   );

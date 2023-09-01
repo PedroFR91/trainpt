@@ -3,11 +3,12 @@ import styles from '../../styles/forms.module.css';
 import { initialForm } from '../../forms/initialForm';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase.config';
-
+import {AiOutlineSend} from 'react-icons/ai'
 const Initial = (props) => {
   const [formStructure, setFormStructure] = useState(initialForm);
 
   const handleCreate = async (e) => {
+    setFormStructure('');
     try {
       await addDoc(collection(db, 'forms'), {
         ...formStructure,
@@ -243,7 +244,11 @@ const Initial = (props) => {
             />
           </div>
         </div>
-        <div onClick={handleCreate}>Enviar</div>
+        <div onClick={handleCreate}>
+          <div><p>Enviar Formulario</p></div>
+          <div><AiOutlineSend size={20}/></div>
+        </div>
+      
       </form>
       <div
         className={styles.closebutton}

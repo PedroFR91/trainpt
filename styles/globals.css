@@ -2,6 +2,7 @@
 :root {
   --dark-blue: #172c63;
   --my-blue: #bec8e2;
+  --orange:#f69d21;
   --light-blue: #afbbd3;
   --transparent-blue: #afbbd380;
   --transparent-blue-second: #afbbd3e4;
@@ -30,6 +31,7 @@ select {
   font-size: 1.2rem;
   color: var(--dark-blue);
 }
+
 button {
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
@@ -37,7 +39,7 @@ button {
   color: var(--dark-blue);
 }
 select {
-  width: 100%;
+  width: fit-content;
   margin: 1rem 0;
 }
 /* Esto aplica a toda la barra de desplazamiento */

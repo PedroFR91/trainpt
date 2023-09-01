@@ -39,7 +39,7 @@ const TrainerHeader = () => {
 
   return (
     <div className={styles.container}>
-      <Link href={'/trainer/home'}>
+   <Link href={'/trainer/home'}>
         <Image
           src='/logo.png'
           priority
@@ -73,7 +73,6 @@ const TrainerHeader = () => {
           )}
         </AnimatePresence>
       </button>
-
       <AnimatePresence>
         {isOpen && (
           <>

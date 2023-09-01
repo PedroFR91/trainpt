@@ -2,6 +2,7 @@
   width: 100%;
   min-height: 100vh;
   background-color: #212121;
+  color: #ffffff;
 }
 .layout {
   width: 100%;
@@ -26,6 +27,7 @@
 .myprofile {
   width: 50%;
   min-height: 50vh;
+  height: fit-content;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
@@ -34,22 +36,57 @@
   border-radius: 10px;
   font-family: 'Roboto';
   z-index: 0;
+  margin: 1rem;
+  background-color: #ffffffbb;
+  color: #212121;
+
+  transform-origin: center center;
+  transition: transform 0.3s;
 }
+
+.myprofile:hover {
+  transform: perspective(500px) rotateY(0deg) rotateX(0deg); /* Mantener la transformación en cero al hacer hover */
+}
+
+
 .profilesection {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  align-items: center;
+transform: translate(40px,-25px);
+border: none;
+background-color: var(--orange);
+color: #212121;
+width: 40px;
+height: 40px;
+border-radius: 50%;
+z-index: 20;
+}
+.profilesectionttwo{
+  position: relative;
+bottom: 0;
+right: 0;
+border: none;
+background-color: var(--orange);
+color: #212121;
+width: 40px;
+height: 40px;
+border-radius: 50%;
+z-index: 20;
+}
+.profilesection:hover{
+  cursor: pointer;
+
 }
 .myprofileimg {
+  border: 5px solid #212121;
   border-radius: 50%;
   width: 150px;
   height: 150px;
   object-fit: cover;
-  margin-bottom: 2rem;
+  
+
 }
 .myprofileinfo {
-  width: 70%;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -94,28 +131,44 @@
 .addText {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
   align-items: center;
-  width: 100%;
-  min-height: 40vh;
+  width: 90%;
+  height: auto;  /* Cambio de fit-content a auto */
+  background-color: #212121;
+  padding: 1rem;
+  margin-top: 2rem;
 }
+
 .modal {
   position: fixed;
   width: 100%;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   top: 0;
   left: 0;
 }
+.modal h3{
+  color: #212121;
+}
+.RichTextEditor{
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  color: #212121;
+}
 .displayText {
   min-width: 100%;
-  height: 20vh;
+  height: fit-content;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
 
   color: #ffffff;
-  border: 1px solid #ffffff;
+
 }
 .displayTextTwo {
   color: #212121;

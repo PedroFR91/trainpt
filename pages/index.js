@@ -131,9 +131,19 @@ export default function Home() {
       console.error(error);
     }
   };
-
+  const sections = [
+    { type:'image',text: 'REIVENTA EL ENTRENAMIENTO PERSONAL ONLINE', src: '/logo.png' },
+    { type:'video',text: 'MANTEN EL CONTROL DE TODOS TUS CLIENTES', src: '/background.mp4' },
+    { type:'image',text: 'TU CALENDARIO DETALLADO', src: 'Foto' },
+    { type:'image',text: 'AUTOMATIZA TU SEGUIMIENTO', src: 'Foto' },
+    { type:'image',text: 'TU CARTA DE PRESENTACIÓN PROFESIONAL', src: '/cardtrainer.png' },
+    { type:'image',text: 'COMPARTE TODO CON TUS CLEINTES', src: 'Foto' },
+    { type:'image',text: 'DISFRUTA DE NUESTRO CREADOR DE RUTINAS', src: 'Foto' },
+  ];
   return (
-    <div className={styles.container}>
+    <>
+  
+      <div className={styles.container}>
       <video
         src='/background.mp4'
         autoPlay
@@ -243,6 +253,54 @@ export default function Home() {
         </div>
       </div>
       {message && <div className={styles.message}>{message}</div>}
-    </div>
+      </div>
+      {sections.map((section, index) => (
+        <div key={index} className={styles.section}>
+          {index === 0 ? (
+            <>
+              <div className={styles.logo}>
+                <img src={section.src} width='100%' />
+              </div>
+              <div className={styles.text}>{section.text}</div>
+            </>
+          ) : index % 2 === 0 ? (
+            <>
+              <div className={styles.text}>{section.text}</div>
+              <div>
+                {section.type==='image'?
+
+<img src={section.src} width='100%' />:
+<video
+  src={section.src}
+  width='100%'
+  height='100%'
+  autoPlay
+  loop
+  muted
+/>
+                }
+           
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                {' '}
+                <video
+                  src={section.src}
+                  width='100%'
+                  height='100%'
+                  autoPlay
+                  loop
+                  muted
+                />
+              </div>
+              <div className={styles.text}>{section.text}</div>
+            </>
+          )}
+        </div>
+      ))}
+    </>
+    
   );
 }

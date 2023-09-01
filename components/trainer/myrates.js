@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
-import styles from '../../styles/rate.module.css';
-import AuthContext from '../../context/AuthContext';
+import React, { useContext, useEffect, useState } from "react";
+import styles from "../../styles/rate.module.css";
+import AuthContext from "../../context/AuthContext";
 import {
   collection,
   deleteDoc,
@@ -8,27 +8,27 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase.config';
-import Modal from './Modal';
-import dynamic from 'next/dynamic';
-
+} from "firebase/firestore";
+import { db } from "../../firebase.config";
+import Modal from "./Modal";
+import dynamic from "next/dynamic";
+import { AiFillEdit } from "react-icons/ai";
 // Importa el componente RichTextEditor de forma dinámica
-const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
+const RichTextEditor = dynamic(() => import("./RichTextEditor"), {
   ssr: false,
 });
 const myrates = () => {
   const { myUid } = useContext(AuthContext);
   const [data, setData] = useState([]);
   const [rates, setRates] = useState([]);
-  const [view, setView] = useState(true);
+  const [view, setView] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [clientSide, setClientSide] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, 'rates'),
+      collection(db, "rates"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -51,7 +51,7 @@ const myrates = () => {
   const handleSave = async (e) => {
     const time = new Date().getTime();
     try {
-      await setDoc(doc(db, 'rates', data.ratename), {
+      await setDoc(doc(db, "rates", data.ratename), {
         ...data,
         rateid: myUid,
         rateinfo: text,
@@ -62,12 +62,12 @@ const myrates = () => {
     }
 
     setData([]);
-    setText('');
+    setText("");
   };
 
   const handleDelete = async (id) => {
     try {
-      await deleteDoc(doc(db, 'rates', id));
+      await deleteDoc(doc(db, "rates", id));
       setRates(rates.filter((item) => item.ratename !== id));
       console.log(rateid);
     } catch (error) {}
@@ -79,25 +79,25 @@ const myrates = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setText('');
+    setText("");
   };
   return (
     <div className={styles.container}>
       <div className={styles.addrate}>
-        {view ? (
-          <button className={styles.add} onClick={() => setView(false)}>
-            Añadir Tarifa
-          </button>
-        ) : (
-          <>
+        <button className={styles.add} onClick={() => setView(true)}>
+          <AiFillEdit />
+        </button>
+
+        {view && (
+          <div>
             <input
-              type='text'
-              placeholder='Nombre de Tarifa'
+              type="text"
+              placeholder="Nombre de Tarifa"
               onChange={(e) => setData({ ...data, ratename: e.target.value })}
             />
             <input
-              type='text'
-              placeholder='Precio'
+              type="text"
+              placeholder="Precio"
               onChange={(e) => setData({ ...data, rateprice: e.target.value })}
             />
             <Modal
@@ -126,7 +126,7 @@ const myrates = () => {
             >
               Guardar
             </button>
-          </>
+          </div>
         )}
       </div>
       <div className={styles.rates}>
