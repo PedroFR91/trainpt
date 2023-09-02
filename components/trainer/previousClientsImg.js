@@ -1,10 +1,4 @@
-import React, {
-  useContext,
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styles from '../../styles/previousimg.module.css';
 import {
   doc,
@@ -17,83 +11,74 @@ import {
 import { db, storage } from '../../firebase.config';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import AuthContext from '../../context/AuthContext';
-import { HiOutlineFolderAdd, HiOutlineUpload } from 'react-icons/hi';
 import { FaPhotoVideo } from 'react-icons/fa';
+import { AiFillDelete, AiOutlineCloudUpload } from 'react-icons/ai';
 
-const previousClientsImg = () => {
+const PreviousClientsImg = () => {
   const { myUid } = useContext(AuthContext);
   const [fileBefore, setFileBefore] = useState(null);
   const [fileAfter, setFileAfter] = useState(null);
   const [clientName, setClientName] = useState('');
-  const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
-  const [tempFileBefore, setTempFileBefore] = useState(null);
-  const [tempFileAfter, setTempFileAfter] = useState(null);
-  const [bothUploaded, setBothUploaded] = useState(false);
 
-  useEffect(() => {
+  const handleInputChange = (e) => {
+    setClientName(e.target.value);
+  };
+
+  const handleFileBeforeChange = (e) => {
+    setFileBefore(e.target.files[0]);
+  };
+
+  const handleFileAfterChange = (e) => {
+    setFileAfter(e.target.files[0]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!clientName || !fileBefore || !fileAfter) {
+      alert('Por favor, complete todos los campos.');
+      return;
+    }
+
     const uploadFile = async (fileToUpload, period) => {
       const name = new Date().getTime() + fileToUpload.name;
       const storageRef = ref(storage, name);
       const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-          switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
-              break;
-            case 'running':
-              console.log('Upload is running');
-              break;
-            default:
-              break;
-          }
-        },
-        (error) => {
-          // Handle unsuccessful uploads
-          console.log(error);
-        },
-        async () => {
-          // Handle successful upload on complete
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log(downloadURL);
+      try {
+        await uploadTask;
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        console.log(downloadURL);
 
-          // Save the downloadURL to Firestore
-          const photoData = {
-            trainerId: myUid,
-            clientName: clientName,
-            period: period,
-            img: downloadURL,
-            title: fileToUpload.name,
-            createdAt: serverTimestamp(),
-          };
-          try {
-            await setDoc(doc(collection(db, 'clientPhotos')), photoData);
-          } catch (error) {
-            console.log(error);
-          }
+        // Save the downloadURL to Firestore
+        const photoData = {
+          trainerId: myUid,
+          clientName: clientName,
+          period: period,
+          img: downloadURL,
+          title: fileToUpload.name,
+          createdAt: serverTimestamp(),
+        };
+        try {
+          await setDoc(doc(collection(db, 'clientPhotos')), photoData);
+        } catch (error) {
+          console.log(error);
         }
-      );
+      } catch (error) {
+        console.log(error);
+      }
     };
 
-    if (fileBefore) {
-      uploadFile(fileBefore, 'before');
-      setFileBefore(null);
-    }
+    // Upload both files
+    uploadFile(fileBefore, 'before');
+    uploadFile(fileAfter, 'after');
 
-    if (fileAfter) {
-      uploadFile(fileAfter, 'after');
-      setFileAfter(null);
-    }
-    if (!fileBefore && !fileAfter && tempFileBefore && tempFileAfter) {
-      setBothUploaded(true);
-    }
-  }, [fileBefore, fileAfter, myUid, clientName]);
+    // Clear form fields
+    setClientName('');
+    setFileBefore(null);
+    setFileAfter(null);
+  };
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -128,138 +113,51 @@ const previousClientsImg = () => {
     );
   };
 
-  const Step1 = ({ clientName, setClientName, setStep }) => (
-    <>
-      <input
-        type='text'
-        placeholder='Nombre del cliente'
-        value={clientName}
-        onChange={(e) => setClientName(e.target.value)}
-        required
-      />
-      <button onClick={() => setStep(2)}>Siguiente</button>
-    </>
-  );
-
-  const Step2 = ({ setTempFileBefore, setStep }) => (
-    <>
-      <input
-        type='file'
-        id='fileBefore'
-        onChange={(e) => {
-          setTempFileBefore(e.target.files[0]);
-        }}
-        hidden
-        required
-      />
-      <label htmlFor='fileBefore'>Seleccionar foto antes</label>
-      <button onClick={() => setStep(3)}>Siguiente</button>
-    </>
-  );
-
-  const Step3 = ({
-    setFileBefore,
-    setFileAfter,
-    setStep,
-    tempFileBefore,
-    tempFileAfter,
-  }) => (
-    <>
-      <input
-        type='file'
-        id='fileAfter'
-        onChange={(e) => {
-          setTempFileAfter(e.target.files[0]);
-        }}
-        hidden
-        required
-      />
-      {!bothUploaded && (
-        <label htmlFor='fileAfter'>Seleccionar foto después</label>
-      )}
-      <button
-        onClick={() => {
-          setFileBefore(tempFileBefore);
-          setFileAfter(tempFileAfter);
-          setStep(1);
-        }}
-      >
-        Subir imágenes
-      </button>
-    </>
-  );
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className={styles.mystep}>
-            <input
-              type='text'
-              placeholder='Nombre del cliente'
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              required
-            />
-            <button onClick={() => setStep(2)}>Siguiente</button>
-          </div>
-        );
-      case 2:
-        return (
-          <div className={styles.mystep}>
-            <input
-              type='file'
-              id='fileBefore'
-              onChange={(e) => {
-                setTempFileBefore(e.target.files[0]);
-                setStep(3);
-              }}
-              hidden
-              required
-            />
-            <label htmlFor='fileBefore'>
-              <FaPhotoVideo />
-              Antes
-            </label>
-            <button onClick={() => setStep(3)}>Siguiente</button>
-          </div>
-        );
-      case 3:
-        return (
-          <div className={styles.mystep}>
-            <input
-              type='file'
-              id='fileAfter'
-              onChange={(e) => {
-                setTempFileAfter(e.target.files[0]);
-              }}
-              hidden
-              required
-            />
-            <label htmlFor='fileAfter'>
-              <FaPhotoVideo />
-              Después
-            </label>
-            <button
-              onClick={() => {
-                setFileBefore(tempFileBefore);
-                setFileAfter(tempFileAfter);
-                setStep(1);
-              }}
-            >
-              Subir imágenes
-            </button>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className={styles.container}>
       <h2>Imágenes de mis clientes</h2>
-      <div>{renderStep()}</div>
+      <form onSubmit={handleSubmit}>
+        <div className={styles.inputContainer}>
+          <input
+            type='text'
+            placeholder='Nombre del cliente'
+            value={clientName}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div>
+          <div className={styles.inputContainer}>
+          <label htmlFor='fileBefore'>
+            <FaPhotoVideo />
+            Antes
+          </label>
+                   <input
+            type='file'
+            id='fileBefore'
+            onChange={handleFileBeforeChange}
+            accept='image/*'
+            required
+            hidden
+          />
+          </div>
+          <div className={styles.inputContainer}>
+          <label htmlFor='fileAfter'>
+            <FaPhotoVideo />
+            Después
+          </label>
+          <input
+            type='file'
+            id='fileAfter'
+            onChange={handleFileAfterChange}
+            accept='image/*'
+            required
+            hidden
+          />
+          </div>
+        </div>
+        <button type='submit'><AiOutlineCloudUpload size={30}/></button>
+      </form>
       <div className={styles.clientPhotos}>
         {/* Agrupar las imágenes por cliente */}
         {Array.from(new Set(photos.map((photo) => photo.clientName)))
@@ -270,8 +168,8 @@ const previousClientsImg = () => {
             )
           )
           .map((client) => (
-            <div key={client}>
-              <h3>{client}</h3>
+            <div key={client} className={styles.client}>
+              <h1>{client}</h1>
               <div className={styles.clientImgGroup}>
                 {photos
                   .filter(
@@ -301,7 +199,7 @@ const previousClientsImg = () => {
                   ))}
               </div>
               <button onClick={() => handleDeleteGroup(client)}>
-                Borrar grupo de imágenes
+                <AiFillDelete />
               </button>
             </div>
           ))}
@@ -310,4 +208,4 @@ const previousClientsImg = () => {
   );
 };
 
-export default previousClientsImg;
+export default PreviousClientsImg;

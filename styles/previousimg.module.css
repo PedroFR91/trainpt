@@ -7,46 +7,79 @@
   align-items: center;
   color: #ffffff;
 }
-.clientPhotos {
-  display: flex;
+.container h2{
+  margin: 2rem;
+}
+.container form{
   width: 100%;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-.clientPhotos div button {
-  width: 100%;
-  font-family: 'Roboto';
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  color: #ffffff;
-  background-color: var(--dark-blue);
-  text-decoration: none;
-}
-.clientPhotos div button:hover {
-  cursor: pointer;
-}
-.divimage {
-  width: 400px;
-  height: 250px;
+  height: 30vh;
   display: flex;
   flex-direction: column;
+  justify-content: space-evenly;
   align-items: center;
-
-  margin-top: 3rem;
+  background-color: #ffffff11;
 }
-.divimage img {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
+.container form div{
+  width: 100%;
+  justify-content: center;
+  display: flex;
 }
-.clientImg {
-  width: 150px;
-  height: 150px;
+.container form button{
+  width: 40px;
+  height: 40px;
+  background-color: var(--orange);
+  color: #212121;
+  border: none;
+  border-radius: 50%;
+  padding: 0.3rem;
+}
+.inputContainer input{
+  width: 200px;
+  height: 40px;
+  color: #212121;
+  background-color: #212121;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 0.3rem;
+}
+.client{
+  height: fit-content;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 3rem;
+  background-color: #ffffff11;
+  margin: 2rem;
+  padding: 2rem;
+}
+.clientPhotos {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+}
+.clientPhotos div button {
+  width: 40px;
+  height: 40px;
+  background-color: var(--orange);
+  color: #212121;
+  border: none;
+  border-radius: 50%;
+  padding: 0.3rem;
+}
+.clientPhotos div button:hover {
+  cursor: pointer;
+}
+.clientImg {
+  width: 500px;
+  height: 800px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   font-family: 'Roboto';
   font-size: 16px;
   font-weight: 600;
@@ -54,7 +87,6 @@
 .clientImg img {
   width: 80%;
   aspect-ratio: 1;
-  margin: auto;
   object-fit: contain;
 }
 .labels {
@@ -62,70 +94,18 @@
   display: flex;
   justify-content: space-around;
 }
-
-.divimage label {
-  width: 30%;
-  text-align: center;
-
-  font-family: 'Roboto';
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  color: #ffffff;
-  background-color: var(--dark-blue);
-  text-decoration: none;
-}
-.divimage label:hover {
-  transform: scale(1.1);
-  color: var(--dark-blue);
-  background-color: transparent;
-  border: 1px solid var(--dark-blue);
-  cursor: pointer;
-}
 .clientImgGroup {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
-  border: 1px solid black;
 }
-
 .clientImg {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: 8px;
+
 }
-.mystep {
-  width: 200px;
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #ffffff;
-  justify-content: space-evenly;
-  padding: 1rem;
-  background-color: rgb(255, 255, 255, 0.9);
-}
-.mystep input,
-.mystep button {
-  background-color: #212121;
-  min-height: 40px;
-  border-radius: 10px;
-  color: #ffffff;
-  text-align: center;
-}
-.mystep label {
-  color: #212121;
-  background-color: transparent;
-  border: 1px solid #212121;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-}
-.mystep label:hover {
-  transform: scale(1.1);
-  cursor: pointer;
-}
+
