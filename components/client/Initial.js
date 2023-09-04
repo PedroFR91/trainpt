@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
-import styles from '../../styles/forms.module.css';
-import { initialForm } from '../../forms/initialForm';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase.config';
-import {AiOutlineSend} from 'react-icons/ai'
+import React, { useState } from "react";
+import styles from "../../styles/forms.module.css";
+import { initialForm } from "../../forms/initialForm";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../../firebase.config";
+import { AiOutlineSend } from "react-icons/ai";
 const Initial = (props) => {
-  const [formStructure, setFormStructure] = useState(initialForm);
+  const [formStructure, setFormStructure] = useState({
+    ...initialForm,
+    measures: {
+      chest: "",
+      shoulders: "",
+      biceps: "",
+      hips: "",
+      abdomen: "",
+      cuadriceps: "",
+      gemelos: "",
+    },
+  });
 
   const handleCreate = async (e) => {
-    setFormStructure('');
+    setFormStructure("");
     try {
-      await addDoc(collection(db, 'forms'), {
+      await addDoc(collection(db, "forms"), {
         ...formStructure,
         formid: props.myUid,
-        type: 'Inicial',
+        type: "Inicial",
         timeStamp: serverTimestamp(),
       });
     } catch (error) {
@@ -26,7 +37,7 @@ const Initial = (props) => {
 
     setFormStructure((prevFormStructure) => ({
       ...prevFormStructure,
-      [name]: type === 'file' ? event.target.files[0] : value,
+      [name]: type === "file" ? event.target.files[0] : value,
     }));
   };
   const handleSelectChange = (event) => {
@@ -36,7 +47,7 @@ const Initial = (props) => {
       ...prevFormStructure,
       [name]: {
         ...prevFormStructure[name],
-        options: value.split(',').map((option) => option.trim()),
+        options: value.split(",").map((option) => option.trim()),
       },
     }));
   };
@@ -83,9 +94,9 @@ const Initial = (props) => {
           <div>
             <p>Nombre:</p>
             <input
-              type='text'
-              name='name'
-              placeholder='Pedro'
+              type="text"
+              name="name"
+              placeholder="Pedro"
               value={formStructure.name}
               onChange={handleChange}
             />
@@ -93,19 +104,19 @@ const Initial = (props) => {
           <div>
             <p>Sexo:</p>
             <select
-              name='gender'
+              name="gender"
               value={formStructure.gender}
               onChange={handleChange}
             >
-              <option value='man'>Hombre</option>
-              <option value='woman'>Mujer</option>
+              <option value="man">Hombre</option>
+              <option value="woman">Mujer</option>
             </select>
           </div>
           <div>
             <p>Peso</p>
             <input
-              type='text'
-              name='weight'
+              type="text"
+              name="weight"
               value={formStructure.weight}
               onChange={handleChange}
             />
@@ -113,8 +124,8 @@ const Initial = (props) => {
           <div>
             <p>Altura</p>
             <input
-              type='text'
-              name='height'
+              type="text"
+              name="height"
               value={formStructure.height}
               onChange={handleChange}
             />
@@ -124,17 +135,17 @@ const Initial = (props) => {
         <div>
           <div>
             <p>Frente:</p>
-            <input type='file' name='front' onChange={handlePhotosChange} />
+            <input type="file" name="front" onChange={handlePhotosChange} />
           </div>
 
           <div>
             <p>Espalda:</p>
-            <input type='file' name='back' onChange={handlePhotosChange} />
+            <input type="file" name="back" onChange={handlePhotosChange} />
           </div>
 
           <div>
             <p>Lateral:</p>
-            <input type='file' name='lateral' onChange={handlePhotosChange} />
+            <input type="file" name="lateral" onChange={handlePhotosChange} />
           </div>
         </div>
         <h3>Dieta</h3>
@@ -142,7 +153,7 @@ const Initial = (props) => {
           <div>
             <p>Intolerancias:</p>
             <textarea
-              name='intolerances'
+              name="intolerances"
               value={formStructure.intolerances}
               onChange={handleChange}
             />
@@ -151,7 +162,7 @@ const Initial = (props) => {
           <div>
             <p>Preferencias de comida:</p>
             <textarea
-              name='preferredFoods'
+              name="preferredFoods"
               value={formStructure.preferredFoods}
               onChange={handleChange}
             />
@@ -159,11 +170,11 @@ const Initial = (props) => {
           <div>
             <p>{initialForm.trainingDays.label}</p>
             <select
-              name='trainingDays'
+              name="trainingDays"
               value={formStructure.trainingDays}
               onChange={handleChange}
             >
-              <option value=''>{initialForm.trainingDays.label}</option>
+              <option value="">{initialForm.trainingDays.label}</option>
               {initialForm.trainingDays.options.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -177,9 +188,11 @@ const Initial = (props) => {
           <div>
             <p>Pecho:</p>
             <input
-              type='text'
-              name='chest'
-              value={formStructure.measures.chest}
+              type="text"
+              name="chest"
+              value={
+                formStructure.measures ? formStructure.measures.chest || "" : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
@@ -187,9 +200,13 @@ const Initial = (props) => {
           <div>
             <p>Hombros:</p>
             <input
-              type='text'
-              name='shoulders'
-              value={formStructure.measures.shoulders}
+              type="text"
+              name="shoulders"
+              value={
+                formStructure.measures
+                  ? formStructure.measures.shoulders || ""
+                  : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
@@ -197,9 +214,13 @@ const Initial = (props) => {
           <div>
             <p>Biceps:</p>
             <input
-              type='text'
-              name='biceps'
-              value={formStructure.measures.biceps}
+              type="text"
+              name="biceps"
+              value={
+                formStructure.measures
+                  ? formStructure.measures.biceps || ""
+                  : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
@@ -207,9 +228,11 @@ const Initial = (props) => {
           <div>
             <p>Cintura:</p>
             <input
-              type='text'
-              name='hips'
-              value={formStructure.measures.hips}
+              type="text"
+              name="hips"
+              value={
+                formStructure.measures ? formStructure.measures.hips || "" : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
@@ -217,9 +240,13 @@ const Initial = (props) => {
           <div>
             <p>Abdomen:</p>
             <input
-              type='text'
-              name='abdomen'
-              value={formStructure.measures.abdomen}
+              type="text"
+              name="abdomen"
+              value={
+                formStructure.measures
+                  ? formStructure.measures.abdomen || ""
+                  : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
@@ -227,9 +254,13 @@ const Initial = (props) => {
           <div>
             <p>Cuadriceps:</p>
             <input
-              type='text'
-              name='cuadriceps'
-              value={formStructure.measures.cuadriceps}
+              type="text"
+              name="cuadriceps"
+              value={
+                formStructure.measures
+                  ? formStructure.measures.cuadriceps || ""
+                  : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
@@ -237,18 +268,25 @@ const Initial = (props) => {
           <div>
             <p>Gemelos:</p>
             <input
-              type='text'
-              name='gemelos'
-              value={formStructure.measures.gemelos}
+              type="text"
+              name="gemelos"
+              value={
+                formStructure.measures
+                  ? formStructure.measures.gemelos || ""
+                  : ""
+              }
               onChange={handleMeasuresChange}
             />
           </div>
         </div>
         <div onClick={handleCreate}>
-          <div><p>Enviar Formulario</p></div>
-          <div><AiOutlineSend size={20}/></div>
+          <div>
+            <p>Enviar Formulario</p>
+          </div>
+          <div>
+            <AiOutlineSend size={20} />
+          </div>
         </div>
-      
       </form>
       <div
         className={styles.closebutton}
