@@ -18,26 +18,27 @@ body {
     'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
   font-weight: 400;
   font-size: 1.2rem;
-  color: #ffffff;
+  color: #000000;
 }
 a {
   text-decoration: none;
-  color: #ffffff;
+  color: #000000;
 }
 input,
 select {
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 1.2rem;
-  color: #ffffff;
+  color: #000000;
 }
 
 button {
   font-family: 'Roboto', sans-serif;
   font-weight: 600;
   font-size: 1.2rem;
-  color: #ffffff;
+  color: #000000;
 }
+
 select {
   width: fit-content;
   margin: 1rem 0;

@@ -1,21 +1,40 @@
 .container {
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100vh;
-
+  overflow-x: hidden;
   z-index: -10;
 }
-.left,
-.right {
-  width: 50%;
-  height: 100%;
+.header{
+  width: 100%;
+  height: 10vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 3rem;
+}
+.menu{
+  width: 30%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.acceso {
+  width: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
-.left {
+.acceso {
   background-color: rgba(33, 33, 33, 0.95);
   color: white;
   font-size: 2rem;
@@ -23,17 +42,17 @@
   text-align: center;
   padding: 0 20px;
 }
-.left div {
+.acceso div {
   display: flex;
   flex-direction: column;
   margin: 1rem;
 }
-.left div form {
+.acceso div form {
   display: flex;
   flex-direction: column;
   margin: 1rem;
 }
-.left div form div {
+.acceso div form div {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -44,15 +63,15 @@
   padding: 0.5rem;
   border-radius: 10px;
 }
-.left div form div:hover {
+.acceso div form div:hover {
   box-shadow: 1px 1px 1px 1px #ffffff;
   color: #212121;
   background-color: #ffffff;
   cursor: pointer;
 }
-.left div form input,
-.left div form select,
-.left div form button,
+.acceso div form input,
+.acceso div form select,
+.acceso div form button,
 .toggleButton div {
   margin: 0.5rem;
   padding: 0.5rem;
@@ -61,23 +80,33 @@
   outline: none;
   font-size: 1rem;
 }
-.left div form button {
+.acceso div form button {
   background-color: transparent;
   color: #ffffff;
   border: 1px solid #ffffff;
   position: relative;
   overflow: hidden;
 }
+.mybutton{
+border: 1px solid var(--orange);
+padding: 0.1rem 2rem;
+border-radius: 10px;
+background-color: #f69d21;
+color: #ffffff;
 
-.left div form button:hover {
+}
+.mybutton:hover{
+  background-color: #ffffff;
+}
+.acceso div form button:hover {
   background-color: #ffffff;
   color: #212121;
 }
-.toggleButton {
+.toggleButton,.underline {
   position: relative;
 }
 
-.toggleButton::before {
+.toggleButton::before,.underline::before {
   content: '';
   position: absolute;
   bottom: 0;
@@ -87,14 +116,12 @@
   background-color: #f69d21;
   transition: width 1.5s;
 }
-
-.toggleButton:hover::before {
-  width: 100%;
+.underline::before{
+  transition: width .5s;
 }
 
-.right {
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.6);
+.toggleButton:hover::before,.underline:hover::before {
+  width: 100%;
 }
 
 .logo {
@@ -139,10 +166,12 @@
   left: 0;
   bottom: 0;
   height: 2px;
-  background-color: #f69d21;
+  background-color: hwb(35 13% 4%);
   animation: underline 3s forwards;
 }
 .section {
+  position: relative;
+  top: 0;
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -165,9 +194,176 @@
 .text {
   width: 100%;
   height: 100%;
-  color: #ffffff;
-  background-color: #212121;
+  color: #ffffffcc;
+  font-size: 3rem;
+  font-weight: 700;
+  padding: 0 2rem;
+  position: relative;
+  overflow: hidden;
+
+}
+@keyframes shine {
+  from {
+    -webkit-mask-position: 150%;
+  }
+  
+  to {
+    -webkit-mask-position: -50%;
+  }
+}
+.text::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, transparent 0%, transparent 50%, #212121 50%, #212121cc 100%);
+  background-size: 200% 100%;
+  background-position: 100%;
+  transition: background-position 0.7s;
+  z-index: -1; /* Coloca el fondo detrás del texto */
+}
+
+.text:hover::before {
+  background-position: 0%;
+}
+.text:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+  color: #ffffff; /* Cambiar el color del texto al hacer hover */
+  mask-image: linear-gradient(-75deg, rgba(0,0,0,.6) 30%, #000 50%, rgba(0,0,0,.6) 70%);
+  mask-size: 200%;
+  animation: shine 2s infinite;
+}
+  .media{
+  width: 100%;
+  height: 100%;
+  background-color: #ffffffdd;
   font-size: 3rem;
   font-weight: 900;
   padding: 0 2rem;
+}
+/*FOOTER*/
+.footer {
+  width: 100%;
+  display: flex;
+
+  bottom: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: #212121;
+  color: #fff;
+}
+.footer a {
+  text-decoration: none;
+  color: #ffffff;
+}
+.footer a:hover {
+  transform: scale(1.1);
+ 
+}
+.top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.social {
+  display: flex;
+  align-items: center;
+}
+.social div {
+  margin-right: 1rem;
+}
+.social Link :hover {
+  cursor: pointer;
+}
+.links:hover{
+  color: #f69d21;
+}
+.leftSection,
+.centerSection,
+.rightSection {
+  flex: 1;
+  margin: 0 1rem;
+}
+.leftSection a {
+  display: block;
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+.centerSection p {
+  margin-bottom: 1rem;
+}
+
+.mapContainer {
+  width: 100%;
+  height: 200px;
+  background-color: #ccc;
+  /* Temporal, reemplazar por el componente de Google Maps */
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.contactForm input,
+.contactForm textarea {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+}
+
+.contactForm button {
+  padding: 0.5rem;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+/*opiniones*/
+.opinions {
+  width: 100%;
+  height: 50vh;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  background-color: #ffffff;
+
+}
+.client {
+  border-radius: 10px;
+  width: 20%;
+  margin: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  background-color: #212121cc;
+  color: #ffffff;
+  font-family: 'Roboto';
+}
+.client img{
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.client div {
+  margin: 1rem 0;
+}
+@media screen and (max-width: 767px) {
+  .top {
+    flex-direction: column;
+    align-items: center;
+  }
+  .legal {
+    text-align: center;
+    margin: 1rem;
+  }
 }

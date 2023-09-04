@@ -1,306 +1,233 @@
-import { useContext, useState } from 'react';
-import Image from 'next/image';
-import styles from '../styles/Home.module.css';
-import AuthContext from '../context/AuthContext';
-import { useAuthUser } from '../hooks/useAuthUser';
-import { useRouter } from 'next/router';
-import {
-  signOut,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
-import { auth, db } from '../firebase.config';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-
-const provider = new GoogleAuthProvider();
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import Link from "next/link";
+import { FaFacebookF, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 export default function Home() {
-  useAuthUser();
-  const { isLogged } = useContext(AuthContext);
-  const [toggleView, setToggleView] = useState(true);
-  const { push } = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [userName, setUserName] = useState('');
-  const [selected, setSelected] = useState('trainer');
-  const [error, setError] = useState(false);
-  const [message, setMessage] = useState(null);
-
-  const signInWithGoogle = async () => {
-    try {
-      const res = await signInWithPopup(auth, provider);
-      const user = res.user;
-
-      // Verificar si el usuario ya ha iniciado sesión con correo/contraseña
-      const existingUserDoc = await getDoc(doc(db, 'users', user.uid));
-      const existingUserData = existingUserDoc.data();
-      if (existingUserData && existingUserData.email) {
-        // El usuario ha iniciado sesión previamente con correo/contraseña
-        // Asociar la cuenta de Google con la cuenta de correo/contraseña
-        const updatedUserData = {
-          ...existingUserData,
-          googleLinked: true,
-        };
-        await setDoc(doc(db, 'users', user.uid), updatedUserData);
-        setMessage(
-          'Ya has accedido con correo y contraseña. Ahora puedes acceder con Google también.'
-        );
-      } else {
-        // El usuario está iniciando sesión con Google por primera vez
-        // Crear un nuevo registro en Firestore
-        const userData = {
-          id: user.uid,
-          email: user.email,
-          username: user.displayName,
-          role: selected,
-          img: user.photoURL,
-          timeStamp: serverTimestamp(),
-          googleLinked: true,
-        };
-        await setDoc(doc(db, 'users', user.uid), userData);
-      }
-      if (selected === 'trainer') {
-        push('/trainer/home');
-      } else {
-        push('/client/program');
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const user = res.user;
-
-      // Consultar el documento del usuario en Firestore
-      const userDoc = doc(db, 'users', user.uid);
-      const userSnapshot = await getDoc(userDoc);
-      const userData = userSnapshot.data();
-
-      if (userData && userData.role) {
-        // Redireccionar al usuario según su rol
-        if (userData.role === 'trainer') {
-          push('/trainer/home');
-        } else {
-          push('/client/program');
-        }
-
-        // Consultar el campo "googleLinked" en Firestore y mostrar el mensaje si es necesario
-        if (userData.googleLinked) {
-          setMessage(
-            'Ya has accedido con Google. Ahora puedes acceder con correo y contraseña también.'
-          );
-        }
-      }
-    } catch (error) {
-      setError(true);
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-
-    // Verificar que todos los campos estén completos
-    if (!email || !password || !userName) {
-      setError(true);
-      return;
-    }
-
-    try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, 'users', res.user.uid), {
-        id: res.user.uid,
-        email,
-        userName,
-        password,
-        role: selected,
-        timeStamp: serverTimestamp(),
-      });
-      if (selected === 'trainer') {
-        push('/trainer/home');
-      } else {
-        push('/client/program');
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
   const sections = [
-    { type:'image',text: 'REIVENTA EL ENTRENAMIENTO PERSONAL ONLINE', src: '/logo.png' },
-    { type:'video',text: 'MANTEN EL CONTROL DE TODOS TUS CLIENTES', src: '/background.mp4' },
-    { type:'image',text: 'TU CALENDARIO DETALLADO', src: 'Foto' },
-    { type:'image',text: 'AUTOMATIZA TU SEGUIMIENTO', src: 'Foto' },
-    { type:'image',text: 'TU CARTA DE PRESENTACIÓN PROFESIONAL', src: '/cardtrainer.png' },
-    { type:'image',text: 'COMPARTE TODO CON TUS CLEINTES', src: 'Foto' },
-    { type:'image',text: 'DISFRUTA DE NUESTRO CREADOR DE RUTINAS', src: 'Foto' },
+    {
+      type: "image",
+      text: "REINVENTA EL ENTRENAMIENTO PERSONAL ONLINE",
+      src: "/logo.png",
+    },
+    {
+      type: "video",
+      text: "MANTEN EL CONTROL DE TODOS TUS CLIENTES",
+      src: "",
+    },
+    { type: "image", text: "TU CALENDARIO DETALLADO", src: "/calendar.png" },
+    {
+      type: "image-carousel", // Cambia el tipo a "image-carousel"
+      text: "AUTOMATIZA TU SEGUIMIENTO",
+      images: [
+        "/cardtrainer.png",
+        "/rates.png",
+        "/clientimgone.png",
+        "/clientimgtwo.png",
+      ],
+    },
+    {
+      type: "image",
+      text: "COMPARTE TODO CON TUS CLIENTES",
+      src: "Foto",
+    },
+    {
+      type: "image",
+      text: "DISFRUTA DE NUESTRO CREADOR DE RUTINAS",
+      src: "Foto",
+    },
   ];
+
   return (
     <>
-  
       <div className={styles.container}>
-      <video
-        src='/background.mp4'
-        autoPlay
-        loop
-        muted
-        style={{
-          position: 'absolute',
-          width: '100%',
-          left: '50%',
-          top: '50%',
-          height: '100%',
-          objectFit: 'cover',
-          transform: 'translate(-50%, -50%)',
-          zIndex: '-1',
-        }}
-      />
-
-      <div className={styles.left}>
-        {toggleView ? (
+        <div className={styles.header}>
           <div>
-            <form onSubmit={handleRegister}>
-              <input
-                type='text'
-                placeholder='Nombre'
-                onChange={(e) => setUserName(e.target.value)}
-              />
-              <input
-                type='email'
-                placeholder='Correo'
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                type='password'
-                placeholder='Contraseña'
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <select
-                value={selected}
-                onChange={(e) => setSelected(e.target.value)}
-              >
-                <option value='trainer'>Entrenador</option>
-                <option value='client'>Cliente</option>
-              </select>
-              <button type='submit'>Crear cuenta</button>
-              <button
-                type='button'
-                onClick={signInWithGoogle}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {' '}
-                <Image
-                  src={'/google.png'}
-                  alt={'google image for login'}
-                  width={55}
-                  height={40}
-                />
-                <p>Accede con Google</p>
-              </button>
-            </form>
+            <Link href={"/"}>
+              <img src={"/logo.png"} height="80px" />
+            </Link>
           </div>
-        ) : (
-          <div>
-            <form onSubmit={handleLogin}>
-              <input
-                type='email'
-                placeholder='Correo'
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                type='password'
-                placeholder='Contraseña'
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button type='submit'>Acceder</button>
-              <div onClick={signInWithGoogle}>
-                <Image
-                  src={'/google.png'}
-                  alt={'google image for login'}
-                  width={55}
-                  height={40}
-                />
-                <p>Accede con Google</p>
-              </div>
-            </form>
+          <div className={styles.menu}>
+            <Link href={"/#"} className={styles.underline}>
+              Inicio
+            </Link>
+            <Link href={"/#"} className={styles.underline}>
+              Conócenos
+            </Link>
+            <Link href={"/#"} className={styles.underline}>
+              Preguntas Frecuentes
+            </Link>
+            <Link href={"/#"} className={styles.underline}>
+              Información Legal
+            </Link>
           </div>
-        )}
-        <div className={styles.toggleButton}>
-          <div onClick={() => setToggleView(!toggleView)}>
-            {toggleView
-              ? '¿Estás registrado?, accede'
-              : '¿No tienes cuenta?, creala'}
+          <div className={styles.mybutton}>
+            <Link href={"/acceso"} className={styles.underline}>
+              Accede
+            </Link>
           </div>
         </div>
-      </div>
-      <div className={styles.right}>
-        <div>
-          <Image
-            src='/logo.png'
-            width={480}
-            height={160}
-            alt='Logo de Empresa. TrainPT'
-          />
-        </div>
-      </div>
-      {message && <div className={styles.message}>{message}</div>}
-      </div>
-      {sections.map((section, index) => (
-        <div key={index} className={styles.section}>
-          {index === 0 ? (
-            <>
-              <div className={styles.logo}>
-                <img src={section.src} width='100%' />
-              </div>
-              <div className={styles.text}>{section.text}</div>
-            </>
-          ) : index % 2 === 0 ? (
-            <>
-              <div className={styles.text}>{section.text}</div>
-              <div>
-                {section.type==='image'?
+        <video
+          src="/background.mp4"
+          autoPlay
+          loop
+          muted
+          style={{
+            position: "fixed",
+            width: "100%",
+            left: "50%",
+            top: "50%",
+            height: "100%",
+            objectFit: "cover",
+            transform: "translate(-50%, -50%)",
+            zIndex: "-10",
+          }}
+        />
+        {sections.map((section, index) => (
+          <div key={index} className={styles.section}>
+            {index % 2 === 0 ? (
+              <>
+                <div className={styles.media}>
+                  {section.type === "image" ? (
+                    <img src={section.src} width="100%" />
+                  ) : (
+                    <video
+                      src={section.src}
+                      width="100%"
+                      height="100%"
+                      autoPlay
+                      loop
+                      muted
+                    />
+                  )}
+                </div>
+                <div className={styles.text}>
+                  <p>{section.text}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.text}>{section.text}</div>
+                {section.type === "image-carousel" ? (
+                  <div className={styles.media}>
+                    <div className={styles.carouselContainer}>
+                      <Carousel
+                        showArrows={true}
+                        showThumbs={false}
+                        autoPlay={true}
+                        interval={2000}
+                        infiniteLoop={true}
+                      >
+                        {section.images.map((image, i) => (
+                          <div key={i}>
+                            <img src={image} alt={`Image ${i}`} />
+                          </div>
+                        ))}
+                      </Carousel>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.media}>
+                    {section.type === "image" ? (
+                      <img src={section.src} width="100%" />
+                    ) : (
+                      <video
+                        src={section.src}
+                        width="100%"
+                        height="100%"
+                        autoPlay
+                        loop
+                        muted
+                      />
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ))}
 
-<img src={section.src} width='100%' />:
-<video
-  src={section.src}
-  width='100%'
-  height='100%'
-  autoPlay
-  loop
-  muted
-/>
-                }
-           
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                {' '}
-                <video
-                  src={section.src}
-                  width='100%'
-                  height='100%'
-                  autoPlay
-                  loop
-                  muted
-                />
-              </div>
-              <div className={styles.text}>{section.text}</div>
-            </>
-          )}
+        <div className={styles.opinions}>
+          <div className={styles.client}>
+            <img src="/face2.jpg" />
+            <div>
+              "¡Increíble gimnasio en línea! Me encanta la variedad de rutinas y
+              la comodidad de entrenar desde casa. Los instructores son muy
+              motivadores, y he logrado resultados asombrosos. ¡No puedo
+              recomendarlo lo suficiente!"
+            </div>
+            <div>Anna Gómez</div>
+          </div>
+          <div className={styles.client}>
+            <img src="/face3.jpg" />
+            <div>
+              "Desde que me uní a este gimnasio en línea, mi vida ha cambiado.
+              La plataforma es fácil de usar, y las rutinas son desafiantes pero
+              efectivas. La comunidad en línea es un gran apoyo, y me siento más
+              fuerte y saludable que nunca. ¡Una inversión que vale la pena!"
+            </div>
+            <div>Isabel Ramírez</div>
+          </div>
+          <div className={styles.client}>
+            <img src="/face4.jpg" />
+            <div>
+              "Mi experiencia en este gimnasio en línea ha sido excepcional. La
+              calidad de las clases y la atención personalizada son notables. He
+              perdido peso, ganado fuerza y me siento más saludable que nunca.
+              Además, la flexibilidad de entrenar en mi propio horario es
+              invaluable. ¡Si buscas un gimnasio en línea de primera clase, este
+              es el indicado!"
+            </div>
+            <div>Gabriel Pérez</div>
+          </div>
         </div>
-      ))}
+        <footer className={styles.footer}>
+          <div className={styles.top}>
+            <div className={styles.social}>
+              <Link href="https://www.facebook.com">
+                <div className={styles.links}>
+                  <FaFacebookF size={24} />
+                </div>
+              </Link>
+              <Link href="https://www.instagram.com">
+                <div className={styles.links}>
+                  <FaInstagram size={24} />
+                </div>
+              </Link>
+              <Link href="https://www.tiktok.com">
+                <div className={styles.links}>
+                  <FaTiktok size={24} />
+                </div>
+              </Link>
+              <Link href="https://www.linkedin.com/company">
+                <div className={styles.links}>
+                  <FaLinkedin size={24} />
+                </div>
+              </Link>
+            </div>
+            <div className={styles.legal}>
+              <Link href={"/terminosycondiciones"} className={styles.underline}>
+                Términos y condiciones &nbsp;
+              </Link>
+              |&nbsp;
+              <Link href={"/privacidad"} className={styles.underline}>
+                Política de privacidad &nbsp;
+              </Link>
+              |&nbsp;
+              <Link href={"/cookies"} className={styles.underline}>
+                Cookies
+              </Link>
+            </div>
+            <div>2023 &copy; Train PT</div>
+          </div>
+          <div style={{ marginBottom: "1rem" }} className={styles.underline}>
+            trainpt@info.es
+          </div>
+          <div>+34 123456789</div>
+        </footer>
+      </div>
     </>
-    
   );
 }
