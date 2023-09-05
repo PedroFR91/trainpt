@@ -1,11 +1,19 @@
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import Link from "next/link";
-import { FaFacebookF, FaInstagram, FaTiktok, FaLinkedin } from "react-icons/fa";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaTiktok,
+  FaLinkedin,
+  FaHamburger,
+} from "react-icons/fa";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
-
+import { AiOutlineCloseSquare, AiOutlineMenu } from "react-icons/ai";
+import { useState } from "react";
 export default function Home() {
+  const [viewmobile, setViewMobile] = useState(false);
   const sections = [
     {
       type: "image",
@@ -20,7 +28,7 @@ export default function Home() {
     { type: "image", text: "TU CALENDARIO DETALLADO", src: "/calendar.png" },
     {
       type: "image-carousel", // Cambia el tipo a "image-carousel"
-      text: "AUTOMATIZA TU SEGUIMIENTO",
+      text: "TU CARTA DE PRESENTACIÓN PROFESIONAL",
       images: [
         "/cardtrainer.png",
         "/rates.png",
@@ -30,16 +38,27 @@ export default function Home() {
     },
     {
       type: "image",
-      text: "COMPARTE TODO CON TUS CLIENTES",
-      src: "Foto",
+      text: "AUTOMATIZA TU SEGUIMIENTO",
+      src: "",
     },
+    {
+      type: "image-carousel", // Cambia el tipo a "image-carousel"
+      text: "COMPARTE TODO CON TUS CLIENTES", // Mantén el mismo texto
+      images: [
+        "/gallery.png", // Cambia las imágenes a "gallery.png" y "videos.png"
+        "/videos.png",
+      ],
+    },
+
     {
       type: "image",
       text: "DISFRUTA DE NUESTRO CREADOR DE RUTINAS",
       src: "Foto",
     },
   ];
-
+  const toggleView = () => {
+    setViewMobile(!viewmobile);
+  };
   return (
     <>
       <div className={styles.container}>
@@ -68,7 +87,27 @@ export default function Home() {
               Accede
             </Link>
           </div>
+          <AiOutlineMenu
+            onClick={() => toggleView(true)}
+            className={styles.hamburgerButton}
+          />
         </div>
+        {viewmobile && (
+          <div className={styles.hamburger}>
+            <div className={styles.menumobile}>
+              <Link href={"/#"}>Inicio</Link>
+              <Link href={"/#"}>Conócenos</Link>
+              <Link href={"/#"}>Preguntas Frecuentes</Link>
+              <Link href={"/#"}>Información Legal</Link>
+            </div>
+            <div className={styles.mybuttonmobile}>
+              <Link href={"/acceso"}>Accede</Link>
+            </div>
+            <div className={styles.buttonclose} onClick={toggleView}>
+              X
+            </div>
+          </div>
+        )}
         <video
           src="/background.mp4"
           autoPlay
@@ -88,7 +127,7 @@ export default function Home() {
         {sections.map((section, index) => (
           <div key={index} className={styles.section}>
             {index % 2 === 0 ? (
-              <>
+              <div className={styles.sectionContainer}>
                 <div className={styles.media}>
                   {section.type === "image" ? (
                     <img src={section.src} width="100%" />
@@ -106,9 +145,9 @@ export default function Home() {
                 <div className={styles.text}>
                   <p>{section.text}</p>
                 </div>
-              </>
+              </div>
             ) : (
-              <>
+              <div className={styles.sectionContainer}>
                 <div className={styles.text}>{section.text}</div>
                 {section.type === "image-carousel" ? (
                   <div className={styles.media}>
@@ -118,7 +157,6 @@ export default function Home() {
                         showThumbs={false}
                         autoPlay={true}
                         interval={2000}
-                        infiniteLoop={true}
                       >
                         {section.images.map((image, i) => (
                           <div key={i}>
@@ -144,11 +182,10 @@ export default function Home() {
                     )}
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         ))}
-
         <div className={styles.opinions}>
           <div className={styles.client}>
             <img src="/face2.jpg" />

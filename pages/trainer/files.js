@@ -1,38 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import styles from '../../styles/files.module.css';
-import TrainerHeader from '../../components/trainer/trainerHeader';
-import { db, storage } from '../../firebase.config';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import React, { useEffect, useState } from "react";
+import styles from "../../styles/files.module.css";
+import TrainerHeader from "../../components/trainer/trainerHeader";
+import { db, storage } from "../../firebase.config";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
   serverTimestamp,
   setDoc,
-} from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import ReactPlayer from 'react-player';
-import { AiOutlineFile, AiOutlinePlayCircle } from 'react-icons/ai';
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import ReactPlayer from "react-player";
+import { AiOutlineFile, AiOutlinePlayCircle } from "react-icons/ai";
 import {
+  FaEdit,
   FaFileArchive,
+  FaFilePdf,
   FaFileUpload,
   FaPlayCircle,
   FaTrashAlt,
   FaUpload,
-} from 'react-icons/fa';
-import Chat from '../../components/chat/chat';
+} from "react-icons/fa";
+import Chat from "../../components/chat/chat";
 const files = () => {
-  const [file, setFile] = useState('');
+  const [file, setFile] = useState("");
   const [data, setData] = useState({});
   const [per, setPer] = useState(null);
   const [myfiles, setMyFiles] = useState([]);
   const [showvideo, setShowvideo] = useState(false);
-  const [url, setUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
+  const [url, setUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
   const [videoList, setVideoList] = useState([]);
-  const [fileTitle, setFileTitle] = useState('');
+  const [fileTitle, setFileTitle] = useState("");
   const [viewUpload, setViewUpload] = useState(false);
   const [viewMyVideos, setViewMyVideos] = useState(false);
   const [viewMyFiles, setViewMyFiles] = useState(false);
@@ -41,7 +44,7 @@ const files = () => {
   const user = auth.currentUser;
 
   useEffect(() => {
-    setData({ ...data, role: 'trainer' });
+    setData({ ...data, role: "trainer" });
   }, []);
   useEffect(() => {
     const uploadFile = () => {
@@ -50,18 +53,18 @@ const files = () => {
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       uploadTask.on(
-        'state_changed',
+        "state_changed",
         (snapshot) => {
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
+          console.log("Upload is " + progress + "% done");
           setPer(progress);
           switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
+            case "paused":
+              console.log("Upload is paused");
               break;
-            case 'running':
-              console.log('Uoload is running');
+            case "running":
+              console.log("Uoload is running");
               break;
             default:
               break;
@@ -83,7 +86,7 @@ const files = () => {
   }, [file]);
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, 'videos'),
+      collection(db, "videos"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -102,7 +105,7 @@ const files = () => {
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, 'files'),
+      collection(db, "files"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -118,12 +121,19 @@ const files = () => {
       unsub();
     };
   }, []);
+  useEffect(() => {
+    // Verifica si hay videos en la lista
+    if (videoList.length > 0) {
+      // Establece la URL del primer video en el estado "url"
+      setUrl(videoList[0].url);
+    }
+  }, [videoList]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
     const name = new Date().getTime() + file.name;
     try {
-      await setDoc(doc(db, 'files', name), {
+      await setDoc(doc(db, "files", name), {
         ...data,
         fileType: file.type,
         title: fileTitle,
@@ -146,14 +156,50 @@ const files = () => {
       timeStamp: serverTimestamp(),
     };
     try {
-      const videoDocRef = await addDoc(collection(db, 'videos'), videoData);
-      const videoDoc = await getDoc(videoDocRef);
-      setVideoList((prevState) => [
-        ...prevState,
-        { id: videoDoc.id, title: videoTitle, url },
-      ]);
+      const videoDocRef = await addDoc(collection(db, "videos"), videoData);
+
+      // Solo agrega el video a videoList después de confirmar que se agregó a Firebase
+      await getDoc(videoDocRef);
+
+      // Verifica si el video ya está en la lista antes de agregarlo
+      if (!videoList.some((video) => video.url === videoData.url)) {
+        setVideoList((prevState) => [
+          ...prevState,
+          { id: videoDocRef.id, title: videoTitle, url },
+        ]);
+      }
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const deleteVideo = async (videoId) => {
+    try {
+      // Elimina el video de la lista de videos en el estado
+      setVideoList((prevState) =>
+        prevState.filter((video) => video.id !== videoId)
+      );
+
+      // Elimina el video de la base de datos
+      await deleteDoc(doc(db, "videos", videoId));
+
+      // Si el video que se estaba reproduciendo se eliminó, detén la reproducción
+      if (url === videoList.find((video) => video.id === videoId).url) {
+        setUrl("");
+      }
+    } catch (error) {
+      console.error("Error al eliminar el video:", error);
+    }
+  };
+  const deleteFile = async (fileId) => {
+    try {
+      // Elimina el archivo de la lista de archivos en el estado
+      setMyFiles((prevState) => prevState.filter((file) => file.id !== fileId));
+
+      // Elimina el archivo de la base de datos
+      await deleteDoc(doc(db, "files", fileId));
+    } catch (error) {
+      console.error("Error al eliminar el archivo:", error);
     }
   };
 
@@ -191,13 +237,13 @@ const files = () => {
                 reproductor.
               </p>
               <input
-                type='text'
-                placeholder='Título del video'
+                type="text"
+                placeholder="Título del video"
                 onChange={(e) => setVideoTitle(e.target.value)}
               />
               <input
-                type='text'
-                placeholder='Pegue aquí su URL'
+                type="text"
+                placeholder="Pegue aquí su URL"
                 onChange={(e) => setUrl(e.target.value)}
               />
               <button onClick={addVideo}>Subir</button>
@@ -210,44 +256,58 @@ const files = () => {
             </div>
           )}
           {viewMyVideos && (
-            <div className={styles.myVideos}>
-              <div className={styles.video}>
-                <ReactPlayer url={url} width={'100%'} />
+            <>
+              <h1 style={{ marginTop: "20vh" }}>Mis Videos</h1>
+              <div className={styles.myVideos}>
+                <div className={styles.video}>
+                  <ReactPlayer url={url} width={"80%"} />
+                </div>
+                <div className={styles.videoList}>
+                  <h2>¿Qué quieres ver?</h2>
+                  {videoList.map((video) => (
+                    <>
+                      <div>
+                        <p
+                          key={video.id}
+                          onClick={() => selectVideo(video.url)}
+                        >
+                          {video.title ? video.title : "Sin título"}
+                        </p>
+                        <p>
+                          <FaTrashAlt
+                            size={20}
+                            onClick={() => deleteVideo(video.id)}
+                          />
+                        </p>
+                      </div>
+                    </>
+                  ))}
+                </div>
+                <div
+                  className={styles.closebutton}
+                  onClick={() => setViewMyVideos(false)}
+                >
+                  X
+                </div>
               </div>
-              <div className={styles.videoList}>
-                {videoList.map((video) => (
-                  <div>
-                    <p key={video.id} onClick={() => selectVideo(video.url)}>
-                      {video.title ? video.title : 'Sin título'}
-                    </p>
-                    <FaTrashAlt size={20} />
-                  </div>
-                ))}
-              </div>
-              <div
-                className={styles.closebutton}
-                onClick={() => setViewMyVideos(false)}
-              >
-                X
-              </div>
-            </div>
+            </>
           )}
           {viewUploadFiles && (
             <div className={styles.uploadArea}>
               <h1>Suba sus archivos</h1>
               <input
-                type='text'
-                placeholder='Ingrese el título de su archivo aquí'
+                type="text"
+                placeholder="Ingrese el título de su archivo aquí"
                 onChange={(e) => setFileTitle(e.target.value)}
               />
               <div className={styles.filePickerContainer}>
-                <label htmlFor='filepicker' className={styles.customFilePicker}>
+                <label htmlFor="filepicker" className={styles.customFilePicker}>
                   Seleccionar archivo
                 </label>
                 <input
-                  type='file'
-                  id='filepicker'
-                  accept='image/*,.pdf,.doc,.docx,.xml'
+                  type="file"
+                  id="filepicker"
+                  accept="image/*,.pdf,.doc,.docx,.xml"
                   onChange={(e) => setFile(e.target.files[0])}
                   className={styles.ocult}
                 />
@@ -263,20 +323,31 @@ const files = () => {
           )}
           {viewMyFiles && (
             <>
+              <h1 style={{ marginTop: "20vh" }}>Mi galería</h1>
               <div className={styles.gallery}>
-                {myfiles.map((item) => (
-                  <div key={item.id}>
-                    <AiOutlineFile
-                      style={{
-                        fontSize: '60px',
-                      }}
-                    />
-                    <p>{item.title}</p>
-                    <a href={item.img} target='_blank'>
-                      Ver/Descargar
-                    </a>
-                  </div>
-                ))}
+                {myfiles.length > 0 ? (
+                  myfiles.map((item) => (
+                    <div key={item.id}>
+                      {item.fileType === "image/jpeg" ? (
+                        <img src={item.img} alt={item.title} width="100%" />
+                      ) : (
+                        <FaFilePdf size={100} />
+                      )}
+
+                      <p>{item.title ? item.title : "Sin título"}</p>
+                      <a href={item.img} target="_blank">
+                        Ver/Descargar
+                      </a>
+                      <FaTrashAlt
+                        size={20}
+                        onClick={() => deleteFile(item.id)}
+                        className={styles.links}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <h1>Aún no has subido ningún archivo</h1>
+                )}
               </div>
               <div
                 className={styles.closebutton}

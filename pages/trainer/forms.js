@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
-import styles from '../../styles/forms.module.css';
-import TrainerHeader from '../../components/trainer/trainerHeader';
+import React, { useContext, useEffect, useState } from "react";
+import styles from "../../styles/forms.module.css";
+import TrainerHeader from "../../components/trainer/trainerHeader";
 import {
   addDoc,
   arrayUnion,
@@ -12,14 +12,20 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase.config';
-import { getAuth } from 'firebase/auth';
-import AuthContext from '../../context/AuthContext';
-import { follow, initialForm } from '../../forms/initialForm';
-import { FaArrowAltCircleRight, FaFile } from 'react-icons/fa';
-import Initial from '../../components/client/Initial';
-import Link from 'next/link';
+} from "firebase/firestore";
+import { db } from "../../firebase.config";
+import { getAuth } from "firebase/auth";
+import AuthContext from "../../context/AuthContext";
+import { follow, initialForm } from "../../forms/initialForm";
+import { FaArrowAltCircleRight, FaFile } from "react-icons/fa";
+import Initial from "../../components/client/Initial";
+import Link from "next/link";
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  storage,
+} from "firebase/storage";
 
 const forms = () => {
   const [data, setData] = useState([]);
@@ -37,12 +43,14 @@ const forms = () => {
   const [showinitial, setShowInitial] = useState(false);
   const [showfollow, setShowFollow] = useState(false);
   const [showmyforms, setShowMyForms] = useState(false);
+  const [imageIds, setImageIds] = useState([]);
+
   //Initial
 
   useEffect(() => {
     if (myData) {
       // Realizar la consulta para obtener todos los usuarios
-      const q = query(collection(db, 'users'));
+      const q = query(collection(db, "users"));
       const unsub = onSnapshot(q, (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -69,10 +77,10 @@ const forms = () => {
   };
 
   const handleMeasuresChange = (event) => {
-    setFormData({
-      ...formData,
+    setFormDataFollow({
+      ...formDataFollow,
       measures: {
-        ...formData.measures,
+        ...formDataFollow.measures,
         [event.target.name]: event.target.value,
       },
     });
@@ -88,7 +96,7 @@ const forms = () => {
     setFormDataFollow({
       ...formDataFollow,
       [event.target.name]:
-        event.target.type === 'file'
+        event.target.type === "file"
           ? event.target.files[0]
           : event.target.value,
     });
@@ -104,19 +112,37 @@ const forms = () => {
     });
   };
 
-  const handlePhotosChangeFollow = (event) => {
-    setFormDataFollow({
-      ...formDataFollow,
-      photos: {
-        ...formDataFollow.photos,
-        [event.target.name]: event.target.files[0],
-      },
-    });
+  const handlePhotosChangeFollow = async (event) => {
+    const imageFile = event.target.files[0];
+
+    try {
+      const storageRef = ref(storage, "images/" + imageFile.name);
+      const uploadTask = uploadBytesResumable(storageRef, imageFile);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // Manejar el progreso de la carga si es necesario
+        },
+        (error) => {
+          console.error("Error al subir la imagen:", error);
+        },
+        () => {
+          // Cuando la carga se completa con éxito, obtener el ID de la imagen
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            // Agregar el ID de la imagen al array
+            setImageIds((prevImageIds) => [...prevImageIds, downloadURL]);
+          });
+        }
+      );
+    } catch (error) {
+      console.error("Error al cargar la imagen:", error);
+    }
   };
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, 'forms'),
+      collection(db, "forms"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -134,32 +160,37 @@ const forms = () => {
   }, []);
 
   const handleCreateFollow = async (e) => {
+    e.preventDefault();
     try {
-      await addDoc(collection(db, 'forms'), {
+      const formDataWithImages = {
         ...formDataFollow,
         formid: myUid,
-        type: 'Seguimiento',
+        type: "Seguimiento",
         timeStamp: serverTimestamp(),
-      });
+        images: imageIds, // Agregar los IDs de las imágenes al formulario
+      };
+
+      await addDoc(collection(db, "forms"), formDataWithImages);
     } catch (error) {
       console.log(error);
     }
   };
+
   const asignForm = (id) => {
     setShowClient(true);
     setCurrentForm(id);
   };
   const selectTrainer = async (cf, id) => {
-    console.log('id', id);
-    console.log('MyUid', myUid);
+    console.log("id", id);
+    console.log("MyUid", myUid);
     console.log(cf);
     const date = new Date();
-    await updateDoc(doc(db, 'forms', cf), {
+    await updateDoc(doc(db, "forms", cf), {
       link: id,
       dateform: date,
     });
 
-    const docRef = doc(db, 'users', myUid);
+    const docRef = doc(db, "users", myUid);
     const userSnap = await getDoc(docRef);
     const userData = userSnap.data();
 
@@ -171,7 +202,7 @@ const forms = () => {
       // If the trainer already has a status with the same id, update only the name
       const updatedStatus = userData.status.map((status, index) => {
         if (index === existingStatusIndex) {
-          return { ...status, name: 'inicial' }; // Replace 'inicial' with the desired name
+          return { ...status, name: "inicial" }; // Replace 'inicial' with the desired name
         } else {
           return status;
         }
@@ -182,7 +213,7 @@ const forms = () => {
     } else {
       // If the trainer doesn't have a status with the same id, add a new status
       await updateDoc(docRef, {
-        status: arrayUnion({ name: 'inicial', id: id }),
+        status: arrayUnion({ name: "inicial", id: id }),
       });
     }
 
@@ -233,9 +264,13 @@ const forms = () => {
                   <label>
                     Chest:
                     <input
-                      type='text'
-                      name='chest'
-                      value={formDataFollow.measures.chest}
+                      type="text"
+                      name="chest"
+                      value={
+                        formDataFollow.measures
+                          ? formDataFollow.measures.chest || ""
+                          : ""
+                      }
                       onChange={handleMeasuresChangeFollow}
                     />
                   </label>
@@ -243,8 +278,8 @@ const forms = () => {
                   <label>
                     Hombros:
                     <input
-                      type='text'
-                      name='shoulders'
+                      type="text"
+                      name="shoulders"
                       value={formDataFollow.measures.shoulders}
                       onChange={handleMeasuresChangeFollow}
                     />
@@ -253,8 +288,8 @@ const forms = () => {
                   <label>
                     Biceps:
                     <input
-                      type='text'
-                      name='biceps'
+                      type="text"
+                      name="biceps"
                       value={formDataFollow.measures.biceps}
                       onChange={handleMeasuresChangeFollow}
                     />
@@ -263,8 +298,8 @@ const forms = () => {
                   <label>
                     Cintura:
                     <input
-                      type='text'
-                      name='hips'
+                      type="text"
+                      name="hips"
                       value={formDataFollow.measures.hips}
                       onChange={handleMeasuresChangeFollow}
                     />
@@ -273,8 +308,8 @@ const forms = () => {
                   <label>
                     Abdomen:
                     <input
-                      type='text'
-                      name='abdomen'
+                      type="text"
+                      name="abdomen"
                       value={formDataFollow.measures.abdomen}
                       onChange={handleMeasuresChangeFollow}
                     />
@@ -283,8 +318,8 @@ const forms = () => {
                   <label>
                     Cuadriceps:
                     <input
-                      type='text'
-                      name='cuadriceps'
+                      type="text"
+                      name="cuadriceps"
                       value={formDataFollow.measures.cuadriceps}
                       onChange={handleMeasuresChangeFollow}
                     />
@@ -293,8 +328,8 @@ const forms = () => {
                   <label>
                     Gemelos:
                     <input
-                      type='text'
-                      name='gemelos'
+                      type="text"
+                      name="gemelos"
                       value={formDataFollow.measures.gemelos}
                       onChange={handleMeasuresChangeFollow}
                     />
@@ -308,8 +343,8 @@ const forms = () => {
                   <label>
                     Frontal:
                     <input
-                      type='file'
-                      name='front'
+                      type="file"
+                      name="front"
                       onChange={handlePhotosChangeFollow}
                     />
                   </label>
@@ -317,8 +352,8 @@ const forms = () => {
                   <label>
                     Espalda:
                     <input
-                      type='file'
-                      name='back'
+                      type="file"
+                      name="back"
                       onChange={handlePhotosChangeFollow}
                     />
                   </label>
@@ -326,15 +361,15 @@ const forms = () => {
                   <label>
                     Lateral:
                     <input
-                      type='file'
-                      name='lateral'
+                      type="file"
+                      name="lateral"
                       onChange={handlePhotosChangeFollow}
                     />
                   </label>
                   <br />
                 </div>
               </div>
-              <button type='submit'>Enviar</button>
+              <button type="submit">Enviar</button>
             </form>
             <div
               className={styles.closebutton}
@@ -389,7 +424,7 @@ const forms = () => {
       {showClient && (
         <div className={styles.share}>
           {clients
-            .filter((data) => data.role === 'client')
+            .filter((data) => data.role === "client")
             .map((data) => (
               <div
                 key={data.id}
@@ -397,9 +432,9 @@ const forms = () => {
               >
                 <div>
                   {data.img ? (
-                    <img src={data.img} alt={'myprofileimg'} />
+                    <img src={data.img} alt={"myprofileimg"} />
                   ) : (
-                    <img src='/face.jpg' alt={'myprofileimg'} />
+                    <img src="/face.jpg" alt={"myprofileimg"} />
                   )}
                 </div>
                 <p>{data.username}</p>

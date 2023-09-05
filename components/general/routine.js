@@ -8,28 +8,26 @@ import {
   updateDoc,
   addDoc,
   getDoc,
-} from 'firebase/firestore';
-import React, { useContext, useEffect, useState } from 'react';
+} from "firebase/firestore";
+import React, { useContext, useEffect, useState } from "react";
 
-import { db } from '../../firebase.config';
-import styles from '../../styles/routines.module.css';
-import { getAuth } from 'firebase/auth';
-import AuthContext from '../../context/AuthContext';
+import { db } from "../../firebase.config";
+import styles from "../../styles/routines.module.css";
+import { getAuth } from "firebase/auth";
+import AuthContext from "../../context/AuthContext";
 
 import {
   FaRunning,
   FaCalendarDay,
   FaDumbbell,
-  FaList,
-  FaShareAlt,
   FaRegEdit,
   FaRegTrashAlt,
   FaPlus,
   FaCopy,
-} from 'react-icons/fa';
+} from "react-icons/fa";
 
 const routine = () => {
-  const [data, setData] = useState(['']);
+  const [data, setData] = useState([""]);
   const [exercises, setExercises] = useState([]);
   const [newexercise, setNewExercise] = useState({});
   const [trainings, setTrainings] = useState([]);
@@ -48,8 +46,8 @@ const routine = () => {
   const [selectedTrainings, setSelectedTrainings] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
   const [newTrain, setNewTrain] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     exercises: [],
   });
   const [message, setMessage] = useState(false);
@@ -66,13 +64,13 @@ const routine = () => {
   const [addNewEx, setAddNewEx] = useState(false);
   const auth = getAuth();
   const user = auth.currentUser;
-  const [seriesData, setSeriesData] = useState([{ repetitions: '', sets: '' }]);
-  const [myMessage, setMyMessage] = useState('');
-  const [toggle,setToggle]=useState(false);
+  const [seriesData, setSeriesData] = useState([{ repetitions: "", sets: "" }]);
+  const [myMessage, setMyMessage] = useState("");
+  const [toggle, setToggle] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, 'routines'),
+      collection(db, "routines"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -86,7 +84,7 @@ const routine = () => {
     );
 
     const unsubExercises = onSnapshot(
-      collection(db, 'exercises'),
+      collection(db, "exercises"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -100,7 +98,7 @@ const routine = () => {
     );
 
     const unsubTrainings = onSnapshot(
-      collection(db, 'trainings'),
+      collection(db, "trainings"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -140,14 +138,14 @@ const routine = () => {
 
     // Limpiar el formulario (según tu implementación actual)
     setNewExercise({
-      name: '',
-      material: '',
-      comments: '',
+      name: "",
+      material: "",
+      comments: "",
     });
   };
   const handleCreateExercise = async (exerciseData) => {
     try {
-      await addDoc(collection(db, 'exercises'), {
+      await addDoc(collection(db, "exercises"), {
         ...exerciseData,
         timeStamp: serverTimestamp(),
       });
@@ -162,27 +160,27 @@ const routine = () => {
   };
   const handleUpdateExercise = async (id, updateData) => {
     try {
-      const docRef = doc(db, 'exercises', id);
+      const docRef = doc(db, "exercises", id);
       await updateDoc(docRef, updateData);
-      console.log('Document updated');
+      console.log("Document updated");
     } catch (error) {
-      console.error('Error updating document: ', error);
+      console.error("Error updating document: ", error);
     }
   };
   const handleDeleteExercise = async (id) => {
     try {
-      await deleteDoc(doc(db, 'exercises', id));
-      console.log('Document deleted');
+      await deleteDoc(doc(db, "exercises", id));
+      console.log("Document deleted");
     } catch (error) {
-      console.error('Error deleting document: ', error);
+      console.error("Error deleting document: ", error);
     }
   };
   const handleAddExercise = () => {
     setCurrentTraining([...currentTraining, exerciseData]);
     setTExercise({
-      name: '',
-      repetitions: '',
-      sets: '',
+      name: "",
+      repetitions: "",
+      sets: "",
     });
   };
   const handleRemoveExercise = (index) => {
@@ -198,9 +196,9 @@ const routine = () => {
       setNewExercise(exerciseToUpdate);
     } else {
       setNewExercise({
-        exercise_name: '',
-        material: '',
-        comments: '',
+        exercise_name: "",
+        material: "",
+        comments: "",
       });
     }
   }, [updateExerciseId, exercises]);
@@ -216,12 +214,12 @@ const routine = () => {
       // exercises: trainingData.exerciseData,
     };
     try {
-      await addDoc(collection(db, 'trainings'), {
+      await addDoc(collection(db, "trainings"), {
         ...trainingData,
         exercises: currentTraining,
         timeStamp: serverTimestamp(),
       });
-      setMyMessage('creado');
+      setMyMessage("creado");
       setMessage(true);
       setTimeout(() => {
         setMessage(false);
@@ -232,10 +230,10 @@ const routine = () => {
   };
   const handleDeleteTraining = async (id) => {
     try {
-      await deleteDoc(doc(db, 'trainings', id));
-      console.log('Document deleted');
+      await deleteDoc(doc(db, "trainings", id));
+      console.log("Document deleted");
     } catch (error) {
-      console.error('Error deleting document: ', error);
+      console.error("Error deleting document: ", error);
     }
   };
   const handleUpdateTraining = async (e, id, updatedTraining) => {
@@ -246,29 +244,29 @@ const routine = () => {
       // exercises: trainingData.exerciseData,
     };
     try {
-      const docRef = doc(db, 'trainings', id);
+      const docRef = doc(db, "trainings", id);
       await updateDoc(docRef, {
         updatedTraining,
         ...trainingData,
         exercises: currentTraining,
       });
-      console.log('Document updated');
-      setMyMessage('actualizado');
+      console.log("Document updated");
+      setMyMessage("actualizado");
       setMessage(true);
       setTimeout(() => {
         setMessage(false);
       }, 3000);
     } catch (error) {
-      console.error('Error updating document: ', error);
+      console.error("Error updating document: ", error);
     }
   };
   const handleCopyTraining = async (id, updatedTraining) => {
     try {
-      const docRef = doc(db, 'trainings', id);
+      const docRef = doc(db, "trainings", id);
       await addDoc(docRef, updatedTraining);
-      console.log('Document updated');
+      console.log("Document updated");
     } catch (error) {
-      console.error('Error updating document: ', error);
+      console.error("Error updating document: ", error);
     }
   };
 
@@ -276,13 +274,13 @@ const routine = () => {
     e.preventDefault();
     const exerciseId = e.target.value;
     try {
-      const trainingRef = doc(db, 'trainings', trainingId);
+      const trainingRef = doc(db, "trainings", trainingId);
       const trainingData = (await getDoc(trainingRef)).data();
 
       const updatedExercises = [...trainingData.exercises, exerciseId];
       await updateDoc(trainingRef, { exercises: updatedExercises });
     } catch (error) {
-      console.error('Error al asignar el ejercicio al entrenamiento: ', error);
+      console.error("Error al asignar el ejercicio al entrenamiento: ", error);
     }
   };
 
@@ -290,8 +288,8 @@ const routine = () => {
     e.preventDefault();
     const trainingId = e.target.value; // Aquí asumo que el id del entrenamiento se encuentra en el valor del botón
     try {
-      const trainingRef = doc(db, 'trainings', trainingId);
-      const routineRef = doc(db, 'routines', routineId);
+      const trainingRef = doc(db, "trainings", trainingId);
+      const routineRef = doc(db, "routines", routineId);
       const routineData = (await getDoc(routineRef)).data();
 
       const updatedRoutine = {
@@ -301,7 +299,7 @@ const routine = () => {
 
       await setDoc(routineRef, updatedRoutine);
     } catch (error) {
-      console.error('Error al asignar el entrenamiento a la rutina: ', error);
+      console.error("Error al asignar el entrenamiento a la rutina: ", error);
     }
   };
 
@@ -310,9 +308,9 @@ const routine = () => {
     setCurrentRoutine(id);
   };
   const selectTrainer = async (cr, id) => {
-    console.log('id', id);
-    console.log('MyUid', myUid);
-    await updateDoc(doc(db, 'routines', cr), {
+    console.log("id", id);
+    console.log("MyUid", myUid);
+    await updateDoc(doc(db, "routines", cr), {
       link: id,
     });
     setShowClient(false);
@@ -320,6 +318,30 @@ const routine = () => {
   const handleView = (id) => {
     setVisible(true);
     setRoutineId(id); // Guarde el ID de la rutina seleccionada en el estado
+  };
+  //Create Routine
+
+  const handleCreateRoutine = async (e) => {
+    e.preventDefault();
+
+    const routineData = {
+      name: data.nameroutine,
+      description: data.desroutine,
+    };
+    try {
+      await addDoc(collection(db, "routines"), {
+        ...routineData,
+
+        timeStamp: serverTimestamp(),
+      });
+      setMyMessage("creado");
+      setMessage(true);
+      setTimeout(() => {
+        setMessage(false);
+      }, 3000);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   //Modales
@@ -371,11 +393,14 @@ const routine = () => {
   };
 
   const handleSelectDay = (day) => {
-    setSelectedDays((prevSelectedDays) =>
-      prevSelectedDays.includes(day)
+    setSelectedDays((prevSelectedDays) => {
+      if (!Array.isArray(prevSelectedDays)) {
+        prevSelectedDays = []; // Si no es un array, inicialízalo como un array vacío.
+      }
+      return prevSelectedDays.includes(day)
         ? prevSelectedDays.filter((selectedDay) => selectedDay !== day)
-        : [...prevSelectedDays, day]
-    );
+        : [...prevSelectedDays, day];
+    });
   };
 
   const viewRoutinesList = () => {
@@ -399,8 +424,8 @@ const routine = () => {
     setShowExerciseFields(true);
     setTExercise({
       name: exercise.exercise_name,
-      repetitions: '',
-      sets: '',
+      repetitions: "",
+      sets: "",
     });
   };
 
@@ -413,11 +438,11 @@ const routine = () => {
   };
 
   const handleAddSeries = () => {
-    setSeriesData([...seriesData, { repetitions: '', sets: '' }]);
+    setSeriesData([...seriesData, { repetitions: "", sets: "" }]);
   };
   const handleInputChange = (index, event) => {
     const values = [...seriesData];
-    if (event.target.name === 'repetitions') {
+    if (event.target.name === "repetitions") {
       values[index].repetitions = event.target.value;
     } else {
       values[index].sets = event.target.value;
@@ -495,7 +520,6 @@ const routine = () => {
                           {training.exercises.map((exercise) => (
                             <div key={exercise.id}>
                               <p>{exercise.name}</p>
-                        
                             </div>
                           ))}
                         </td>
@@ -582,7 +606,7 @@ const routine = () => {
               <div>
                 <p>Ejercicio</p>
                 <input
-                  type='text'
+                  type="text"
                   value={newexercise.name}
                   onChange={(e) =>
                     setNewExercise({
@@ -595,7 +619,7 @@ const routine = () => {
               <div>
                 <p>Material necesario</p>
                 <input
-                  type='text'
+                  type="text"
                   value={newexercise.material}
                   onChange={(e) =>
                     setNewExercise({
@@ -608,7 +632,7 @@ const routine = () => {
               <div>
                 <p>Comentarios</p>
                 <textarea
-                  type='text'
+                  type="text"
                   value={newexercise.comments}
                   onChange={(e) =>
                     setNewExercise({
@@ -618,8 +642,8 @@ const routine = () => {
                   }
                 />
               </div>
-              <button type='submit' className={styles.create}>
-                {updateExerciseId ? 'Actualizar Ejercicio' : 'Crear Ejercicio'}
+              <button type="submit" className={styles.create}>
+                {updateExerciseId ? "Actualizar Ejercicio" : "Crear Ejercicio"}
               </button>
             </form>
             <div
@@ -642,7 +666,7 @@ const routine = () => {
               <div>
                 <p>Entrenamiento:</p>
                 <input
-                  type='text'
+                  type="text"
                   value={newTrain.name}
                   onChange={(e) => {
                     setNewTrain({ ...newTrain, name: e.target.value });
@@ -652,7 +676,7 @@ const routine = () => {
               <div>
                 <p>Descripción:</p>
                 <textarea
-                  type='text'
+                  type="text"
                   value={newTrain.description}
                   onChange={(e) =>
                     setNewTrain({
@@ -663,47 +687,49 @@ const routine = () => {
                 />
               </div>
             </form>
-            {toggle&&<div className={styles.myCurrent}>
-              <h3>Entrenamiento en Proceso</h3>
-              <div>
-                {newTrain.name && <p>Nombre: {newTrain.name}</p>}
-                {newTrain.description && (
-                  <p>Descripción: {newTrain.description}</p>
-                )}
+            {toggle && (
+              <div className={styles.myCurrent}>
+                <h3>Entrenamiento en Proceso</h3>
+                <div>
+                  {newTrain.name && <p>Nombre: {newTrain.name}</p>}
+                  {newTrain.description && (
+                    <p>Descripción: {newTrain.description}</p>
+                  )}
+                </div>
+                <div className={styles.myexs}>
+                  {currentTraining.map((exercise, index) => (
+                    <div key={index} className={styles.thisTraining}>
+                      <div>
+                        <p>Nombre: </p>
+                        <p>{exercise.name}</p>
+                      </div>
+                      <div>
+                        <p>Repeticiones: </p>
+                        <p>{exercise.repetitions}</p>
+                      </div>
+                      <div>
+                        <p>Series: </p>
+                        <p>{exercise.sets}</p>
+                      </div>
+                      <div>
+                        <p>Materiales: </p>
+                        <p>{exercise.materials}</p>
+                      </div>
+                      <div>
+                        <p>Comentarios: </p>
+                        <p>{exercise.comments}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveExercise(index)}
+                        className={styles.create}
+                      >
+                        <FaRegTrashAlt size={20} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className={styles.myexs}>
-                {currentTraining.map((exercise, index) => (
-                  <div key={index} className={styles.thisTraining}>
-                    <div>
-                      <p>Nombre: </p>
-                      <p>{exercise.name}</p>
-                    </div>
-                    <div>
-                      <p>Repeticiones: </p>
-                      <p>{exercise.repetitions}</p>
-                    </div>
-                    <div>
-                      <p>Series: </p>
-                      <p>{exercise.sets}</p>
-                    </div>
-                    <div>
-                      <p>Materiales: </p>
-                      <p>{exercise.materials}</p>
-                    </div>
-                    <div>
-                      <p>Comentarios: </p>
-                      <p>{exercise.comments}</p>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveExercise(index)}
-                      className={styles.create}
-                    >
-                      <FaRegTrashAlt size={20} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>}
+            )}
             <div className={styles.trainingButton}>
               <button
                 onClick={(e) =>
@@ -715,8 +741,8 @@ const routine = () => {
                 disabled={!tExercise}
               >
                 {updateTrainingId
-                  ? 'Actualizar Entrenamiento'
-                  : 'Crear Entrenamiento'}
+                  ? "Actualizar Entrenamiento"
+                  : "Crear Entrenamiento"}
               </button>
               <button
                 className={styles.create}
@@ -736,7 +762,12 @@ const routine = () => {
               >
                 Añadir desde BBDD
               </button>
-              <button className={styles.create} onClick={()=>setToggle(!toggle)}>Ver Actual</button>
+              <button
+                className={styles.create}
+                onClick={() => setToggle(!toggle)}
+              >
+                Ver Actual
+              </button>
             </div>
             <div
               className={styles.closebutton}
@@ -749,7 +780,6 @@ const routine = () => {
                 Entrenamiento {myMessage} con éxito
               </div>
             )}
-          
           </div>
         </div>
       )}
@@ -763,7 +793,7 @@ const routine = () => {
                 <p>{tExercise.name}</p>
               ) : (
                 <input
-                  type='text'
+                  type="text"
                   value={tExercise.name}
                   onChange={(e) =>
                     setTExercise({ ...tExercise, name: e.target.value })
@@ -775,8 +805,8 @@ const routine = () => {
               <div>
                 <p>Repeticiones:</p>
                 <input
-                  type='text'
-                  name='repetitions'
+                  type="text"
+                  name="repetitions"
                   value={tExercise.repetitions}
                   onChange={(e) =>
                     setTExercise({ ...tExercise, repetitions: e.target.value })
@@ -786,8 +816,8 @@ const routine = () => {
               <div>
                 <p>Series:</p>
                 <input
-                  type='text'
-                  name='sets'
+                  type="text"
+                  name="sets"
                   value={tExercise.sets}
                   onChange={(e) =>
                     setTExercise({ ...tExercise, sets: e.target.value })
@@ -799,7 +829,7 @@ const routine = () => {
             <div>
               <p>Comentarios:</p>
               <textarea
-                type='text'
+                type="text"
                 value={tExercise.comments}
                 onChange={(e) =>
                   setTExercise({ ...tExercise, comments: e.target.value })
@@ -809,7 +839,7 @@ const routine = () => {
             <div>
               <p>Materiales:</p>
               <input
-                type='text'
+                type="text"
                 value={tExercise.materials}
                 onChange={(e) =>
                   setTExercise({ ...tExercise, materials: e.target.value })
@@ -853,8 +883,8 @@ const routine = () => {
                       setTExercise({
                         ...exercise,
                         name: exercise.name,
-                        repetitions: '',
-                        sets: '',
+                        repetitions: "",
+                        sets: "",
                       });
                       setAddNewEx(true);
                     }}
@@ -876,22 +906,34 @@ const routine = () => {
       {showRoutineModal && (
         <div className={styles.modal}>
           <div>
-            <form onSubmit={handleCreate}>
+            <form onSubmit={handleCreateRoutine}>
+              <div>
+                <p>Nombre:</p>
+                <input
+                  type="text"
+                  value={data.nameroutine}
+                  onChange={(e) => {
+                    setData({ ...data, nameroutine: e.target.value });
+                    console.log(data);
+                  }}
+                />
+              </div>
               <div>
                 <p>Descripción:</p>
                 <input
-                  type='text'
+                  type="text"
                   value={data.desroutine}
-                  onChange={(e) =>
-                    setData({ ...data, desroutine: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setData({ ...data, desroutine: e.target.value });
+                    console.log(data);
+                  }}
                 />
               </div>
               <h3>Entrenamientos</h3>
               {trainings.map((training) => (
                 <div key={training.id}>
                   <input
-                    type='checkbox'
+                    type="checkbox"
                     id={training.id}
                     value={training.id}
                     onChange={(e) => handleAddTrainingToRoutine(e.target.value)}
@@ -901,19 +943,21 @@ const routine = () => {
               ))}
               <h3>Días</h3>
               <div className={styles.myweek}>
-                {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
+                {["L", "M", "X", "J", "V", "S", "D"].map((day) => (
                   <div key={day} className={styles.myday}>
                     <input
-                      type='checkbox'
+                      type="checkbox"
                       id={day}
                       value={day}
-                      onChange={(e) => handleSelectDay(e.target.value)}
+                      onChange={(e) =>
+                        setData({ ...data, day: e.target.value })
+                      }
                     />
                     <label htmlFor={day}>{day}</label>
                   </div>
                 ))}
               </div>
-              <div className={styles.create} type='submit'>
+              <div className={styles.create} onClick={handleCreateRoutine}>
                 Crear Rutina
               </div>
             </form>
@@ -921,7 +965,7 @@ const routine = () => {
               className={styles.closebutton}
               onClick={handleCloseRoutineModal}
             >
-              Cerrar
+              X
             </div>
           </div>
         </div>
@@ -929,7 +973,7 @@ const routine = () => {
       {showClient && (
         <div className={styles.share}>
           {myData
-            .filter((data) => data.role === 'client')
+            .filter((data) => data.role === "client")
             .map((data) => (
               <div
                 key={data.id}
@@ -937,9 +981,9 @@ const routine = () => {
               >
                 <div>
                   {data.img ? (
-                    <img src={data.img} alt={'myprofileimg'} />
+                    <img src={data.img} alt={"myprofileimg"} />
                   ) : (
-                    <img src='/face.jpg' alt={'myprofileimg'} />
+                    <img src="/face.jpg" alt={"myprofileimg"} />
                   )}
                 </div>
                 <p>{data.username}</p>
