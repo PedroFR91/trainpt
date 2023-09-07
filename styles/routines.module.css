@@ -8,21 +8,24 @@
   background-color: #212121;
   color: #ffffff;
 }
+
 .editor {
-  width: 100%;
-  height: 75vh;
-  display: flex;
-  flex-direction: column;
-}
-.top {
   position: absolute;
   bottom: 0;
   width: 100%;
   height: 85vh;
-  padding-top: 10vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: space-around;
+  margin-top: 2rem;
 }
+
 .bottom {
   position: fixed;
   bottom: 0;
@@ -31,6 +34,7 @@
   display: flex;
   justify-content: space-around;
 }
+
 .selectmenu {
   width: 30%;
   height: 50vh;
@@ -41,6 +45,7 @@
   color: #ffffff;
   margin-top: 1rem;
 }
+
 .selectmenu div {
   width: 70%;
   height: 10vh;
@@ -51,6 +56,7 @@
   justify-content: center;
   align-items: center;
 }
+
 .myddbb {
   width: 100%;
   height: 100%;
@@ -61,6 +67,7 @@
   display: flex;
   flex-direction: column;
 }
+
 .routine {
   width: 200px;
   height: 200px;
@@ -75,6 +82,7 @@
   justify-content: space-evenly;
   align-items: center;
 }
+
 .routine:hover {
   font-size: 1.3rem;
   color: #212121;
@@ -104,6 +112,7 @@
   border-color: #f69d21;
   background-color: #f69d21dd;
 }
+
 .myddbbitem {
   width: 100%;
   min-height: 100vh;
@@ -115,28 +124,34 @@
 
   z-index: 10;
 }
+
 .myddbbitem table {
   width: 90%;
 }
+
 .myddbbitem table tr:first-child {
   background-color: #f69d21dd;
   color: #212121;
   font-size: 1.3rem;
   font-weight: bold;
 }
+
 .myddbbitem table div tr:first-child {
   background-color: #212121;
   font-size: 1.3rem;
   font-weight: normal;
 }
+
 .exercise {
   width: 100%;
   height: 55vh;
   overflow-y: scroll;
 }
+
 .exercise div {
   width: 100%;
 }
+
 .myddbbitem table tr {
   width: 100%;
   height: 15vh;
@@ -146,6 +161,7 @@
   margin: 0.5rem auto;
   padding: 0.5rem;
 }
+
 .myddbbitem table tr td,
 .myddbbitem table tr th {
   width: 25%;
@@ -155,14 +171,16 @@
   align-items: center;
   color: #ffffff;
 }
+
 .myddbbitem table tr td {
   background-color: #212121;
 }
+
 .modal {
   position: fixed;
   bottom: 0;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.9);
+  background: #212121;
   width: 100%;
   height: 85vh;
   overflow-y: scroll;
@@ -171,6 +189,7 @@
   justify-content: center;
   align-items: center;
 }
+
 .exContent {
   width: 100%;
   height: 100vh;
@@ -180,7 +199,9 @@
   align-items: center;
   position: relative;
 }
-.exContent form {
+
+.exContent form,
+.dynamic {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -188,6 +209,7 @@
   align-items: center;
   padding: 1rem;
 }
+
 .exContent form div {
   width: 500px;
   display: flex;
@@ -195,6 +217,7 @@
   align-items: center;
   margin: 0.5rem;
 }
+
 .exContent form div:hover {
   cursor: pointer;
 }
@@ -205,6 +228,7 @@
   width: 90%;
   justify-content: space-between;
 }
+
 .exContent form div input {
   width: 60%;
   height: 30px;
@@ -215,6 +239,7 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .exContent form div textarea {
   width: 60%;
   height: 90px;
@@ -225,6 +250,7 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .tContent {
   width: 100%;
   min-height: 100vh;
@@ -233,6 +259,7 @@
   justify-content: space-evenly;
   align-items: center;
 }
+
 .tContent form {
   display: flex;
   flex-direction: column;
@@ -240,6 +267,7 @@
   align-items: center;
   padding: 1rem;
 }
+
 .tContent form div {
   width: 500px;
   display: flex;
@@ -247,6 +275,7 @@
   align-items: center;
   margin: 0.5rem;
 }
+
 .tContent form div:hover {
   cursor: pointer;
 }
@@ -257,6 +286,7 @@
   width: 90%;
   justify-content: space-between;
 }
+
 .tContent form div input {
   width: 60%;
   height: 30px;
@@ -267,6 +297,7 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .tContent form div textarea {
   width: 60%;
   height: 90px;
@@ -277,6 +308,7 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .closebutton {
   position: absolute;
   top: 5vh;
@@ -290,6 +322,21 @@
   background-color: rgba(0, 0, 0, 0.9);
   margin-bottom: 1rem;
 }
+
+.backbutton {
+  position: absolute;
+  top: 5vh;
+  left: 1rem;
+  border: 1px solid #ffffff;
+  padding: 0.5rem 1rem;
+  font-size: 1.3rem;
+  color: #ffffff;
+  cursor: pointer;
+  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.9);
+  margin-bottom: 1rem;
+}
+
 .create {
   margin: 0.5rem;
   padding: 0.5rem;
@@ -301,9 +348,11 @@
   z-index: 20;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .create:hover {
   border-color: #f69d21;
 }
+
 .add {
   width: 2rem;
   height: 2rem;
@@ -316,20 +365,22 @@
   z-index: 20;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .add:hover {
   border-color: #f69d21;
 }
+
 .trainingButton {
-  position: absolute;
-  top: 10vh;
-  left: 5%;
+
   display: flex;
   flex-direction: column;
 }
+
 .trainingButton button:hover:first-child {
   background-color: #f69d21;
   color: #212121;
 }
+
 .myweek {
   width: 100%;
   min-height: 20vh;
@@ -338,6 +389,7 @@
   justify-content: space-evenly;
   align-items: flex-start;
 }
+
 .myday {
   width: 5rem;
   height: 5rem;
@@ -349,6 +401,7 @@
   border-radius: 10px;
   margin: 0.5rem 1rem;
 }
+
 .myday:hover {
   background-color: #212121;
   color: #ffffff;
@@ -356,10 +409,12 @@
   box-shadow: 2px 2px 2px 2px black;
   cursor: pointer;
 }
+
 .myday input {
   width: 2rem;
   height: 2rem;
 }
+
 .message {
   position: fixed;
   top: 50%;
@@ -375,22 +430,27 @@
   align-items: center;
   animation: fadeout 1.5s 3s forwards;
 }
+
 @keyframes underline {
   0% {
     width: 0;
   }
+
   100% {
     width: 100%;
   }
 }
+
 @keyframes fadeout {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 .message:after {
   content: '';
   position: absolute;
@@ -400,21 +460,25 @@
   background-color: #f69d21;
   animation: underline 3s forwards;
 }
+
 .myCurrent {
   position: absolute;
-  width: 30%;
+  width: 100%;
   height: 85vh;
   bottom: 0;
   right: 0;
   margin: auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 0.5rem;
-  background-color: #00000088;
+  background-color: #212121;
 
 }
+
 .thisTraining {
-  background-color: #212121;
+  width: 100%;
+  background-color: #ffffff11;
   color: #ffffff;
   padding: 0.5rem;
   margin: 0.5rem;
@@ -423,15 +487,32 @@
   justify-content: space-between;
   align-items: center;
 }
+
 .thisTraining div {
-  width: 60%;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   margin: 0.5rem;
 }
-.myexs {
-  overflow-y: scroll;
+
+.supersets,
+.superset {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ffffff;
+  padding: 0.5rem;
 }
+
+.myexs {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
 .secondWidth {
   position: fixed;
   bottom: 0;
@@ -443,7 +524,7 @@
   justify-content: space-between;
   align-items: center;
   color: #ffffff;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: #212121;
   z-index: 20;
   overflow-y: scroll;
 }
@@ -462,6 +543,7 @@
   width: 90%;
   justify-content: space-between;
 }
+
 .secondWidth div input {
   width: 60%;
   height: 30px;
@@ -472,6 +554,7 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .secondWidth div textarea {
   width: 60%;
   height: 90px;
@@ -482,6 +565,7 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
+
 .superset {
   display: flex;
   flex-direction: column;
@@ -489,9 +573,11 @@
   border-radius: 10px;
   padding: 0.5rem;
 }
+
 .superset div {
   padding: 0.5rem;
 }
+
 .closebuttontwo {
   position: absolute;
   width: 3rem;
@@ -505,4 +591,46 @@
   cursor: pointer;
   z-index: 20;
   background-color: rgba(255, 255, 255, 0.9);
+}
+
+.dynamic {
+  z-index: 20;
+}
+
+.dynamic>div {
+  display: flex;
+  flex-direction: column;
+
+}
+
+@media screen and (max-width:767px) {
+  .editor {
+    width: 100%;
+    height: 85vh;
+  }
+
+  .top {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .routine {
+    width: 200px;
+    height: 200px;
+    margin: 1rem;
+  }
+
+  .selectmenu {
+    flex-direction: row;
+  }
+
+  .exContent form div {
+    width: 100%;
+  }
+
+  .message {
+    width: 100%;
+  }
 }

@@ -12,7 +12,13 @@ import {
 import { db } from "../../firebase.config";
 import Modal from "./Modal";
 import dynamic from "next/dynamic";
-import { AiFillCloseCircle, AiFillDelete, AiFillEdit, AiFillSave, AiOutlineDelete } from "react-icons/ai";
+import {
+  AiFillCloseCircle,
+  AiFillDelete,
+  AiFillEdit,
+  AiFillSave,
+  AiOutlineDelete,
+} from "react-icons/ai";
 // Importa el componente RichTextEditor de forma dinámica
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), {
   ssr: false,
@@ -84,12 +90,16 @@ const myrates = () => {
   return (
     <div className={styles.container}>
       <div className={styles.addrate}>
-      <h2>Añade tus tarifas</h2>
-        {!view?  <button className={styles.add} onClick={() => setView(true)}>
-          <AiFillEdit size={30}/>
-        </button>:<button className={styles.add} onClick={() => setView(false)}>
-          <AiFillCloseCircle size={30}/>
-        </button> }
+        <h2>Añade tus tarifas</h2>
+        {!view ? (
+          <button className={styles.add} onClick={() => setView(true)}>
+            <AiFillEdit size={30} />
+          </button>
+        ) : (
+          <button className={styles.add} onClick={() => setView(false)}>
+            <AiFillCloseCircle size={30} />
+          </button>
+        )}
         {view && (
           <div>
             <input
@@ -102,7 +112,7 @@ const myrates = () => {
               placeholder="Precio"
               onChange={(e) => setData({ ...data, rateprice: e.target.value })}
             />
-          
+
             <div
               className={styles.displayText}
               dangerouslySetInnerHTML={{ __html: text }}
@@ -110,30 +120,24 @@ const myrates = () => {
             <div onClick={openModal} className={styles.moreinfo}>
               Información
             </div>
-           
           </div>
         )}
-          
       </div>
-      <Modal
-              isOpen={isModalOpen}
-              closeModal={closeModal}
-            >
-              <div  className={styles.modal}>
-                <h3>Detalles de la oferta</h3>
-                {clientSide && <RichTextEditor value={text} onChange={setText} />}
-                <button
-              className={styles.save}
-              onClick={() => {
-                handleSave();
-                closeModal();
-                setView(false);
-              }}
-            >
-              <AiFillSave/>
-            </button>
-              </div>
-      
+      <Modal isOpen={isModalOpen} closeModal={closeModal}>
+        <div className={styles.modal}>
+          <h3>Detalles de la oferta</h3>
+          {clientSide && <RichTextEditor value={text} onChange={setText} />}
+          <button
+            className={styles.save}
+            onClick={() => {
+              handleSave();
+              closeModal();
+              setView(false);
+            }}
+          >
+            <AiFillSave />
+          </button>
+        </div>
       </Modal>
       <div className={styles.rates}>
         {rates
@@ -146,12 +150,20 @@ const myrates = () => {
                 className={styles.displayTextTwo}
                 dangerouslySetInnerHTML={{ __html: rate.rateinfo }}
               ></div>
-              <button
-                onClick={() => handleDelete(rate.ratename)}
-                className={styles.add}
-              >
-                <AiFillDelete/>
-              </button>
+              <div className={styles.mybuttons}>
+                <button
+                  onClick={() => handleDelete(rate.ratename)}
+                  className={styles.add}
+                >
+                  <AiFillDelete />
+                </button>
+                <button
+                  onClick={() => handleDelete(rate.ratename)}
+                  className={styles.add}
+                >
+                  <AiFillEdit />
+                </button>
+              </div>
             </div>
           ))}
       </div>

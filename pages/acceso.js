@@ -9,6 +9,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  linkWithPopup,
 } from "firebase/auth";
 import { auth, db } from "../firebase.config";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
@@ -111,15 +114,14 @@ const acceso = () => {
     }
 
     try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", res.user.uid), {
-        id: res.user.uid,
-        email,
-        userName,
-        password,
-        role: selected,
-        timeStamp: serverTimestamp(),
-      });
+      // Verificar si el correo ya está en uso en Firebase Authentication
+      const credential = EmailAuthProvider.credential(email, password);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+
+      // Enlazar la cuenta de correo/contraseña con la cuenta de Google existente
+      await linkWithPopup(auth.currentUser, provider);
+
+      // Redirigir al usuario según su rol
       if (selected === "trainer") {
         push("/trainer/home");
       } else {
@@ -127,8 +129,10 @@ const acceso = () => {
       }
     } catch (error) {
       console.error(error);
+      setError(true);
     }
   };
+
   return (
     <div className={styles.acceso}>
       <video

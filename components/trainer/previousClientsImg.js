@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
-import styles from '../../styles/previousimg.module.css';
+import React, { useContext, useEffect, useState } from "react";
+import styles from "../../styles/previousimg.module.css";
 import {
   doc,
   setDoc,
@@ -7,18 +7,18 @@ import {
   onSnapshot,
   collection,
   deleteDoc,
-} from 'firebase/firestore';
-import { db, storage } from '../../firebase.config';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import AuthContext from '../../context/AuthContext';
-import { FaPhotoVideo } from 'react-icons/fa';
-import { AiFillDelete, AiOutlineCloudUpload } from 'react-icons/ai';
+} from "firebase/firestore";
+import { db, storage } from "../../firebase.config";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import AuthContext from "../../context/AuthContext";
+import { FaPhotoVideo } from "react-icons/fa";
+import { AiFillDelete, AiOutlineCloudUpload } from "react-icons/ai";
 
 const PreviousClientsImg = () => {
   const { myUid } = useContext(AuthContext);
   const [fileBefore, setFileBefore] = useState(null);
   const [fileAfter, setFileAfter] = useState(null);
-  const [clientName, setClientName] = useState('');
+  const [clientName, setClientName] = useState("");
   const [photos, setPhotos] = useState([]);
 
   const handleInputChange = (e) => {
@@ -37,7 +37,7 @@ const PreviousClientsImg = () => {
     e.preventDefault();
 
     if (!clientName || !fileBefore || !fileAfter) {
-      alert('Por favor, complete todos los campos.');
+      alert("Por favor, complete todos los campos.");
       return;
     }
 
@@ -61,7 +61,7 @@ const PreviousClientsImg = () => {
           createdAt: serverTimestamp(),
         };
         try {
-          await setDoc(doc(collection(db, 'clientPhotos')), photoData);
+          await setDoc(doc(collection(db, "clientPhotos")), photoData);
         } catch (error) {
           console.log(error);
         }
@@ -71,18 +71,18 @@ const PreviousClientsImg = () => {
     };
 
     // Upload both files
-    uploadFile(fileBefore, 'before');
-    uploadFile(fileAfter, 'after');
+    uploadFile(fileBefore, "before");
+    uploadFile(fileAfter, "after");
 
     // Clear form fields
-    setClientName('');
+    setClientName("");
     setFileBefore(null);
     setFileAfter(null);
   };
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, 'clientPhotos'),
+      collection(db, "clientPhotos"),
       (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
@@ -107,7 +107,7 @@ const PreviousClientsImg = () => {
     await Promise.all(
       photosToDelete.map(async (photo) => {
         try {
-          await deleteDoc(doc(db, 'clientPhotos', photo.id));
+          await deleteDoc(doc(db, "clientPhotos", photo.id));
         } catch (error) {}
       })
     );
@@ -115,12 +115,12 @@ const PreviousClientsImg = () => {
 
   return (
     <div className={styles.container}>
-      <h2>Imágenes de mis clientes</h2>
+      <h2>Sube imágenes de tus clientes</h2>
       <form onSubmit={handleSubmit}>
         <div className={styles.inputContainer}>
           <input
-            type='text'
-            placeholder='Nombre del cliente'
+            type="text"
+            placeholder="Nombre del cliente"
             value={clientName}
             onChange={handleInputChange}
             required
@@ -128,38 +128,34 @@ const PreviousClientsImg = () => {
         </div>
         <div>
           <div className={styles.inputContainer}>
-          <label htmlFor='fileBefore'>
-            <FaPhotoVideo />
-            Antes
-          </label>
-                   <input
-            type='file'
-            id='fileBefore'
-            onChange={handleFileBeforeChange}
-            accept='image/*'
-            required
-            hidden
-          />
+            <label htmlFor="fileBefore">Antes</label>
+            <input
+              type="file"
+              id="fileBefore"
+              onChange={handleFileBeforeChange}
+              accept="image/*"
+              required
+              hidden
+            />
           </div>
           <div className={styles.inputContainer}>
-          <label htmlFor='fileAfter'>
-            <FaPhotoVideo />
-            Después
-          </label>
-          <input
-            type='file'
-            id='fileAfter'
-            onChange={handleFileAfterChange}
-            accept='image/*'
-            required
-            hidden
-          />
+            <label htmlFor="fileAfter">Después</label>
+            <input
+              type="file"
+              id="fileAfter"
+              onChange={handleFileAfterChange}
+              accept="image/*"
+              required
+              hidden
+            />
           </div>
         </div>
-        <button type='submit'><AiOutlineCloudUpload size={30}/></button>
+        <button type="submit">
+          <AiOutlineCloudUpload size={30} />
+        </button>
       </form>
       <div className={styles.clientPhotos}>
-        {/* Agrupar las imágenes por cliente */}
+    
         {Array.from(new Set(photos.map((photo) => photo.clientName)))
           .filter((clientName) =>
             photos.some(
@@ -176,7 +172,7 @@ const PreviousClientsImg = () => {
                     (data) =>
                       data.trainerId === myUid &&
                       data.clientName === client &&
-                      data.period === 'before'
+                      data.period === "before"
                   )
                   .map((photo) => (
                     <div key={photo.id} className={styles.clientImg}>
@@ -189,7 +185,7 @@ const PreviousClientsImg = () => {
                     (data) =>
                       data.trainerId === myUid &&
                       data.clientName === client &&
-                      data.period === 'after'
+                      data.period === "after"
                   )
                   .map((photo) => (
                     <div key={photo.id} className={styles.clientImg}>

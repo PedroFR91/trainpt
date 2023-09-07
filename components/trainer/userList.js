@@ -84,7 +84,7 @@ const userList = () => {
   }, [myData]);
 
   return (
-    <>
+    <div className={styles.container}> 
       <h1>Mis Clientes</h1>
       <div className={styles.list}>
         {!show &&
@@ -102,7 +102,9 @@ const userList = () => {
                 <div>{data.username}</div>
                 {myData.status &&
                   myData.status.find((status) => status.id === data.id) && (
-                    <div
+                    <>
+                    <p>Estatus:</p>
+                      <p
                       className={`${styles.status} ${
                         myData.status.find((status) => status.id === data.id)
                           .name === "pendiente"
@@ -117,12 +119,14 @@ const userList = () => {
                           ? styles.greenStatus
                           : ""
                       }`}
-                    >
+                    ><span></span>
                       {
                         myData.status.find((status) => status.id === data.id)
                           .name
                       }
-                    </div>
+                    </p>
+                    </>
+                  
                   )}
                 <div className={styles.button}>
                   <span onClick={() => showClient(data)}>Ver</span>
@@ -182,7 +186,8 @@ const userList = () => {
           </div>
         )}
       </div>
-    </>
+      
+    </div>
   );
 };
 

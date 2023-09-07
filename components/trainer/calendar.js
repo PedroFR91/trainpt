@@ -3,7 +3,7 @@ import moment from "moment/min/moment-with-locales.js";
 import styles from "../../styles/calendar.module.css";
 import { db } from "../../firebase.config";
 import { collection, onSnapshot } from "firebase/firestore";
-
+import { AiOutlineArrowLeft, AiOutlineArrowRight } from "react-icons/ai";
 const calendar = () => {
   moment.locale("es");
   const [currentDate, setCurrentDate] = useState(moment());
@@ -74,9 +74,11 @@ const calendar = () => {
     const firstDay = daysOfWeek.shift(); // Sacamos el primer día (domingo) y lo almacenamos
     daysOfWeek.push(firstDay); // Agregamos el primer día al final (lunes)
     return daysOfWeek.map((day) => (
-      <div key={day} className={styles.daysOfWeek}>
-        {day}
-      </div>
+      <>
+        <div key={day} className={styles.daysOfWeek}>
+          {day}
+        </div>
+      </>
     ));
   };
 
@@ -123,10 +125,20 @@ const calendar = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <h1>{currentDate.format("MMMM YYYY")}</h1>
-      <div className={styles.daysOfWeekContainer}>{generateDaysOfWeek()}</div>
-      <div className={styles.daysContainer}>{generateCalendar()}</div>
+    <>
+      <div className={styles.container}>
+        <h1>{currentDate.format("MMMM YYYY")}</h1>
+        <div className={styles.daysOfWeekContainer}>{generateDaysOfWeek()}</div>
+        <div className={styles.daysContainer}>{generateCalendar()}</div>
+        <div className={styles.controls}>
+          <button onClick={handlePrevMonth} className={styles.button}>
+            <AiOutlineArrowLeft />
+          </button>
+          <button onClick={handleNextMonth} className={styles.button}>
+            <AiOutlineArrowRight />
+          </button>
+        </div>
+      </div>
       {modalVisible && (
         <div className={styles.modal}>
           <p>Estos son los eventos del día: {selectedDate}</p>
@@ -155,17 +167,22 @@ const calendar = () => {
           </div>
         </div>
       )}
+      <div className={styles.container}>
+        <h1>{currentDate.format("MMMM YYYY")}</h1>
+        <div className={styles.daysOfWeekContainer}>{generateDaysOfWeek()}</div>
+        <div className={styles.daysContainer}>{generateCalendar()}</div>
 
-      <div className={styles.controls}>
-        <button onClick={handlePrevMonth} className={styles.button}>
-          {moment(currentDate).subtract(1, "months").format("MMMM YYYY")}
-        </button>
+        <div className={styles.controls}>
+          <button onClick={handlePrevMonth} className={styles.button}>
+            <AiOutlineArrowLeft />
+          </button>
 
-        <button onClick={handleNextMonth} className={styles.button}>
-          {moment(currentDate).add(1, "months").format("MMMM YYYY")}
-        </button>
+          <button onClick={handleNextMonth} className={styles.button}>
+            <AiOutlineArrowRight />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
