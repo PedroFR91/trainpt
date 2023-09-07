@@ -25,7 +25,8 @@ import {
   FaPlus,
   FaCopy,
 } from "react-icons/fa";
-
+import { AiOutlineArrowLeft } from 'react-icons/ai'
+import DynamicForm from "../../forms/DynamicForm";
 const routine = () => {
   const [data, setData] = useState([""]);
   const [exercises, setExercises] = useState([]);
@@ -430,6 +431,7 @@ const routine = () => {
   };
 
   const handleAddExerciseClick = (e) => {
+    console.log(tExercise)
     e.preventDefault();
     setCurrentTraining([...currentTraining, tExercise]);
     setAddNewEx(false);
@@ -703,17 +705,33 @@ const routine = () => {
                         <p>Nombre: </p>
                         <p>{exercise.name}</p>
                       </div>
-                      <div>
-                        <p>Repeticiones: </p>
-                        <p>{exercise.repetitions}</p>
+                      <div >
+                        <div className={styles.supersets}>
+                          {exercise.exercises.map((exercise, index) => (
+                            <div className={styles.superset}>
+                              <div>
+                                <p>Superset {index + 1}</p>
+                              </div>
+
+                              <div>
+                                <p>Repeticiones:</p>
+                                <p key={index}>{exercise.repetitions}</p>
+                              </div>
+
+                              <div>
+                                <p>Series:</p>
+                                <p key={index}>{exercise.sets}</p>
+                              </div>
+
+                            </div>
+                          ))}
+                        </div>
+
                       </div>
-                      <div>
-                        <p>Series: </p>
-                        <p>{exercise.sets}</p>
-                      </div>
+
                       <div>
                         <p>Materiales: </p>
-                        <p>{exercise.materials}</p>
+                        <p>{exercise.material}</p>
                       </div>
                       <div>
                         <p>Comentarios: </p>
@@ -728,46 +746,55 @@ const routine = () => {
                     </div>
                   ))}
                 </div>
+                <div
+                  className={styles.backbutton}
+                  onClick={() => setToggle(false)}
+                >
+                  <AiOutlineArrowLeft />
+                </div>
+                <button
+                  onClick={(e) =>
+                    updateTrainingId
+                      ? handleUpdateTraining(e, updateTrainingId, newTrain)
+                      : handleCreateTraining(e)
+                  }
+                  className={styles.create}
+                  disabled={!tExercise}
+                >
+                  {updateTrainingId
+                    ? "Actualizar Entrenamiento"
+                    : "Crear Entrenamiento"}
+                </button>
               </div>
             )}
             <div className={styles.trainingButton}>
-              <button
-                onClick={(e) =>
-                  updateTrainingId
-                    ? handleUpdateTraining(e, updateTrainingId, newTrain)
-                    : handleCreateTraining(e)
-                }
+              <div>
+                <button
+                  className={styles.create}
+                  onClick={() => {
+                    setAddNewEx(true);
+                    setSelectExercises(false);
+                  }}
+                >
+                  Nuevo ejercicio
+                </button>
+                <button
+                  className={styles.create}
+                  onClick={() => {
+                    setSelectExercises(true);
+                    setAddNewEx(false);
+                  }}
+                >
+                  Añadir desde BBDD
+                </button>
+              </div>
+              {!toggle && <button
                 className={styles.create}
-                disabled={!tExercise}
-              >
-                {updateTrainingId
-                  ? "Actualizar Entrenamiento"
-                  : "Crear Entrenamiento"}
-              </button>
-              <button
-                className={styles.create}
-                onClick={() => {
-                  setAddNewEx(true);
-                  setSelectExercises(false);
-                }}
-              >
-                Nuevo ejercicio
-              </button>
-              <button
-                className={styles.create}
-                onClick={() => {
-                  setSelectExercises(true);
-                  setAddNewEx(false);
-                }}
-              >
-                Añadir desde BBDD
-              </button>
-              <button
-                className={styles.create}
-                onClick={() => setToggle(!toggle)}
+                onClick={() => setToggle(true)}
               >
                 Ver Actual
-              </button>
+              </button>}
+
             </div>
             <div
               className={styles.closebutton}
@@ -802,29 +829,7 @@ const routine = () => {
               )}
             </div>
             <div className={styles.superset}>
-              <div>
-                <p>Repeticiones:</p>
-                <input
-                  type="text"
-                  name="repetitions"
-                  value={tExercise.repetitions}
-                  onChange={(e) =>
-                    setTExercise({ ...tExercise, repetitions: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <p>Series:</p>
-                <input
-                  type="text"
-                  name="sets"
-                  value={tExercise.sets}
-                  onChange={(e) =>
-                    setTExercise({ ...tExercise, sets: e.target.value })
-                  }
-                />
-              </div>
-              <button className={styles.add}>+</button>
+              <DynamicForm tExercise={tExercise} setTExercise={setTExercise} />
             </div>
             <div>
               <p>Comentarios:</p>
@@ -840,9 +845,9 @@ const routine = () => {
               <p>Materiales:</p>
               <input
                 type="text"
-                value={tExercise.materials}
+                value={tExercise.material}
                 onChange={(e) =>
-                  setTExercise({ ...tExercise, materials: e.target.value })
+                  setTExercise({ ...tExercise, material: e.target.value })
                 }
               />
             </div>
