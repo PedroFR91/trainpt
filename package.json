@@ -44,5 +44,9 @@
     "react-quill": "^2.0.0",
     "react-responsive-carousel": "^3.2.23",
     "slate-react": "^0.93.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
+  
 }
