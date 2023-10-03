@@ -222,6 +222,11 @@ const routine = () => {
       });
       setMyMessage("creado");
       setMessage(true);
+      setNewTrain({
+        name: "",
+        description: "",
+        exercises: [],
+      })
       setTimeout(() => {
         setMessage(false);
       }, 3000);
@@ -254,6 +259,11 @@ const routine = () => {
       console.log("Document updated");
       setMyMessage("actualizado");
       setMessage(true);
+      setNewTrain({
+        name: "",
+        description: "",
+        exercises: [],
+      })
       setTimeout(() => {
         setMessage(false);
       }, 3000);
@@ -308,6 +318,7 @@ const routine = () => {
     setShowClient(true);
     setCurrentRoutine(id);
   };
+
   const selectTrainer = async (cr, id) => {
     console.log("id", id);
     console.log("MyUid", myUid);
@@ -867,7 +878,7 @@ const routine = () => {
       )}
       {selectExercises && (
         <form className={styles.secondWidth}>
-          <h3>Mis ejercicios</h3>
+          <h3>Banco de Ejercicios</h3>
           <table>
             <tr>
               <th>Nombre</th>
@@ -941,26 +952,26 @@ const routine = () => {
                     type="checkbox"
                     id={training.id}
                     value={training.id}
-                    onChange={(e) => handleAddTrainingToRoutine(e.target.value)}
+                    onChange={(e) => handleAddTrainingToRoutine(training.id)}
                   />
                   <label htmlFor={training.id}>{training.name}</label>
                 </div>
               ))}
               <h3>Días</h3>
               <div className={styles.myweek}>
-                {["L", "M", "X", "J", "V", "S", "D"].map((day) => (
-                  <div key={day} className={styles.myday}>
-                    <input
-                      type="checkbox"
-                      id={day}
-                      value={day}
-                      onChange={(e) =>
-                        setData({ ...data, day: e.target.value })
-                      }
-                    />
-                    <label htmlFor={day}>{day}</label>
-                  </div>
-                ))}
+
+                <div className={styles.myday}>
+                  <input
+                    type="text"
+
+                    value={data.day}
+                    onChange={(e) =>
+                      setData({ ...data, day: e.target.value })
+                    }
+                  />
+                  <label>Días de entrenamiento</label>
+                </div>
+
               </div>
               <div className={styles.create} onClick={handleCreateRoutine}>
                 Crear Rutina
