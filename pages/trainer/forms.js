@@ -19,6 +19,7 @@ import AuthContext from "../../context/AuthContext";
 import { follow, initialForm } from "../../forms/initialForm";
 import { FaArrowAltCircleRight, FaFile } from "react-icons/fa";
 import Initial from "../../components/client/Initial";
+import Follow from "../../components/client/Follow"
 import Link from "next/link";
 import {
   ref,
@@ -256,162 +257,46 @@ const forms = () => {
           />
         )}
         {showfollow && (
-          <>
-            <form onSubmit={handleCreateFollow} className={styles.follow}>
-              <div className={styles.followLeft}>
-                <div>
-                  <h3>Medidas</h3>
-                  <label>
-                    Chest:
-                    <input
-                      type="text"
-                      name="chest"
-                      value={
-                        formDataFollow.measures
-                          ? formDataFollow.measures.chest || ""
-                          : ""
-                      }
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Hombros:
-                    <input
-                      type="text"
-                      name="shoulders"
-                      value={formDataFollow.measures.shoulders}
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Biceps:
-                    <input
-                      type="text"
-                      name="biceps"
-                      value={formDataFollow.measures.biceps}
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Cintura:
-                    <input
-                      type="text"
-                      name="hips"
-                      value={formDataFollow.measures.hips}
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Abdomen:
-                    <input
-                      type="text"
-                      name="abdomen"
-                      value={formDataFollow.measures.abdomen}
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Cuadriceps:
-                    <input
-                      type="text"
-                      name="cuadriceps"
-                      value={formDataFollow.measures.cuadriceps}
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Gemelos:
-                    <input
-                      type="text"
-                      name="gemelos"
-                      value={formDataFollow.measures.gemelos}
-                      onChange={handleMeasuresChangeFollow}
-                    />
-                  </label>
-                  <br />
-                </div>
-              </div>
-              <div className={styles.followRight}>
-                <div>
-                  <h3>Fotos</h3>
-                  <label>
-                    Frontal:
-                    <input
-                      type="file"
-                      name="front"
-                      onChange={handlePhotosChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Espalda:
-                    <input
-                      type="file"
-                      name="back"
-                      onChange={handlePhotosChangeFollow}
-                    />
-                  </label>
-                  <br />
-                  <label>
-                    Lateral:
-                    <input
-                      type="file"
-                      name="lateral"
-                      onChange={handlePhotosChangeFollow}
-                    />
-                  </label>
-                  <br />
-                </div>
-              </div>
-              <button type="submit">Enviar</button>
-            </form>
-            <div
-              className={styles.closebutton}
-              onClick={() => setShowFollow(false)}
-            >
-              X
-            </div>
-          </>
+          <Follow showfollow={showfollow}
+            setShowFollow={setShowFollow}
+            myUid={myUid} />
         )}
         {showmyforms && (
           <>
-            <div className={styles.myforms}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Tipo</th>
-                    <th>ID</th>
-                    <th>Acciones</th>
+
+            <table className={styles.myddbbitem}>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>ID</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myForm.map((form) => (
+                  <tr key={form.id}>
+                    <td>{form.name}</td>
+                    <td>{form.type}</td>
+                    <td>{form.id}</td>
+                    <td
+
+                      className={styles.myddbbitem}
+                    >
+                      <Link href={`/shared/forms/${form.id}`}>Ver</Link>
+                      <div onClick={() => {
+                        setShowClient(true), setCurrentForm(form);
+                      }}>
+                        Asignar
+                      </div>
+
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {myForm.map((form) => (
-                    <tr key={form.id}>
-                      <td>{form.name}</td>
-                      <td>{form.type}</td>
-                      <td>{form.id}</td>
-                      <td>
-                        <Link href={`/share/${form.id}`}>Ver</Link>
-                      </td>
-                      <td
-                        onClick={() => {
-                          setShowClient(true), setCurrentForm(form);
-                        }}
-                      >
-                        Asignar formulario Inicial
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+
+
             <div
               className={styles.closebutton}
               onClick={() => setShowMyForms(false)}
@@ -440,7 +325,7 @@ const forms = () => {
                 <p>{data.username}</p>
               </div>
             ))}
-          <button onClick={() => setShowClient(false)}>Cerrar</button>
+          <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
         </div>
       )}
     </div>

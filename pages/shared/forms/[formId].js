@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase.config';
+import { db } from '../../../firebase.config';
 import { serverTimestamp } from 'firebase/firestore';
 import styles from '../../styles/forms.module.css';
 import Link from 'next/link';
+
 const FormPage = () => {
   const router = useRouter();
   const { formId } = router.query; // Obtiene el ID del formulario desde la URL

@@ -13,6 +13,7 @@ import {
 import { db } from '../../firebase.config';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AuthContext from '../../context/AuthContext';
+import Link from 'next/link';
 const trainersList = (props) => {
   const [data, setData] = useState([]);
   const [show, setShow] = useState(false);
@@ -82,21 +83,21 @@ const trainersList = (props) => {
       <div className={styles.trainersList}>
         {select
           ? data
-              .filter(
-                (trainer) =>
-                  Array.isArray(trainer.link) && trainer.link.includes(myUid)
-              )
-              .map((trainer) => (
-                <div key={trainer.id} className={styles.userdata}>
-                  <div>
-                    {trainer.img ? (
-                      <img src={trainer.img} alt={'myprofileimg'} />
-                    ) : (
-                      <img src='/face.jpg' alt={'myprofileimg'} />
-                    )}
-                  </div>
-                  <div>{trainer.username}</div>
-                  <div
+            .filter(
+              (trainer) =>
+                Array.isArray(trainer.link) && trainer.link.includes(myUid)
+            )
+            .map((trainer) => (
+              <div key={trainer.id} className={styles.userdata}>
+                <div>
+                  {trainer.img ? (
+                    <img src={trainer.img} alt={'myprofileimg'} />
+                  ) : (
+                    <img src='/face.jpg' alt={'myprofileimg'} />
+                  )}
+                </div>
+                <div>{trainer.username}</div>
+                {/* <div
                     className={`${styles.status} ${
                       trainer.status.name === 'pendiente'
                         ? styles.yellowStatus
@@ -114,60 +115,60 @@ const trainersList = (props) => {
                                 }`}
                   >
                     {trainer.status.name}
-                  </div>
+                  </div> */}
 
+                <Link href={`/shared/trainers/${trainer.id}`}
+                  className={styles.button}
+
+                >
+                  Ver Perfil
+                </Link>
+
+                <div
+                  className={styles.button}
+                  onClick={() => {
+                    deselectTrainer(trainer.id);
+                    setSelect(false);
+                  }}
+                >
+                  Cambiar
+                </div>
+              </div>
+            ))
+          : data
+            .filter((trainer) => trainer.role === 'trainer')
+            .map((trainer) => (
+              <div key={trainer.id} className={styles.userdata}>
+                <div>
+                  {trainer.img ? (
+                    <img src={trainer.img} alt={'myprofileimg'} />
+                  ) : (
+                    <img src='/face.jpg' alt={'myprofileimg'} />
+                  )}
+                </div>
+                <div>{trainer.username}</div>
+                {!show ? (
                   <div
                     className={styles.button}
                     onClick={() => showTrainer(trainer)}
                   >
                     Ver Perfil
                   </div>
+                ) : (
+                  <div className={styles.trainerInfo}>INFO</div>
+                )}
 
-                  <div
-                    className={styles.button}
-                    onClick={() => {
-                      deselectTrainer(trainer.id);
-                      setSelect(false);
-                    }}
-                  >
-                    Cambiar
-                  </div>
+                <div
+                  className={styles.button}
+                  onClick={() => {
+                    selectTrainer(trainer.id);
+                    setSelect(true);
+                  }}
+                >
+                  Seleccionar
                 </div>
-              ))
-          : data
-              .filter((trainer) => trainer.role === 'trainer')
-              .map((trainer) => (
-                <div key={trainer.id} className={styles.userdata}>
-                  <div>
-                    {trainer.img ? (
-                      <img src={trainer.img} alt={'myprofileimg'} />
-                    ) : (
-                      <img src='/face.jpg' alt={'myprofileimg'} />
-                    )}
-                  </div>
-                  <div>{trainer.username}</div>
-                  {!show ? (
-                    <div
-                      className={styles.button}
-                      onClick={() => showTrainer(trainer)}
-                    >
-                      Ver Perfil
-                    </div>
-                  ) : (
-                    <div className={styles.trainerInfo}>INFO</div>
-                  )}
-
-                  <div
-                    className={styles.button}
-                    onClick={() => {
-                      selectTrainer(trainer.id);
-                      setSelect(true);
-                    }}
-                  >
-                    Seleccionar
-                  </div>
-                </div>
-              ))}
+              </div>
+            ))}
       </div>
     </>
   );

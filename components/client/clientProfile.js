@@ -5,6 +5,7 @@ import { db, storage } from '../../firebase.config';
 import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import AuthContext from '../../context/AuthContext';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { FaEdit, FaRegEdit } from 'react-icons/fa';
 const clientProfile = () => {
   const { myData, myUid } = useContext(AuthContext);
   const auth = getAuth();
@@ -65,28 +66,23 @@ const clientProfile = () => {
             alt={'img'}
             className={styles.myprofileimg}
           />
-
           <input
             type='file'
             id='file'
             onChange={(e) => setFile(e.target.files[0])}
             hidden
           />
-          <div className={styles.profilesection}>
-            <button
-              className={styles.label}
-              htmlFor='file'
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('file').click();
-              }}
-            >
-              Cambiar imagen de perfil
-            </button>
-          </div>
-          <div className={styles.myprofileinfo}>
-            <p>{myData.username}</p>
-          </div>
+          <FaRegEdit htmlFor='file'
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('file').click();
+            }} style={{
+              position: 'absolute', top: '180px', left: '140px',
+              backgroundColor: '#f69d21', color: '#212121',
+              width: '2.2rem', height: '2.2rem',
+              borderRadius: '50%'
+            }} />
+          <p>{myData.username}</p>
         </div>
       )}
     </>

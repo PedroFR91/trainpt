@@ -27,7 +27,7 @@
 }
 
 .myprofile {
-  width: 100%;
+  width: 50%;
   min-height: 50vh;
   height: fit-content;
   display: flex;
@@ -193,4 +193,8 @@
   color: #212121;
 }
 
-@media screen and (max-width: 767px) {}
+@media screen and (max-width: 767px) {
+  .myprofile {
+    width: 100%;
+  }
+}

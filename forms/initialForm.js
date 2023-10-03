@@ -12,18 +12,11 @@ export const initialForm = {
     cuadriceps: '',
     gemelos: '',
   },
-  photos: {
-    front: '',
-    back: '',
-    lateral: '',
-  },
+  lateral: '',
+  front: '',
+  back: '',
   intolerances: '',
-
-  preferredFoods: {
-    type: 'textarea',
-    value: '', // Valor inicial del textarea
-  },
-
+  preferredFoods: '',
   trainingDays: {
     type: 'select',
     label: 'Días de entrenamiento:',
@@ -44,9 +37,7 @@ export const follow = {
     cuadriceps: '',
     gemelos: '',
   },
-  photos: {
-    front: '',
-    back: '',
-    lateral: '',
-  },
+  lateral: '',
+  front: '',
+  back: '',
 };

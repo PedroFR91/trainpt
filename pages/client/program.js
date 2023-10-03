@@ -81,7 +81,7 @@ const program = () => {
       <ClientHeader />
       <div className={styles.programlayout}>
         <ClientProfile />
-        <MyImages />
+        {/* <MyImages /> */}
         <div className={styles.nextrevision}>Próxima revisión:{revision}</div>
         <TrainersList />
       </div>

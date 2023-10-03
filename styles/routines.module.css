@@ -160,6 +160,7 @@
   align-items: center;
   margin: 0.5rem auto;
   padding: 0.5rem;
+  
 }
 
 .myddbbitem table tr td,
@@ -173,7 +174,11 @@
 }
 
 .myddbbitem table tr td {
-  background-color: #212121;
+  background-color: #ffffff33;
+}
+.myddbbitem table tr td p:hover,.myddbbitem table tr td:hover{
+cursor: pointer;
+
 }
 
 .modal {

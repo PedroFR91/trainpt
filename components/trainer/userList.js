@@ -4,6 +4,16 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import Link from "next/link";
+import {
+  FaCamera,
+  FaChartLine,
+  FaFile,
+  FaMale,
+  FaProcedures,
+  FaRunning,
+  FaSignOutAlt,
+} from 'react-icons/fa';
+import { MdFoodBank } from 'react-icons/md'
 const userList = () => {
   const [show, setShow] = useState(false);
   const [current, setCurrent] = useState("");
@@ -84,7 +94,7 @@ const userList = () => {
   }, [myData]);
 
   return (
-    <div className={styles.container}> 
+    <div className={styles.container}>
       <h1>Mis Clientes</h1>
       <div className={styles.list}>
         {!show &&
@@ -94,42 +104,46 @@ const userList = () => {
               <div key={data.id} className={styles.userdata}>
                 <div>
                   {data.img ? (
-                    <img src={data.img} alt={"myprofileimg"} />
+                    <>
+                      <img src={data.img} alt={"myprofileimg"} />
+                      <div>{data.username}</div></>
                   ) : (
-                    <img src="/face.jpg" alt={"myprofileimg"} />
+                    <>
+                      <img src="/face.jpg" alt={"myprofileimg"} />
+                      <div>{data.username}</div>
+                    </>
                   )}
                 </div>
-                <div>{data.username}</div>
+
                 {myData.status &&
                   myData.status.find((status) => status.id === data.id) && (
                     <>
-                    <p>Estatus:</p>
+                      <p>Estatus:</p>
                       <p
-                      className={`${styles.status} ${
-                        myData.status.find((status) => status.id === data.id)
+                        className={`${styles.status} ${myData.status.find((status) => status.id === data.id)
                           .name === "pendiente"
                           ? styles.yellowStatus
                           : myData.status.find(
-                              (status) => status.id === data.id
-                            ).name === "inicial"
-                          ? styles.blueStatus
-                          : myData.status.find(
+                            (status) => status.id === data.id
+                          ).name === "inicial"
+                            ? styles.blueStatus
+                            : myData.status.find(
                               (status) => status.id === data.id
                             ).name === "archivos"
-                          ? styles.greenStatus
-                          : ""
-                      }`}
-                    ><span></span>
-                      {
-                        myData.status.find((status) => status.id === data.id)
-                          .name
-                      }
-                    </p>
+                              ? styles.greenStatus
+                              : ""
+                          }`}
+                      ><span></span>
+                        {
+                          myData.status.find((status) => status.id === data.id)
+                            .name
+                        }
+                      </p>
                     </>
-                  
+
                   )}
-                <div className={styles.button}>
-                  <span onClick={() => showClient(data)}>Ver</span>
+                <div >
+                  <span className={styles.spanbutton} onClick={() => showClient(data)}>Ver Info</span>
                 </div>
               </div>
             </div>
@@ -143,39 +157,75 @@ const userList = () => {
                 <img src="/face.jpg" alt={"myprofileimg"} />
               )}
             </div>
-            <div>{current.username}</div>
-            <div>Medidas</div>
-            <div>Fotos</div>
-            <div>
-              <p>Formularios:</p>
+            <h1>{current.username}</h1>
+            <div className={styles.sectionClient}>
               <div>
-                {myForm
-                  .filter((form) => form.link === current.id)
-                  .map((form) => (
-                    <div key={form.id}>
-                      <Link href={`/share/${form.id}`}>Ver</Link>
-                    </div>
-                  ))}
+                <p>Medidas</p>
+                <div>
+                  <FaChartLine size={80} />
+                </div>
               </div>
-            </div>
-            <div>Entrenamientos</div>
-            <div>
-              <p>Rutina asignada</p>
               <div>
-                {routine
-                  .filter((data) => data.link === current.id)
-                  .map((routine) => (
-                    <div key={routine.id} className={styles.routine}>
-                      <div>
-                        <p>
-                          <span>{routine.nameroutine}</span>
-                        </p>
+                <p>
+                  Fotos
+                </p>
+                <div>
+                  <FaCamera size={80} />
+                </div>
+              </div>
+              <div>
+                <p>Formularios</p>
+                <div>
+                  <FaFile size={80} />
+                </div>
+                {/* <div>
+                  {myForm
+                    .filter((form) => form.link === current.id)
+                    .map((form) => (
+                      <div key={form.id}>
+                        <Link href={`/share/${form.id}`}>Ver</Link>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div> */}
+              </div>
+              <div>
+                <p>
+                  Entrenamientos
+                </p>
+                <div>
+                  <FaRunning size={80} />
+                </div>
+              </div>
+              <div>
+                <p>Rutina asignada</p>
+                {/* <div>
+                  {routine
+                    .filter((data) => data.link === current.id)
+                    .map((routine) => (
+                      <div key={routine.id} className={styles.routine}>
+                        <div>
+                          <p>
+                            <span>{routine.nameroutine}</span>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div> */}
+                <div>
+                  <FaFile size={80} />
+                </div>
+
+              </div>
+              <div>
+                <p>
+                  Dieta asignada
+                </p>
+                <div>
+                  <MdFoodBank size={80} />
+                </div>
               </div>
             </div>
-            <div>Dieta asignada</div>
+
 
             <button
               onClick={() => setShow(false)}
@@ -186,8 +236,8 @@ const userList = () => {
           </div>
         )}
       </div>
-      
-    </div>
+
+    </div >
   );
 };
 

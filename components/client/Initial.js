@@ -2,78 +2,53 @@ import React, { useState } from "react";
 import styles from "../../styles/forms.module.css";
 import { initialForm } from "../../forms/initialForm";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../../firebase.config";
-import { AiOutlineSend } from "react-icons/ai";
+import { db, storage } from "../../firebase.config";
+import { AiOutlineSend, AiOutlineUpload } from "react-icons/ai";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+
 const Initial = (props) => {
   const [formStructure, setFormStructure] = useState({
     ...initialForm,
-    measures: {
-      chest: "",
-      shoulders: "",
-      biceps: "",
-      hips: "",
-      abdomen: "",
-      cuadriceps: "",
-      gemelos: "",
-    },
+    gender: "man",
+
   });
 
   const handleCreate = async (e) => {
-    setFormStructure("");
+    e.preventDefault();
+
     try {
-      await addDoc(collection(db, "forms"), {
+      // Agregar el formulario a Firestore y obtener su ID
+      const formRef = await addDoc(collection(db, "forms"), {
         ...formStructure,
-        formid: props.myUid,
         type: "Inicial",
         timeStamp: serverTimestamp(),
       });
+
+      // Limpiar el estado del formulario
+      setFormStructure({
+        ...initialForm,
+        gender: "man",
+        front: null,
+        back: null,
+        lateral: null,
+      });
+
+      console.log("Formulario creado con éxito", formRef.id);
     } catch (error) {
-      console.log(error);
+      console.error("Error al crear el formulario:", error);
     }
   };
 
   const handleChange = (event) => {
     const { name, type, value } = event.target;
 
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
-      [name]: type === "file" ? event.target.files[0] : value,
-    }));
-  };
-  const handleSelectChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
-      [name]: {
-        ...prevFormStructure[name],
-        options: value.split(",").map((option) => option.trim()),
-      },
-    }));
-  };
-  const handleCheckboxChange = (event) => {
-    const { name, checked } = event.target;
-
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
-      [name]: {
-        ...prevFormStructure[name],
-        options: {
-          ...prevFormStructure[name].options,
-          [event.target.value]: checked,
-        },
-      },
-    }));
-  };
-
-  const handlePhotosChange = (event) => {
-    setFormStructure({
-      ...formStructure,
-      photos: {
-        ...formStructure.photos,
-        [event.target.name]: event.target.files[0],
-      },
-    });
+    if (type !== "file") {
+      // Manejar otros campos como lo estás haciendo actualmente
+      setFormStructure((prevFormStructure) => ({
+        ...prevFormStructure,
+        [name]: value,
+      }));
+    }
   };
 
   const handleMeasuresChange = (event) => {
@@ -84,6 +59,25 @@ const Initial = (props) => {
         [event.target.name]: event.target.value,
       },
     });
+  };
+  const uploadPhoto = async (fieldName, file) => {
+    if (file) {
+      const name = new Date().getTime() + file.name;
+      const storageRef = ref(storage, name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      try {
+        await uploadTask;
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+        setFormStructure((prevFormStructure) => ({
+          ...prevFormStructure,
+          [fieldName]: downloadURL,
+        }));
+      } catch (error) {
+        console.error(`Error al subir ${fieldName}:`, error);
+      }
+    }
   };
 
   return (
@@ -105,6 +99,7 @@ const Initial = (props) => {
             <p>Sexo:</p>
             <select
               name="gender"
+              type="select"
               value={formStructure.gender}
               onChange={handleChange}
             >
@@ -134,18 +129,46 @@ const Initial = (props) => {
         <h3>Fotos</h3>
         <div>
           <div>
-            <p>Frente:</p>
-            <input type="file" name="front" onChange={handlePhotosChange} />
+            <label htmlFor="front">
+              Frente<AiOutlineUpload />
+            </label>
+            <input
+              type="file"
+              id="front"
+              name="front"
+              accept="image/*"
+              required
+              onChange={(e) => uploadPhoto("front", e.target.files[0])}
+              hidden
+            />
           </div>
-
           <div>
-            <p>Espalda:</p>
-            <input type="file" name="back" onChange={handlePhotosChange} />
+            <label htmlFor="back">
+              Espalda<AiOutlineUpload />
+            </label>
+            <input
+              type="file"
+              id="back"
+              name="back"
+              accept="image/*"
+              required
+              onChange={(e) => uploadPhoto("back", e.target.files[0])}
+              hidden
+            />
           </div>
-
           <div>
-            <p>Lateral:</p>
-            <input type="file" name="lateral" onChange={handlePhotosChange} />
+            <label htmlFor="lateral">
+              Lateral <AiOutlineUpload />
+            </label>
+            <input
+              type="file"
+              id="lateral"
+              name="lateral"
+              accept="image/*"
+              required
+              onChange={(e) => uploadPhoto("lateral", e.target.files[0])}
+              hidden
+            />
           </div>
         </div>
         <h3>Dieta</h3>

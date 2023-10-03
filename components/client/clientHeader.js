@@ -17,13 +17,6 @@ import {
 } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FaHome,
-  FaUser,
-  FaDumbbell,
-  FaClipboard,
-  FaFolder,
-} from 'react-icons/fa';
 import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 
 const clientHeader = () => {
@@ -97,7 +90,7 @@ const clientHeader = () => {
             >
               <Link passHref href={'./program'}>
                 <div className={styles.menuItem}>
-                  <FaMale size={50} /> Programa
+                  <FaMale size={50} /> Inicio
                 </div>
               </Link>
               <Link passHref href={'./train'}>

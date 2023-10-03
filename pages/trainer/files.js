@@ -328,7 +328,7 @@ const files = () => {
                 {myfiles.length > 0 ? (
                   myfiles.map((item) => (
                     <div key={item.id}>
-                      {item.fileType === "image/jpeg" ? (
+                      {item.fileType === ("image/jpeg" || "image/png") ? (
                         <img src={item.img} alt={item.title} width="100%" />
                       ) : (
                         <FaFilePdf size={100} />
