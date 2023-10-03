@@ -945,7 +945,7 @@ const routine = () => {
                   }}
                 />
               </div>
-              <h3>Entrenamientos</h3>
+              <h3>Entrenamiento</h3>
               {trainings.map((training) => (
                 <div key={training.id}>
                   <input
