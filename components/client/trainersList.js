@@ -50,18 +50,31 @@ const trainersList = (props) => {
 
   const selectTrainer = async (id) => {
     const docRef = doc(db, 'users', id);
+    const mydocRef = doc(db, 'users', myUid);
+
     await updateDoc(docRef, {
       link: arrayUnion(myUid),
       status: arrayUnion({ name: 'pendiente', id: myUid }),
+      selected: true,
+    });
+    await updateDoc(mydocRef, {
+      link: id,
+      status: arrayUnion({ name: 'pendiente', id: id }),
       selected: true,
     });
   };
 
   const deselectTrainer = async (id) => {
     const docRef = doc(db, 'users', id);
+    const mydocRef = doc(db, 'users', myUid);
     await updateDoc(docRef, {
       link: arrayRemove(myUid),
       selected: false,
+    });
+    await updateDoc(mydocRef, {
+      link: '',
+      selected: false,
+      status: '',
     });
   };
 

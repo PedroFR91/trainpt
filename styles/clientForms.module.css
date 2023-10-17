@@ -18,8 +18,62 @@
 }
 .myforms div p {
   width: 80%;
-
   display: flex;
   justify-content: space-around;
   margin-bottom: 0.5rem;
+}
+.myformsTable {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: #212121;
+  z-index: 10;
+  position: absolute;
+  padding-top: 15vh;
+}
+.myformsTable thead,
+.myformsTable tbody {
+  width: 100%;
+}
+.myformsTable thead {
+  position: fixed;
+}
+.myformsTable tbody {
+  padding-top: 15vh;
+}
+.myformsTable thead tr {
+  background-color: #f69d21;
+  color: #212121;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+.myformsTable tr {
+  width: 100%;
+  height: 15vh;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem auto;
+  padding: 0.5rem;
+}
+
+.myformsTable tr td,
+.myformsTable tr th {
+  width: 25%;
+  height: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  color: #ffffff;
+}
+
+.myformsTable tr td {
+  background-color: #ffffff33;
+}
+.myformsTable tr td p:hover,
+.myformsTable tr td:hover {
+  cursor: pointer;
 }

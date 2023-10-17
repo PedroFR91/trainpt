@@ -1,26 +1,85 @@
 import { useRouter } from 'next/router';
-import React from 'react'
+import React, { useState, useEffect } from 'react';
 import styles from '../../../styles/myprofile.module.css';
-import TrainerHeader from '../../../components/trainer/trainerHeader';
-import Profile from '../../../components/trainer/myprofile';
-import Rates from '../../../components/trainer/myrates';
-import PreviousImages from '../../../components/trainer/previousClientsImg';
-const mytrainer = () => {
+import { onSnapshot, collection, query, where } from 'firebase/firestore'; // Asegúrate de importar las bibliotecas de Firebase necesarias
+import { db } from '../../../firebase.config';
+import Modal from '../../../components/trainer/Modal';
+import AddTextClient from '../../../components/client/addTextClient';
+import MyRatesClient from '../../../components/client/myRatesClient';
+const Mytrainer = () => {
     const router = useRouter();
     const { mytrainer } = router.query;
+    const [userData, setUserData] = useState(null);
+    const [rates, setRates] = useState([]);
+
+    useEffect(() => {
+        // Consultar los datos del entrenador (userData)
+        const userQuery = query(
+            collection(db, "users"),
+            where("id", "==", mytrainer)
+        );
+
+        const unsubUser = onSnapshot(
+            userQuery,
+            (userSnapshot) => {
+                if (!userSnapshot.empty) {
+                    const userDoc = userSnapshot.docs[0];
+                    const userDocData = userDoc.data();
+                    setUserData(userDocData);
+                }
+            },
+            (error) => {
+                console.log("Error al consultar el usuario:", error);
+            }
+        );
+
+        // Consultar las tarifas (rates)
+        const ratesQuery = query(
+            collection(db, "rates"),
+            where("rateid", "==", mytrainer)
+        );
+
+        const unsubRates = onSnapshot(
+            ratesQuery,
+            (ratesSnapshot) => {
+                let ratesList = [];
+                ratesSnapshot.docs.forEach((rateDoc) => {
+                    ratesList.push({ id: rateDoc.id, ...rateDoc.data() });
+                });
+                setRates(ratesList);
+            },
+            (error) => {
+                console.log("Error al consultar las tarifas:", error);
+            }
+        );
+
+        return () => {
+            unsubUser();
+            unsubRates();
+        };
+    }, [mytrainer]);
 
     return (
         <div className={styles.containerProfile}>
-
             <div className={styles.layout}>
-                <Profile />
+                <div className={styles.myprofile}>
+                    <img
+                        src={userData?.img ? userData.img : "/face.jpg"}
+                        alt={"img"}
+                        className={styles.myprofileimg}
+                    />
+
+                    <h2>{userData?.username}</h2>
+                    <div className={styles.myprofileinfo}>
+                        <AddTextClient initialText={userData?.mytext} />
+                    </div>
+                </div>
                 <div className={styles.subdivision}>
-                    <Rates />
-                    <PreviousImages />
+                    <MyRatesClient rates={rates} />
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default mytrainer
+export default Mytrainer;

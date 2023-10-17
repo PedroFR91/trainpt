@@ -2,58 +2,74 @@ import React, { useContext, useEffect, useState } from 'react';
 import ClientHeader from '../../components/client/clientHeader';
 import styles from '../../styles/previousimg.module.css';
 import AuthContext from '../../context/AuthContext';
-import { collection, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore'; // Import the necessary Firestore functions
 import { db } from '../../firebase.config';
-const photos = () => {
+
+const Photos = () => {
   const { myUid } = useContext(AuthContext);
-  const [file, setFile] = useState('');
-  const [data, setData] = useState({});
-  const [per, setPer] = useState(null);
   const [photos, setPhotos] = useState([]);
-  const [type, setType] = useState('Frontal');
+
   useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'clientPhotos'),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
+    // Define a query to retrieve documents with the matching 'clientId'
+    const q = query(collection(db, 'forms'), where('clientId', '==', myUid));
+
+    getDocs(q)
+      .then((querySnapshot) => {
+        const photoList = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Check if 'front', 'lateral', and 'back' exist in the document
+          if (data.front && data.lateral && data.back && data.timeStamp) {
+            // Push the URLs into the photoList array
+            photoList.push({
+              front: data.front,
+              lateral: data.lateral,
+              back: data.back,
+              date: data.timeStamp
+            });
+          }
         });
-        setPhotos(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    return () => {
-      unsub();
-    };
-  }, []);
-  const handleDelete = async (id) => {
-    console.log(id);
-    try {
-      await deleteDoc(doc(db, 'clientPhotos', id));
-    } catch (error) {}
-  };
+        // Set the retrieved photoList to the 'photos' state
+        setPhotos(photoList);
+      })
+      .catch((error) => {
+        console.error('Error getting documents: ', error);
+      });
+  }, [myUid]);
 
   return (
     <div>
       <ClientHeader />
-      <div className={styles.clientPhotos}>
-        {photos
-          .filter((data) => data.trainerId === myUid)
-          .map((photo) => (
-            <div key={photo.id}>
-              <div className={styles.clientImg}>
-                <img src={photo.img} alt={photo.title} />
-                <p>{photo.type}</p>
-              </div>
-              <button onClick={() => handleDelete(photo.id)}>Borrar</button>
+      <div className={styles.myphotos}>
+        <h1>Mis fotos</h1>
+        {photos.map((photo, index) => (
+          <div key={index} className={styles.formphotos}>
+            <div className={styles.formdate}>
+              <p>{photo.date.toDate().toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              })}</p>
             </div>
-          ))}
+            <div className={styles.formphoto}>
+              <div>
+                <img src={photo.front} alt="Front" height={'90%'} />
+                <p>Frente</p>
+              </div>
+              <div>
+                <img src={photo.lateral} alt="Lateral" height={'90%'} />
+                <p>Lateral</p>
+              </div>
+              <div>
+                <img src={photo.back} alt="Back" height={'90%'} />
+                <p>Espalda</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-export default photos;
+export default Photos;

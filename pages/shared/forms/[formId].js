@@ -1,15 +1,18 @@
 // pages/client/form/[formId].js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../firebase.config';
+import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { db, storage } from '../../../firebase.config';
 import { serverTimestamp } from 'firebase/firestore';
-import styles from '../../styles/forms.module.css';
-import Link from 'next/link';
+import { initialForm } from "../../../forms/initialForm";
+import styles from '../../../styles/forms.module.css';
+import { AiOutlineUpload } from 'react-icons/ai';
 
 const FormPage = () => {
   const router = useRouter();
   const { formId } = router.query; // Obtiene el ID del formulario desde la URL
+  const { clientId } = router.query;
 
   const [formStructure, setFormStructure] = useState(null);
 
@@ -36,61 +39,77 @@ const FormPage = () => {
     }
   }, [formId]);
 
+
   const handleCreate = async (e) => {
+    e.preventDefault();
+
+    // Validar que todos los campos obligatorios estén llenos
+    const requiredFields = [
+      'name',
+      'gender',
+      'weight',
+      'height',
+      'front',
+      'back',
+      'lateral',
+    ];
+
+    const allRequiredFieldsFilled = requiredFields.every(
+      (fieldName) => formStructure[fieldName] !== null && formStructure[fieldName].trim() !== ''
+    );
+
+    if (!allRequiredFieldsFilled) {
+      alert("Rellene todos los campos obligatorios");
+      return;
+    }
+
+    // Validar que al menos un campo de medidas o dieta esté lleno
+    const measuresFields = ['chest', 'shoulders', 'biceps', 'hips', 'abdomen', 'cuadriceps', 'gemelos'];
+    const anyMeasuresFieldFilled = measuresFields.some(
+      (fieldName) => formStructure.measures[fieldName] !== null && formStructure.measures[fieldName].trim() !== ''
+    );
+
+    if (!anyMeasuresFieldFilled && (!formStructure.intolerances || formStructure.intolerances.trim() === '') && (!formStructure.preferredFoods || formStructure.preferredFoods.trim() === '')) {
+      alert("Rellene al menos un campo de medidas o dieta");
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'forms'), {
+      // Agregar el formulario a Firestore y obtener su ID
+      const formRef = await addDoc(collection(db, "forms"), {
         ...formStructure,
-        formid: myUid,
-        type: 'Inicial',
+        type: "ClienteInicial",
+        clientId: clientId,
         timeStamp: serverTimestamp(),
       });
+
+      // Limpiar el estado del formulario
+      setFormStructure({
+        ...initialForm,
+        gender: "man",
+        front: '',
+        back: '',
+        lateral: '',
+      });
+
+      console.log("Formulario creado con éxito", formRef.id);
+      // Redirigir a la página anterior
+      router.back();
     } catch (error) {
-      console.log(error);
+      console.error("Error al crear el formulario:", error);
     }
   };
 
   const handleChange = (event) => {
     const { name, type, value } = event.target;
 
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
-      [name]: type === 'file' ? event.target.files[0] : value,
-    }));
-  };
-  const handleSelectChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
-      [name]: {
-        ...prevFormStructure[name],
-        options: value.split(',').map((option) => option.trim()),
-      },
-    }));
-  };
-  const handleCheckboxChange = (event) => {
-    const { name, checked } = event.target;
-
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
-      [name]: {
-        ...prevFormStructure[name],
-        options: {
-          ...prevFormStructure[name].options,
-          [event.target.value]: checked,
-        },
-      },
-    }));
-  };
-
-  const handlePhotosChange = (event) => {
-    setFormStructure({
-      ...formStructure,
-      photos: {
-        ...formStructure.photos,
-        [event.target.name]: event.target.files[0],
-      },
-    });
+    if (type !== "file") {
+      // Manejar otros campos como lo estás haciendo actualmente
+      setFormStructure((prevFormStructure) => ({
+        ...prevFormStructure,
+        [name]: value,
+      }));
+    }
   };
 
   const handleMeasuresChange = (event) => {
@@ -102,6 +121,25 @@ const FormPage = () => {
       },
     });
   };
+  const uploadPhoto = async (fieldName, file) => {
+    if (file) {
+      const name = new Date().getTime() + file.name;
+      const storageRef = ref(storage, name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      try {
+        await uploadTask;
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+        setFormStructure((prevFormStructure) => ({
+          ...prevFormStructure,
+          [fieldName]: downloadURL,
+        }));
+      } catch (error) {
+        console.error(`Error al subir ${fieldName}:`, error);
+      }
+    }
+  };
 
   if (!formStructure) {
     return <div>Cargando...</div>; // Muestra un mensaje de carga mientras se obtienen los datos del formulario
@@ -110,7 +148,7 @@ const FormPage = () => {
   // Renderiza el formulario con los datos obtenidos
   return (
     <div>
-      <form className={styles.initial} onSubmit={handleCreate}>
+      <form className={styles.initial} >
         <h3>Datos generales</h3>
         <div>
           <div>
@@ -156,18 +194,46 @@ const FormPage = () => {
         <h3>Fotos</h3>
         <div>
           <div>
-            <p>Frente:</p>
-            <input type='file' name='front' onChange={handlePhotosChange} />
+            <label htmlFor="front">
+              Frente<AiOutlineUpload />
+            </label>
+            <input
+              type="file"
+              id="front"
+              name="front"
+              accept="image/*"
+              required
+              onChange={(e) => uploadPhoto("front", e.target.files[0])}
+              hidden
+            />
           </div>
-
           <div>
-            <p>Espalda:</p>
-            <input type='file' name='back' onChange={handlePhotosChange} />
+            <label htmlFor="back">
+              Espalda<AiOutlineUpload />
+            </label>
+            <input
+              type="file"
+              id="back"
+              name="back"
+              accept="image/*"
+              required
+              onChange={(e) => uploadPhoto("back", e.target.files[0])}
+              hidden
+            />
           </div>
-
           <div>
-            <p>Lateral:</p>
-            <input type='file' name='lateral' onChange={handlePhotosChange} />
+            <label htmlFor="lateral">
+              Lateral <AiOutlineUpload />
+            </label>
+            <input
+              type="file"
+              id="lateral"
+              name="lateral"
+              accept="image/*"
+              required
+              onChange={(e) => uploadPhoto("lateral", e.target.files[0])}
+              hidden
+            />
           </div>
         </div>
         <h3>Dieta</h3>
@@ -262,7 +328,8 @@ const FormPage = () => {
             />
           </div>
         </div>
-        <button type='submit'>Enviar</button>
+        <div onClick={handleCreate}>Enviar</div>
+
       </form>
       <div className={styles.closebutton} onClick={() => router.back()}>
         X

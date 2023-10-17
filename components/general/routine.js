@@ -8,9 +8,10 @@ import {
   updateDoc,
   addDoc,
   getDoc,
+  query,
 } from "firebase/firestore";
 import React, { useContext, useEffect, useState } from "react";
-
+import Exercise from "./exercise";
 import { db } from "../../firebase.config";
 import styles from "../../styles/routines.module.css";
 import { getAuth } from "firebase/auth";
@@ -25,6 +26,7 @@ import {
   FaPlus,
   FaCopy,
 } from "react-icons/fa";
+import { BsFillShareFill } from 'react-icons/bs';
 import { AiOutlineArrowLeft } from 'react-icons/ai'
 import DynamicForm from "../../forms/DynamicForm";
 const routine = () => {
@@ -46,14 +48,10 @@ const routine = () => {
   const [selectExercises, setSelectExercises] = useState(false);
   const [selectedTrainings, setSelectedTrainings] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
-  const [newTrain, setNewTrain] = useState({
-    name: "",
-    description: "",
-    exercises: [],
-  });
   const [message, setMessage] = useState(false);
   const [updateExerciseId, setUpdateExerciseId] = useState(null);
   const [updateTrainingId, setUpdateTrainingId] = useState(null);
+  const [updateRoutineId, setUpdateRoutineId] = useState(null)
   const [copyTrainingId, setCopyTrainingId] = useState(null);
   const [trainingExercises, setTrainingExercises] = useState([]);
   const [addExercise, setAddExercise] = useState(false);
@@ -68,6 +66,31 @@ const routine = () => {
   const [seriesData, setSeriesData] = useState([{ repetitions: "", sets: "" }]);
   const [myMessage, setMyMessage] = useState("");
   const [toggle, setToggle] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [newTrain, setNewTrain] = useState({
+    name: "",
+    material: "",
+    comments: "",
+  })
+
+  useEffect(() => {
+    if (myData) {
+      // Realizar la consulta para obtener todos los usuarios
+      const q = query(collection(db, "users"));
+      const unsub = onSnapshot(q, (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        // Actualizar el estado con todos los usuarios
+        setClients(list);
+      });
+
+      return () => {
+        unsub();
+      };
+    }
+  }, [myData]);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -320,8 +343,6 @@ const routine = () => {
   };
 
   const selectTrainer = async (cr, id) => {
-    console.log("id", id);
-    console.log("MyUid", myUid);
     await updateDoc(doc(db, "routines", cr), {
       link: id,
     });
@@ -336,17 +357,33 @@ const routine = () => {
   const handleCreateRoutine = async (e) => {
     e.preventDefault();
 
+    const selectedTrainings = data.trainings || [];
+
+    // Obtener una lista de objetos con los IDs y nombres de los entrenamientos seleccionados
+    const selectedTrainingsData = selectedTrainings.map((training) => ({
+      id: training.id,
+      name: training.name,
+    }));
+
     const routineData = {
       name: data.nameroutine,
       description: data.desroutine,
+      trainings: selectedTrainingsData || [], // Guardar los IDs y nombres de los entrenamientos seleccionados
+      days: data.days || '', // Agregar los días de entrenamiento
     };
+
     try {
       await addDoc(collection(db, "routines"), {
         ...routineData,
-
         timeStamp: serverTimestamp(),
       });
-      setMyMessage("creado");
+      setMyMessage("creada");
+      setData({
+        name: "",
+        description: "",
+        trainings: [],
+        days: ""
+      })
       setMessage(true);
       setTimeout(() => {
         setMessage(false);
@@ -355,6 +392,44 @@ const routine = () => {
       console.log(error);
     }
   };
+
+  const handleDeleteRoutine = async (id) => {
+    try {
+      await deleteDoc(doc(db, "routines", id));
+      console.log("Routine deleted");
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+    }
+  };
+  const handleUpdateRoutine = async (e, id, routineData) => {
+    e.preventDefault();
+    try {
+      const routineData = {
+        nameroutine: routineData.nameroutine,
+        desroutine: routineData.desroutine,
+        trainings: routineData.trainings,
+        days: routineData.days,
+        // Agrega otros campos que necesites actualizar
+      };
+
+      const docRef = doc(db, "routines", id);
+      await updateDoc(docRef, routineData);
+
+      console.log("Rutina actualizada");
+      setMyMessage("actualizada");
+      setMessage(true);
+
+      // Limpia los campos del formulario o realiza otras acciones necesarias
+
+      setTimeout(() => {
+        setMessage(false);
+        // Cierra el modal u otras acciones después de actualizar
+      }, 3000);
+    } catch (error) {
+      console.error("Error al actualizar la rutina: ", error);
+    }
+  };
+
 
   //Modales
 
@@ -505,14 +580,43 @@ const routine = () => {
               {routinesList && (
                 <div className={styles.myddbbitem}>
                   <h3>Mis Rutinas</h3>
-                  {routines.map((routine) => (
-                    <button
-                      key={routine.id}
-                      onClick={(e) => handleAssignTraining(e, routine.id)}
-                    >
-                      Asignar Rutina
-                    </button>
-                  ))}
+                  <table>
+                    <tr>
+                      <th>Nombre de la Rutina</th>
+                      <th>Descripción</th>
+                      <th>Entrenamientos</th>
+                      <th>Opciones</th>
+                    </tr>
+                    {routines.map((routine) => (
+                      <tr key={routine.id}>
+                        <td>{routine.name}</td>
+                        <td>{routine.description}</td>
+                        <td>
+                          {routine.trainings.map((training, index) => (
+                            <div key={index}>
+                              <p>{training.name}</p>
+                            </div>
+                          ))}
+                        </td>
+                        <td>
+                          <FaRegEdit size={20}
+                            onClick={() => {
+                              setUpdateRoutineId(routine.id);
+                              setShowRoutineModal(true);
+                            }} />
+                          <BsFillShareFill
+                            size={20}
+                            onClick={() => {
+                              setShowClient(true);
+                              setCurrentRoutine(routine.id);
+                            }}
+                          />
+                          <FaRegTrashAlt size={20} onClick={() => { handleDeleteRoutine(routine.id) }} />
+
+                        </td>
+                      </tr>
+                    ))}
+                  </table>
                 </div>
               )}
               {trainingsList && (
@@ -612,64 +716,9 @@ const routine = () => {
         )}
       </div>
       {showExerciseModal && (
-        <div className={styles.modal}>
-          <div className={styles.exContent}>
-            <FaDumbbell size={50} />
-            <form onSubmit={handleFormSubmit}>
-              <div>
-                <p>Ejercicio</p>
-                <input
-                  type="text"
-                  value={newexercise.name}
-                  onChange={(e) =>
-                    setNewExercise({
-                      ...newexercise,
-                      name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <p>Material necesario</p>
-                <input
-                  type="text"
-                  value={newexercise.material}
-                  onChange={(e) =>
-                    setNewExercise({
-                      ...newexercise,
-                      material: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <p>Comentarios</p>
-                <textarea
-                  type="text"
-                  value={newexercise.comments}
-                  onChange={(e) =>
-                    setNewExercise({
-                      ...newexercise,
-                      comments: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <button type="submit" className={styles.create}>
-                {updateExerciseId ? "Actualizar Ejercicio" : "Crear Ejercicio"}
-              </button>
-            </form>
-            <div
-              className={styles.closebutton}
-              onClick={handleCloseExerciseModal}
-            >
-              X
-            </div>
-            {message && (
-              <div className={styles.message}>Ejercicio creado con éxito</div>
-            )}
-          </div>
-        </div>
+        <Exercise
+          showExerciseModal={showExerciseModal} setShowExerciseModal={setShowExerciseModal}
+        />
       )}
       {showTrainingModal && (
         <div className={styles.modal}>
@@ -718,10 +767,10 @@ const routine = () => {
                       </div>
                       <div >
                         <div className={styles.supersets}>
-                          {exercise.exercises.map((exercise, index) => (
+                          {exercise && exercise.exercises && exercise.exercises.map((exercise, index) => (
                             <div className={styles.superset}>
                               <div>
-                                <p>Superset {index + 1}</p>
+                                <p>Serie {index + 1}</p>
                               </div>
 
                               <div>
@@ -729,10 +778,7 @@ const routine = () => {
                                 <p key={index}>{exercise.repetitions}</p>
                               </div>
 
-                              <div>
-                                <p>Series:</p>
-                                <p key={index}>{exercise.sets}</p>
-                              </div>
+
 
                             </div>
                           ))}
@@ -822,59 +868,59 @@ const routine = () => {
         </div>
       )}
       {addNewEx && (
-        <>
-          <form className={styles.secondWidth}>
-            <FaDumbbell size={50} />
-            <div>
-              <p>Ejercicio:</p>
-              {isExerciseFromList ? (
-                <p>{tExercise.name}</p>
-              ) : (
-                <input
-                  type="text"
-                  value={tExercise.name}
-                  onChange={(e) =>
-                    setTExercise({ ...tExercise, name: e.target.value })
-                  }
-                />
-              )}
-            </div>
-            <div className={styles.superset}>
-              <DynamicForm tExercise={tExercise} setTExercise={setTExercise} />
-            </div>
-            <div>
-              <p>Comentarios:</p>
-              <textarea
-                type="text"
-                value={tExercise.comments}
-                onChange={(e) =>
-                  setTExercise({ ...tExercise, comments: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <p>Materiales:</p>
+
+        <form className={styles.secondWidth}>
+          <FaDumbbell size={50} />
+          <div>
+            <p>Ejercicio:</p>
+            {isExerciseFromList ? (
+              <p>{tExercise.name}</p>
+            ) : (
               <input
                 type="text"
-                value={tExercise.material}
+                value={tExercise.name}
                 onChange={(e) =>
-                  setTExercise({ ...tExercise, material: e.target.value })
+                  setTExercise({ ...tExercise, name: e.target.value })
                 }
               />
-            </div>
-            <button onClick={handleAddExerciseClick} className={styles.create}>
-              Confirmar
-            </button>
-            <span
-              className={styles.closebutton}
-              onClick={() => {
-                setAddNewEx(false);
-              }}
-            >
-              X
-            </span>
-          </form>
-        </>
+            )}
+          </div>
+          <div className={styles.superset}>
+            <DynamicForm tExercise={tExercise} setTExercise={setTExercise} />
+          </div>
+          <div>
+            <p>Comentarios:</p>
+            <textarea
+              type="text"
+              value={tExercise.comments}
+              onChange={(e) =>
+                setTExercise({ ...tExercise, comments: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <p>Materiales:</p>
+            <input
+              type="text"
+              value={tExercise.material}
+              onChange={(e) =>
+                setTExercise({ ...tExercise, material: e.target.value })
+              }
+            />
+          </div>
+          <button onClick={handleAddExerciseClick} className={styles.create}>
+            Confirmar
+          </button>
+          <span
+            className={styles.closebutton}
+            onClick={() => {
+              setAddNewEx(false);
+            }}
+          >
+            X
+          </span>
+        </form>
+
       )}
       {selectExercises && (
         <form className={styles.secondWidth}>
@@ -920,8 +966,10 @@ const routine = () => {
         </form>
       )}
       {showRoutineModal && (
-        <div className={styles.modal}>
-          <div>
+        <div className={styles.modal}
+        >
+          <div className={styles.exContent} styles={{ display: showTrainingModal ? 'none' : '' }}>
+            <FaCalendarDay size={50} />
             <form onSubmit={handleCreateRoutine}>
               <div>
                 <p>Nombre:</p>
@@ -936,7 +984,7 @@ const routine = () => {
               </div>
               <div>
                 <p>Descripción:</p>
-                <input
+                <textarea
                   type="text"
                   value={data.desroutine}
                   onChange={(e) => {
@@ -945,50 +993,74 @@ const routine = () => {
                   }}
                 />
               </div>
-              <h3>Entrenamiento</h3>
-              {trainings.map((training) => (
-                <div key={training.id}>
-                  <input
-                    type="checkbox"
-                    id={training.id}
-                    value={training.id}
-                    onChange={(e) => handleAddTrainingToRoutine(training.id)}
-                  />
-                  <label htmlFor={training.id}>{training.name}</label>
-                </div>
-              ))}
-              <h3>Días</h3>
-              <div className={styles.myweek}>
+              <h2>Añade Tus Entrenamientos</h2>
+              <h3>Selecciona desde tu Banco de ejercicios</h3>
+              <div className={styles.addtrainings}>
 
-                <div className={styles.myday}>
-                  <input
-                    type="text"
-
-                    value={data.day}
-                    onChange={(e) =>
-                      setData({ ...data, day: e.target.value })
-                    }
-                  />
-                  <label>Días de entrenamiento</label>
-                </div>
-
+                {trainings.map((training) => (
+                  <div key={training.id} className={styles.trainingCheckbox}>
+                    <input
+                      type="checkbox"
+                      id={training.id}
+                      value={training.id}
+                      onChange={(e) => {
+                        // Verificar si el entrenamiento está seleccionado
+                        const selectedTrainings = data.trainings || [];
+                        if (e.target.checked) {
+                          // Agregarlo a la lista si está marcado
+                          selectedTrainings.push({
+                            id: training.id,
+                            name: training.name,
+                          });
+                        } else {
+                          // Quitarlo de la lista si está desmarcado
+                          const index = selectedTrainings.findIndex(
+                            (item) => item.id === training.id
+                          );
+                          if (index !== -1) {
+                            selectedTrainings.splice(index, 1);
+                          }
+                        }
+                        setData({ ...data, trainings: selectedTrainings });
+                      }}
+                    />
+                    <label htmlFor={training.id}>{training.name}</label>
+                  </div>
+                ))}
               </div>
-              <div className={styles.create} onClick={handleCreateRoutine}>
+              <h3 onClick={() => {
+                setShowTrainingModal(true);
+                setShowRoutineModal(false);
+                setCurrent(true);
+              }} >Crea tus nuevos entrenamientos</h3>
+
+              <h3>Días de entrenamiento</h3>
+              <div className={styles.myday}>
+                <input
+                  type="text"
+                  value={data.days || ''}
+                  onChange={(e) => setData({ ...data, days: e.target.value })}
+                />
+              </div>
+
+              <button className={styles.create} onClick={handleCreateRoutine}>
                 Crear Rutina
-              </div>
+              </button>
             </form>
-            <div
-              className={styles.closebutton}
-              onClick={handleCloseRoutineModal}
-            >
+            <div className={styles.closebutton} onClick={handleCloseRoutineModal}>
               X
             </div>
+            {message && (
+              <div className={styles.message}>
+                Rutina {myMessage} con éxito
+              </div>
+            )}
           </div>
         </div>
       )}
       {showClient && (
         <div className={styles.share}>
-          {myData
+          {clients
             .filter((data) => data.role === "client")
             .map((data) => (
               <div
@@ -1005,7 +1077,7 @@ const routine = () => {
                 <p>{data.username}</p>
               </div>
             ))}
-          <button onClick={() => setShowClient(false)}>Cerrar</button>
+          <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
         </div>
       )}
     </div>

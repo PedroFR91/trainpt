@@ -142,99 +142,13 @@ const userList = () => {
                     </>
 
                   )}
-                <div >
-                  <span className={styles.spanbutton} onClick={() => showClient(data)}>Ver Info</span>
-                </div>
+                <Link href={`/shared/clients/${data.id}`} >
+                  <span className={styles.spanbutton} >Ver Info</span>
+                </Link>
               </div>
             </div>
           ))}
-        {show && (
-          <div className={styles.client}>
-            <div>
-              {current.img ? (
-                <img src={current.img} alt={"myprofileimg"} />
-              ) : (
-                <img src="/face.jpg" alt={"myprofileimg"} />
-              )}
-            </div>
-            <h1>{current.username}</h1>
-            <div className={styles.sectionClient}>
-              <div>
-                <p>Medidas</p>
-                <div>
-                  <FaChartLine size={80} />
-                </div>
-              </div>
-              <div>
-                <p>
-                  Fotos
-                </p>
-                <div>
-                  <FaCamera size={80} />
-                </div>
-              </div>
-              <div>
-                <p>Formularios</p>
-                <div>
-                  <FaFile size={80} />
-                </div>
-                {/* <div>
-                  {myForm
-                    .filter((form) => form.link === current.id)
-                    .map((form) => (
-                      <div key={form.id}>
-                        <Link href={`/share/${form.id}`}>Ver</Link>
-                      </div>
-                    ))}
-                </div> */}
-              </div>
-              <div>
-                <p>
-                  Entrenamientos
-                </p>
-                <div>
-                  <FaRunning size={80} />
-                </div>
-              </div>
-              <div>
-                <p>Rutina asignada</p>
-                {/* <div>
-                  {routine
-                    .filter((data) => data.link === current.id)
-                    .map((routine) => (
-                      <div key={routine.id} className={styles.routine}>
-                        <div>
-                          <p>
-                            <span>{routine.nameroutine}</span>
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                </div> */}
-                <div>
-                  <FaFile size={80} />
-                </div>
 
-              </div>
-              <div>
-                <p>
-                  Dieta asignada
-                </p>
-                <div>
-                  <MdFoodBank size={80} />
-                </div>
-              </div>
-            </div>
-
-
-            <button
-              onClick={() => setShow(false)}
-              className={styles.closeButton}
-            >
-              X
-            </button>
-          </div>
-        )}
       </div>
 
     </div >

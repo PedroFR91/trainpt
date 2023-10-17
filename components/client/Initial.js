@@ -60,6 +60,7 @@ const Initial = (props) => {
       },
     });
   };
+
   const uploadPhoto = async (fieldName, file) => {
     if (file) {
       const name = new Date().getTime() + file.name;

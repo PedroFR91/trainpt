@@ -10,6 +10,7 @@ import {
   doc,
   getDoc,
   onSnapshot,
+  query,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
@@ -40,6 +41,8 @@ const files = () => {
   const [viewMyVideos, setViewMyVideos] = useState(false);
   const [viewMyFiles, setViewMyFiles] = useState(false);
   const [viewUploadFiles, setViewUploadFiles] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [showClient, setShowClient] = useState(false);
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -128,7 +131,24 @@ const files = () => {
       setUrl(videoList[0].url);
     }
   }, [videoList]);
+  useEffect(() => {
+    if (data) {
+      // Realizar la consulta para obtener todos los usuarios
+      const q = query(collection(db, "users"));
+      const unsub = onSnapshot(q, (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        // Actualizar el estado con todos los usuarios
+        setClients(list);
+      });
 
+      return () => {
+        unsub();
+      };
+    }
+  }, [data]);
   const handleUpload = async (e) => {
     e.preventDefault();
     const name = new Date().getTime() + file.name;
@@ -338,6 +358,11 @@ const files = () => {
                       <a href={item.img} target="_blank">
                         Ver/Descargar
                       </a>
+                      <a onClick={() => {
+                        setShowClient(true);
+                      }}>
+                        Asignar
+                      </a>
                       <FaTrashAlt
                         size={20}
                         onClick={() => deleteFile(item.id)}
@@ -357,6 +382,28 @@ const files = () => {
               </div>
             </>
           )}
+        </div>
+      )}
+      {showClient && (
+        <div className={styles.share}>
+          {clients
+            .filter((data) => data.role === "client")
+            .map((data) => (
+              <div
+                key={data.id}
+                onClick={() => selectTrainer(currentForm.id, data.id)}
+              >
+                <div>
+                  {data.img ? (
+                    <img src={data.img} alt={"myprofileimg"} />
+                  ) : (
+                    <img src="/face.jpg" alt={"myprofileimg"} />
+                  )}
+                </div>
+                <p>{data.username}</p>
+              </div>
+            ))}
+          <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
         </div>
       )}
       <Chat />
