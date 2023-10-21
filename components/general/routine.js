@@ -16,7 +16,7 @@ import { db } from "../../firebase.config";
 import styles from "../../styles/routines.module.css";
 import { getAuth } from "firebase/auth";
 import AuthContext from "../../context/AuthContext";
-
+import DynamicForm from '../../forms/DynamicForm'
 import {
   FaRunning,
   FaCalendarDay,
@@ -25,10 +25,10 @@ import {
   FaRegTrashAlt,
   FaPlus,
   FaCopy,
+  FaCalendar,
+  FaDatabase,
 } from "react-icons/fa";
-import { BsFillShareFill } from 'react-icons/bs';
-import { AiOutlineArrowLeft } from 'react-icons/ai'
-import DynamicForm from "../../forms/DynamicForm";
+import Training from "./training";
 const routine = () => {
   const [data, setData] = useState([""]);
   const [exercises, setExercises] = useState([]);
@@ -55,7 +55,7 @@ const routine = () => {
   const [copyTrainingId, setCopyTrainingId] = useState(null);
   const [trainingExercises, setTrainingExercises] = useState([]);
   const [addExercise, setAddExercise] = useState(false);
-  const [currentTraining, setCurrentTraining] = useState([]);
+
   const [tExercise, setTExercise] = useState([]);
   const [showExerciseFields, setShowExerciseFields] = useState(false);
   const [isExerciseFromList, setIsExerciseFromList] = useState(false);
@@ -65,13 +65,9 @@ const routine = () => {
   const user = auth.currentUser;
   const [seriesData, setSeriesData] = useState([{ repetitions: "", sets: "" }]);
   const [myMessage, setMyMessage] = useState("");
-  const [toggle, setToggle] = useState(false);
+
   const [clients, setClients] = useState([]);
-  const [newTrain, setNewTrain] = useState({
-    name: "",
-    material: "",
-    comments: "",
-  })
+  const [step, setStep] = useState('one')
 
   useEffect(() => {
     if (myData) {
@@ -226,37 +222,6 @@ const routine = () => {
       });
     }
   }, [updateExerciseId, exercises]);
-
-  // Para crear entrenamientos
-
-  const handleCreateTraining = async (e) => {
-    e.preventDefault();
-
-    const trainingData = {
-      name: newTrain.name,
-      description: newTrain.description,
-      // exercises: trainingData.exerciseData,
-    };
-    try {
-      await addDoc(collection(db, "trainings"), {
-        ...trainingData,
-        exercises: currentTraining,
-        timeStamp: serverTimestamp(),
-      });
-      setMyMessage("creado");
-      setMessage(true);
-      setNewTrain({
-        name: "",
-        description: "",
-        exercises: [],
-      })
-      setTimeout(() => {
-        setMessage(false);
-      }, 3000);
-    } catch (error) {
-      console.log(error);
-    }
-  };
   const handleDeleteTraining = async (id) => {
     try {
       await deleteDoc(doc(db, "trainings", id));
@@ -265,82 +230,6 @@ const routine = () => {
       console.error("Error deleting document: ", error);
     }
   };
-  const handleUpdateTraining = async (e, id, updatedTraining) => {
-    e.preventDefault();
-    const trainingData = {
-      name: newTrain.name,
-      description: newTrain.description,
-      // exercises: trainingData.exerciseData,
-    };
-    try {
-      const docRef = doc(db, "trainings", id);
-      await updateDoc(docRef, {
-        updatedTraining,
-        ...trainingData,
-        exercises: currentTraining,
-      });
-      console.log("Document updated");
-      setMyMessage("actualizado");
-      setMessage(true);
-      setNewTrain({
-        name: "",
-        description: "",
-        exercises: [],
-      })
-      setTimeout(() => {
-        setMessage(false);
-      }, 3000);
-    } catch (error) {
-      console.error("Error updating document: ", error);
-    }
-  };
-  const handleCopyTraining = async (id, updatedTraining) => {
-    try {
-      const docRef = doc(db, "trainings", id);
-      await addDoc(docRef, updatedTraining);
-      console.log("Document updated");
-    } catch (error) {
-      console.error("Error updating document: ", error);
-    }
-  };
-
-  const handleAssignExercise = async (e, trainingId) => {
-    e.preventDefault();
-    const exerciseId = e.target.value;
-    try {
-      const trainingRef = doc(db, "trainings", trainingId);
-      const trainingData = (await getDoc(trainingRef)).data();
-
-      const updatedExercises = [...trainingData.exercises, exerciseId];
-      await updateDoc(trainingRef, { exercises: updatedExercises });
-    } catch (error) {
-      console.error("Error al asignar el ejercicio al entrenamiento: ", error);
-    }
-  };
-
-  const handleAssignTraining = async (e, routineId) => {
-    e.preventDefault();
-    const trainingId = e.target.value; // Aquí asumo que el id del entrenamiento se encuentra en el valor del botón
-    try {
-      const trainingRef = doc(db, "trainings", trainingId);
-      const routineRef = doc(db, "routines", routineId);
-      const routineData = (await getDoc(routineRef)).data();
-
-      const updatedRoutine = {
-        ...routineData,
-        trainings: [...routineData.trainings, { ...trainingRef }],
-      };
-
-      await setDoc(routineRef, updatedRoutine);
-    } catch (error) {
-      console.error("Error al asignar el entrenamiento a la rutina: ", error);
-    }
-  };
-
-  const asignRoutine = (id) => {
-    setShowClient(true);
-    setCurrentRoutine(id);
-  };
 
   const selectTrainer = async (cr, id) => {
     await updateDoc(doc(db, "routines", cr), {
@@ -348,12 +237,7 @@ const routine = () => {
     });
     setShowClient(false);
   };
-  const handleView = (id) => {
-    setVisible(true);
-    setRoutineId(id); // Guarde el ID de la rutina seleccionada en el estado
-  };
   //Create Routine
-
   const handleCreateRoutine = async (e) => {
     e.preventDefault();
 
@@ -430,20 +314,7 @@ const routine = () => {
     }
   };
 
-
   //Modales
-
-  const handleCloseExerciseModal = () => {
-    setShowExerciseModal(false);
-    // Restablece cualquier estado relacionado con el modal de ejercicio aquí
-  };
-
-  const handleCloseTrainingModal = () => {
-    setShowTrainingModal(false);
-    setCurrent(false);
-    // setTrainingData('');
-    // Restablece cualquier estado relacionado con el modal de entrenamiento aquí
-  };
 
   const handleAddExerciseToTraining = (exerciseId, checked) => {
     if (checked) {
@@ -537,6 +408,7 @@ const routine = () => {
     }
     setSeriesData(values);
   };
+
 
   return (
     <div className={styles.routinesContainer}>
@@ -720,341 +592,150 @@ const routine = () => {
           showExerciseModal={showExerciseModal} setShowExerciseModal={setShowExerciseModal}
         />
       )}
-      {showTrainingModal && (
-        <div className={styles.modal}>
-          <div className={styles.exContent}>
-            <FaRunning size={50} />
-            <form>
-              <div>
-                <p>Entrenamiento:</p>
-                <input
-                  type="text"
-                  value={newTrain.name}
-                  onChange={(e) => {
-                    setNewTrain({ ...newTrain, name: e.target.value });
-                  }}
-                />
-              </div>
-              <div>
-                <p>Descripción:</p>
-                <textarea
-                  type="text"
-                  value={newTrain.description}
-                  onChange={(e) =>
-                    setNewTrain({
-                      ...newTrain,
-                      description: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </form>
-            {toggle && (
-              <div className={styles.myCurrent}>
-                <h3>Entrenamiento en Proceso</h3>
-                <div>
-                  {newTrain.name && <p>Nombre: {newTrain.name}</p>}
-                  {newTrain.description && (
-                    <p>Descripción: {newTrain.description}</p>
-                  )}
-                </div>
-                <div className={styles.myexs}>
-                  {currentTraining.map((exercise, index) => (
-                    <div key={index} className={styles.thisTraining}>
-                      <div>
-                        <p>Nombre: </p>
-                        <p>{exercise.name}</p>
-                      </div>
-                      <div >
-                        <div className={styles.supersets}>
-                          {exercise && exercise.exercises && exercise.exercises.map((exercise, index) => (
-                            <div className={styles.superset}>
-                              <div>
-                                <p>Serie {index + 1}</p>
-                              </div>
-
-                              <div>
-                                <p>Repeticiones:</p>
-                                <p key={index}>{exercise.repetitions}</p>
-                              </div>
-
-
-
-                            </div>
-                          ))}
-                        </div>
-
-                      </div>
-
-                      <div>
-                        <p>Materiales: </p>
-                        <p>{exercise.material}</p>
-                      </div>
-                      <div>
-                        <p>Comentarios: </p>
-                        <p>{exercise.comments}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveExercise(index)}
-                        className={styles.create}
-                      >
-                        <FaRegTrashAlt size={20} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div
-                  className={styles.backbutton}
-                  onClick={() => setToggle(false)}
-                >
-                  <AiOutlineArrowLeft />
-                </div>
-                <button
-                  onClick={(e) =>
-                    updateTrainingId
-                      ? handleUpdateTraining(e, updateTrainingId, newTrain)
-                      : handleCreateTraining(e)
-                  }
-                  className={styles.create}
-                  disabled={!tExercise}
-                >
-                  {updateTrainingId
-                    ? "Actualizar Entrenamiento"
-                    : "Crear Entrenamiento"}
-                </button>
-              </div>
-            )}
-            <div className={styles.trainingButton}>
-              <div>
-                <button
-                  className={styles.create}
-                  onClick={() => {
-                    setAddNewEx(true);
-                    setSelectExercises(false);
-                  }}
-                >
-                  Nuevo ejercicio
-                </button>
-                <button
-                  className={styles.create}
-                  onClick={() => {
-                    setSelectExercises(true);
-                    setAddNewEx(false);
-                  }}
-                >
-                  Añadir desde BBDD
-                </button>
-              </div>
-              {!toggle && <button
-                className={styles.create}
-                onClick={() => setToggle(true)}
-              >
-                Ver Actual
-              </button>}
-
-            </div>
-            <div
-              className={styles.closebutton}
-              onClick={handleCloseTrainingModal}
-            >
-              X
-            </div>
-            {message && (
-              <div className={styles.message}>
-                Entrenamiento {myMessage} con éxito
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {addNewEx && (
-
-        <form className={styles.secondWidth}>
-          <FaDumbbell size={50} />
-          <div>
-            <p>Ejercicio:</p>
-            {isExerciseFromList ? (
-              <p>{tExercise.name}</p>
-            ) : (
-              <input
-                type="text"
-                value={tExercise.name}
-                onChange={(e) =>
-                  setTExercise({ ...tExercise, name: e.target.value })
-                }
-              />
-            )}
-          </div>
-          <div className={styles.superset}>
-            <DynamicForm tExercise={tExercise} setTExercise={setTExercise} />
-          </div>
-          <div>
-            <p>Comentarios:</p>
-            <textarea
-              type="text"
-              value={tExercise.comments}
-              onChange={(e) =>
-                setTExercise({ ...tExercise, comments: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <p>Materiales:</p>
-            <input
-              type="text"
-              value={tExercise.material}
-              onChange={(e) =>
-                setTExercise({ ...tExercise, material: e.target.value })
-              }
-            />
-          </div>
-          <button onClick={handleAddExerciseClick} className={styles.create}>
-            Confirmar
-          </button>
-          <span
-            className={styles.closebutton}
-            onClick={() => {
-              setAddNewEx(false);
-            }}
-          >
-            X
-          </span>
-        </form>
-
-      )}
-      {selectExercises && (
-        <form className={styles.secondWidth}>
-          <h3>Banco de Ejercicios</h3>
-          <table>
-            <tr>
-              <th>Nombre</th>
-              <th>Equipamiento</th>
-              <th>Comentarios</th>
-              <th>Opciones</th>
-            </tr>
-            {exercises.map((exercise) => (
-              <tr key={exercise} className={styles.exercise}>
-                <td>{exercise.name}</td>
-                <td>{exercise.material}</td>
-                <td>{exercise.comments}</td>
-                <td>
-                  <FaPlus
-                    size={20}
-                    onClick={(e) => {
-                      setSelectExercises(false);
-                      setTExercise({
-                        ...exercise,
-                        name: exercise.name,
-                        repetitions: "",
-                        sets: "",
-                      });
-                      setAddNewEx(true);
-                    }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </table>
-          <span
-            className={styles.closebuttontwo}
-            onClick={() => {
-              setSelectExercises(false);
-            }}
-          >
-            X
-          </span>
-        </form>
-      )}
+      {showTrainingModal && <Training showTrainingModal={showTrainingModal} setShowTrainingModal={setShowTrainingModal} />}
       {showRoutineModal && (
         <div className={styles.modal}
         >
           <div className={styles.exContent} styles={{ display: showTrainingModal ? 'none' : '' }}>
-            <FaCalendarDay size={50} />
+            <div className={styles.trainsteps}>
+              <div onClick={() => { setStep('one') }}
+                style={step === 'one' ? {
+                  backgroundColor: '#f69d21', color: '#000000',
+                  borderColor: '#000000'
+                } : { backgroundColor: '#000000' }}>
+                <p>Define tu rutina</p>
+                <p>
+                  <FaCalendarDay size={50} />
+                </p>
+              </div>
+              <div onClick={() => { setStep('two') }}
+                style={step === 'two' ? {
+                  backgroundColor: '#f69d21', color: '#000000',
+                  borderColor: '#000000'
+                } : { backgroundColor: '#000000' }}>
+                <p>Crea un entrenamiento</p>
+                <p>
+                  <FaRunning size={50} />
+                </p>
+              </div>
+              <div onClick={() => { setStep('three') }}
+                style={step === 'three' ? {
+                  backgroundColor: '#f69d21', color: '#000000',
+                  borderColor: '#000000'
+                } : { backgroundColor: '#000000' }}>
+                <p>Añade entrenamientos existentes</p>
+                <p>
+                  <FaDatabase size={50} />
+                </p>
+              </div>
+              <div onClick={() => { setStep('four') }}
+                style={step === 'four' ? {
+                  backgroundColor: '#f69d21', color: '#000000',
+                  borderColor: '#000000'
+                } : { backgroundColor: '#000000' }}>
+                <p>Organiza tu rutina</p>
+                <p>
+                  <FaCalendar size={50} />
+                </p>
+              </div>
+              <div onClick={() => { setStep('five') }}
+                style={step === 'five' ? {
+                  backgroundColor: '#f69d21', color: '#000000',
+                  borderColor: '#000000'
+                } : { backgroundColor: '#000000' }}>
+                <p>Envía entrenamiento</p>
+                <p>
+                  <FaRunning size={50} />
+                </p>
+              </div>
+            </div>
             <form onSubmit={handleCreateRoutine}>
-              <div>
-                <p>Nombre:</p>
-                <input
-                  type="text"
-                  value={data.nameroutine}
-                  onChange={(e) => {
-                    setData({ ...data, nameroutine: e.target.value });
-                    console.log(data);
-                  }}
-                />
-              </div>
-              <div>
-                <p>Descripción:</p>
-                <textarea
-                  type="text"
-                  value={data.desroutine}
-                  onChange={(e) => {
-                    setData({ ...data, desroutine: e.target.value });
-                    console.log(data);
-                  }}
-                />
-              </div>
-              <h2>Añade Tus Entrenamientos</h2>
-              <h3>Selecciona desde tu Banco de ejercicios</h3>
-              <div className={styles.addtrainings}>
 
-                {trainings.map((training) => (
-                  <div key={training.id} className={styles.trainingCheckbox}>
+              {step === 'one' &&
+                <>
+                  <FaCalendarDay size={50} />
+                  <div>
+                    <p>Nombre:</p>
                     <input
-                      type="checkbox"
-                      id={training.id}
-                      value={training.id}
+                      type="text"
+                      value={data.nameroutine}
                       onChange={(e) => {
-                        // Verificar si el entrenamiento está seleccionado
-                        const selectedTrainings = data.trainings || [];
-                        if (e.target.checked) {
-                          // Agregarlo a la lista si está marcado
-                          selectedTrainings.push({
-                            id: training.id,
-                            name: training.name,
-                          });
-                        } else {
-                          // Quitarlo de la lista si está desmarcado
-                          const index = selectedTrainings.findIndex(
-                            (item) => item.id === training.id
-                          );
-                          if (index !== -1) {
-                            selectedTrainings.splice(index, 1);
-                          }
-                        }
-                        setData({ ...data, trainings: selectedTrainings });
+                        setData({ ...data, nameroutine: e.target.value });
+                        console.log(data);
                       }}
                     />
-                    <label htmlFor={training.id}>{training.name}</label>
                   </div>
-                ))}
-              </div>
-              <h3 onClick={() => {
-                setShowTrainingModal(true);
-                setShowRoutineModal(false);
-                setCurrent(true);
-              }} >Crea tus nuevos entrenamientos</h3>
+                  <div>
+                    <p>Descripción:</p>
+                    <textarea
+                      type="text"
+                      value={data.desroutine}
+                      onChange={(e) => {
+                        setData({ ...data, desroutine: e.target.value });
+                        console.log(data);
+                      }}
+                    />
+                  </div>
+                </>}
+              {step === 'two' &&
+                <> <h3 onClick={() => {
+                  setShowTrainingModal(true);
+                  setShowRoutineModal(false);
+                  setCurrent(true);
+                }} >Crea tus nuevos entrenamientos</h3>
+                </>}
+              {step === 'three' && <>  <h2>Añade Tus Entrenamientos</h2>
+                <h3>Selecciona desde tu Banco de ejercicios</h3>
+                <div className={styles.addtrainings}>
 
-              <h3>Días de entrenamiento</h3>
-              <div className={styles.myday}>
-                <input
-                  type="text"
-                  value={data.days || ''}
-                  onChange={(e) => setData({ ...data, days: e.target.value })}
-                />
-              </div>
+                  {trainings.map((training) => (
+                    <div key={training.id} className={styles.trainingCheckbox}>
+                      <input
+                        type="checkbox"
+                        id={training.id}
+                        value={training.id}
+                        onChange={(e) => {
+                          // Verificar si el entrenamiento está seleccionado
+                          const selectedTrainings = data.trainings || [];
+                          if (e.target.checked) {
+                            // Agregarlo a la lista si está marcado
+                            selectedTrainings.push({
+                              id: training.id,
+                              name: training.name,
+                            });
+                          } else {
+                            // Quitarlo de la lista si está desmarcado
+                            const index = selectedTrainings.findIndex(
+                              (item) => item.id === training.id
+                            );
+                            if (index !== -1) {
+                              selectedTrainings.splice(index, 1);
+                            }
+                          }
+                          setData({ ...data, trainings: selectedTrainings });
+                        }}
+                      />
+                      <label htmlFor={training.id}>{training.name}</label>
+                    </div>
+                  ))}
+                </div></>}
+              {step === 'four' && <> <h3>Días de entrenamiento</h3>
+                <div className={styles.myday}>
+                  <input
+                    type="text"
+                    value={data.days || ''}
+                    onChange={(e) => setData({ ...data, days: e.target.value })}
+                  />
+                </div>
+              </>}
 
-              <button className={styles.create} onClick={handleCreateRoutine}>
+              {step === 'five' && <>  <button className={styles.create} onClick={handleCreateRoutine}>
                 Crear Rutina
-              </button>
+              </button></>}
             </form>
             <div className={styles.closebutton} onClick={handleCloseRoutineModal}>
               X
             </div>
-            {message && (
-              <div className={styles.message}>
-                Rutina {myMessage} con éxito
-              </div>
-            )}
           </div>
         </div>
       )}

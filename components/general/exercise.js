@@ -12,7 +12,8 @@ import styles from "../../styles/routines.module.css";
 import {
     FaDumbbell,
 } from "react-icons/fa";
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const exercise = (props) => {
 
     const [exercises, setExercises] = useState([]);
@@ -20,9 +21,22 @@ const exercise = (props) => {
     const [message, setMessage] = useState(false);
     const [updateExerciseId, setUpdateExerciseId] = useState(null);
     const [tExercise, setTExercise] = useState([]);
-    const { showExerciseModal, setShowExerciseModal } = props;
+    const { setShowExerciseModal } = props;
 
-
+    useEffect(() => {
+        if (updateExerciseId) {
+            const exerciseToUpdate = exercises.find(
+                (exercise) => exercise.id === updateExerciseId
+            );
+            setNewExercise(exerciseToUpdate);
+        } else {
+            setNewExercise({
+                exercise_name: "",
+                material: "",
+                comments: "",
+            });
+        }
+    }, [updateExerciseId, exercises]);
     // Para crear ejercicios
     const handleFormSubmit = async (e) => {
         e.preventDefault();
@@ -55,12 +69,11 @@ const exercise = (props) => {
                 ...exerciseData,
                 timeStamp: serverTimestamp(),
             });
+            notify("Ejercicio creado");
 
-            setMessage(true);
-            setTimeout(() => {
-                setMessage(false);
-            }, 3000);
+
         } catch (error) {
+            notify("Error al crear el ejercicio");
             console.log(error);
         }
     };
@@ -77,20 +90,7 @@ const exercise = (props) => {
     const handleCloseExerciseModal = () => {
         setShowExerciseModal(false);
     };
-    useEffect(() => {
-        if (updateExerciseId) {
-            const exerciseToUpdate = exercises.find(
-                (exercise) => exercise.id === updateExerciseId
-            );
-            setNewExercise(exerciseToUpdate);
-        } else {
-            setNewExercise({
-                exercise_name: "",
-                material: "",
-                comments: "",
-            });
-        }
-    }, [updateExerciseId, exercises]);
+    const notify = (msg) => toast(msg);
     return (
         <div className={styles.modal}>
             <div className={styles.exContent}>
@@ -145,9 +145,7 @@ const exercise = (props) => {
                 >
                     X
                 </div>
-                {message && (
-                    <div className={styles.message}>Ejercicio creado con éxito</div>
-                )}
+                <ToastContainer style={{ position: 'fixed', top: '20vh', right: '10%' }} />
             </div>
         </div>
     )
