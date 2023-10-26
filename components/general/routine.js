@@ -16,7 +16,6 @@ import { db } from "../../firebase.config";
 import styles from "../../styles/routines.module.css";
 import { getAuth } from "firebase/auth";
 import AuthContext from "../../context/AuthContext";
-import DynamicForm from '../../forms/DynamicForm'
 import {
   FaRunning,
   FaCalendarDay,
@@ -733,9 +732,10 @@ const routine = () => {
                 Crear Rutina
               </button></>}
             </form>
-            <div className={styles.closebutton} onClick={handleCloseRoutineModal}>
-              X
-            </div>
+
+          </div>
+          <div className={styles.closebutton} onClick={handleCloseRoutineModal}>
+            X
           </div>
         </div>
       )}

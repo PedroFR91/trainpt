@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { FaRegEdit, FaRegTrashAlt } from 'react-icons/fa';
-
+import { FaPlus, FaRegEdit, FaRegTrashAlt } from 'react-icons/fa';
+import styles from '../styles/routines.module.css'
 function DynamicForm({ tExercise, setTExercise }) {
     const [exercises, setExercises] = useState([{ repetitions: '', sets: '' }]);
 
@@ -31,27 +31,30 @@ function DynamicForm({ tExercise, setTExercise }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: 'fit-content' }}>
             {exercises.map((exercise, index) => (
-                <div key={index} >
-                    <p>Repeticiones:</p>
-                    <input
-                        type="text"
-                        name="repetitions"
-                        value={exercise.repetitions}
-                        onChange={(e) => { handleInputChange(index, e); }}
-                    />
-                    <p>Series {index + 1}</p>
-                    {/* <input
-                        type="text"
-                        name="sets"
-                        value={exercise.sets}
-                        onChange={(e) => handleInputChange(index, e)}
-                    /> */}
-                    <button type="button" onClick={() => handleRemoveExercise(index)}>
-                        <FaRegTrashAlt />
-                    </button>
+                <div key={index} className={styles.mydinamic}>
+                    <div>
+                        <p>Series {index + 1}</p>
+
+                        <div onClick={() => handleRemoveExercise(index)} className={styles.addexercisebutton}>
+                            <FaRegTrashAlt />
+                        </div>
+                    </div>
+                    <div>
+                        <p>Repeticiones:</p>
+                        <input
+                            type="text"
+                            name="repetitions"
+                            value={exercise.repetitions}
+                            onChange={(e) => { handleInputChange(index, e); }}
+                        />
+
+                    </div>
                 </div>
             ))}
-            <button type="button" onClick={handleAddExercise}><FaRegEdit /></button>
+            <button onClick={handleAddExercise} className={styles.addexercisebutton}>
+                <p style={{ color: '#212121' }}>Añadir Serie</p>
+                <FaPlus />
+            </button>
         </div>
     );
 }

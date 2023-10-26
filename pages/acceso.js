@@ -30,6 +30,7 @@ const acceso = () => {
   const [selected, setSelected] = useState("trainer");
   const [error, setError] = useState(false);
   const [message, setMessage] = useState(null);
+  const [status, setStatus] = useState('Pendiente')
   const signInWithGoogle = async () => {
     try {
       const res = await signInWithPopup(auth, provider);
@@ -57,6 +58,7 @@ const acceso = () => {
           email: user.email,
           username: user.displayName,
           role: selected,
+          status: status,
           img: user.photoURL,
           timeStamp: serverTimestamp(),
           googleLinked: true,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaRunning, FaDumbbell, FaPlus, FaRegTrashAlt } from 'react-icons/fa';
+import { FaRunning, FaDumbbell, FaPlus, FaRegTrashAlt, FaMinus, FaEdit } from 'react-icons/fa';
 import { AiFillDatabase, AiOutlineSend } from 'react-icons/ai';
 import { MdCreate } from 'react-icons/md'
 import styles from "../../styles/routines.module.css";
@@ -8,6 +8,7 @@ import { db } from '../../firebase.config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DynamicForm from '../../forms/DynamicForm'
+import { IoIosArrowForward } from 'react-icons/io'
 const Training = (props) => {
     const [newTrain, setNewTrain] = useState({
         name: "",
@@ -25,7 +26,7 @@ const Training = (props) => {
     const [updateTrainingId, setUpdateTrainingId] = useState(null);
     const [isExerciseFromList, setIsExerciseFromList] = useState(false);
     const [exercises, setExercises] = useState([]);
-
+    const [viewCreate, setViewCreate] = useState(false);
     const [step, setStep] = useState('one');
     // Para crear entrenamientos
     useEffect(() => {
@@ -151,7 +152,6 @@ const Training = (props) => {
             console.error("Error al asignar el entrenamiento a la rutina: ", error);
         }
     };
-
     const handleCloseTrainingModal = () => {
         setShowTrainingModal(false);
         // setCurrent(false);
@@ -165,6 +165,7 @@ const Training = (props) => {
         setAddNewEx(false);
         setSelectExercises(false);
         setTExercise([]);
+        setStep('two')
         notify('Ejercicio añadido')
     };
     const handleRemoveExercise = (index) => {
@@ -173,94 +174,253 @@ const Training = (props) => {
         setCurrentTraining(newTraining);
     };
 
+    //Steps
+    const next = (step) => {
+        switch (step) {
+            case 'one':
+                setStep('two');
+                break;
+            case 'two':
+                setStep('three');
+                break;
+            case 'three':
+                setStep('four');
+                break;
+            default:
+                break;
+        }
+    }
+    const prev = (step) => {
+        switch (step) {
+            case 'four':
+                setStep('three');
+                break;
+            case 'three':
+                setStep('two');
+                break;
+            case 'two':
+                setStep('one');
+                break;
+
+            default:
+                break;
+        }
+    }
+
     return (
         <div className={styles.modal}>
             <div className={styles.exContent}>
                 <div className={styles.trainsteps}>
-                    <div onClick={() => { setStep('one') }}
-                        style={step === 'one' ? {
-                            backgroundColor: '#f69d21', color: '#000000',
-                            borderColor: '#000000'
-                        } : { backgroundColor: '#000000' }}>
-                        <p>Define tu entrenamiento</p>
-                        <p>
-                            <FaRunning size={50} />
-                        </p>
-                    </div>
-                    <div onClick={() => { setStep('two') }}
+                    {step === 'one' &&
+                        <div
+                            style={step === 'one' ? {
+                                backgroundColor: '#f69d21', color: '#000000',
+                                borderColor: '#000000'
+                            } : { backgroundColor: '#000000' }}>
+                            <div>
+                                <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                            </div>
+                            <div>
+                                <h3>Define tu entrenamiento</h3>
+                                <p>
+                                    <FaRunning size={50} />
+                                </p>
+                            </div>
+                            <div>
+                                <IoIosArrowForward size={50} onClick={() => next(step)} />
+                            </div>
+
+                        </div>}
+                    {step === 'two' && <div
                         style={step === 'two' ? {
                             backgroundColor: '#f69d21', color: '#000000',
                             borderColor: '#000000'
                         } : { backgroundColor: '#000000' }}>
-                        <p>Crea ejercicios</p>
-                        <p>
-                            <MdCreate size={50} />
-                        </p>
-                    </div>
-                    <div onClick={() => { setStep('three') }}
+                        <div>
+                            <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                        </div>
+                        <div>
+                            <h3>Añade ejercicios existentes</h3>
+                            <p>
+                                <AiFillDatabase size={50} />
+                            </p>
+                        </div>
+
+                        <div>
+                            <IoIosArrowForward size={50} onClick={() => next(step)} />
+                        </div>
+                    </div>}
+                    {step === 'three' && <div
                         style={step === 'three' ? {
                             backgroundColor: '#f69d21', color: '#000000',
                             borderColor: '#000000'
                         } : { backgroundColor: '#000000' }}>
-                        <p>Añade ejercicios existentes</p>
-                        <p>
-                            <AiFillDatabase size={50} />
+                        <div>
+                            <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                        </div>
+                        <div>
+                            <h3>Crea ejercicios</h3>
+                            <p>
+                                <FaDumbbell size={50} />
+                            </p>
+                        </div>
+                        <div>
+                            <IoIosArrowForward size={50} onClick={() => next(step)} />
+                        </div>
+                    </div>}
 
-                        </p>
-                    </div>
-                    <div onClick={() => { setStep('four') }}
+                    {step === 'four' && <div
                         style={step === 'four' ? {
                             backgroundColor: '#f69d21', color: '#000000',
                             borderColor: '#000000'
                         } : { backgroundColor: '#000000' }}>
+                        <div>
+                            <IoIosArrowForward size={50} style={step === 'three' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                        </div>
                         <p>Guarda tu entrenamiento</p>
-                        <p>
-                            <AiOutlineSend size={50} />
-                        </p>
-                    </div>
+
+                    </div>}
                 </div>
-                {step === 'one' && <>
-                    <FaRunning size={50} />
-                    <form>
-                        <div>
-                            <p>Entrenamiento:</p>
-                            <input
-                                type="text"
-                                value={newTrain.name}
-                                onChange={(e) => setNewTrain({ ...newTrain, name: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <p>Descripción:</p>
-                            <textarea
-                                type="text"
-                                value={newTrain.description}
-                                onChange={(e) => setNewTrain({ ...newTrain, description: e.target.value })}
-                            />
-                        </div>
-                    </form>
-                </>}
+                <h3>Mi Entrenamiento</h3>
+                <form>
+                    <div>
+                        <p>Entrenamiento:</p>
+                        {step === 'one' ? <input
+                            type="text"
+                            value={newTrain.name}
+                            onChange={(e) => setNewTrain({ ...newTrain, name: e.target.value })}
+                        /> : <p>{newTrain.name}</p>}
+
+                    </div>
+                    <div>
+                        <p>Descripción:</p>
+                        {step === 'one' ? <textarea
+                            type="text"
+                            value={newTrain.description}
+                            onChange={(e) => setNewTrain({ ...newTrain, description: e.target.value })}
+                        /> : <p> {newTrain.description}</p>}
+                    </div>
+                    {currentTraining.map((exercise, index) => (
+                        <>
+                            <h3> Ejercicios</h3>
+                            <div key={index} >
+                                <div className={styles.exinfo}>
+                                    <div>
+                                        <p>Nombre: </p>
+                                        <p>{exercise.name}</p>
+                                    </div>
+                                    <div>
+                                        <p>Materiales: </p>
+                                        <p>{exercise.material}</p>
+                                    </div>
+                                    <div>
+                                        <p>Comentarios: </p>
+                                        <p>{exercise.comments}</p>
+                                    </div>
+
+                                    <div className={styles.supersets}>
+                                        {exercise.superset && exercise.superset.map((exercise, index) => (
+                                            <div className={styles.superset} key={index}>
+                                                <div className={styles.column}>
+                                                    <div>
+                                                        <p>Serie {index + 1}</p>
+                                                    </div>
+                                                    <div>
+
+                                                        <p key={index}>Repeticiones:{exercise.repetitions}</p>
+                                                    </div>
+                                                </div>
+
+
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        <button
+                                            onClick={() => handleRemoveExercise(index)}
+                                            className={styles.create}
+                                        >
+                                            <FaRegTrashAlt size={20} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleRemoveExercise(index)}
+                                            className={styles.create}
+                                        >
+                                            <FaEdit size={20} />
+                                        </button>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+                        </>
+                    ))}
+
+                </form>
                 {step === 'two' && (
+                    <form>
+                        <h3>Añade ejercicios existentes</h3>
+                        <table>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Equipamiento</th>
+                                <th>Comentarios</th>
+                                <th>Opciones</th>
+                            </tr>
+                            {exercises.map((exercise) => (
+                                <tr key={exercise} className={styles.exddbb}>
+                                    <td>{exercise.name}</td>
+                                    <td>{exercise.material}</td>
+                                    <td>{exercise.comments}</td>
+                                    <td>
+                                        <FaPlus
+                                            size={20}
+                                            onClick={(e) => {
+                                                console.log('HOLA')
+                                                setTExercise({
+                                                    name: exercise.name,
+                                                    comments: exercise.comments,
+                                                    material: exercise.material,
+                                                });
+                                                setStep('three')
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </table>
+                    </form>
+                )}
+                {step === 'three' && (
                     <>
-                        <FaDumbbell size={50} />
-                        <form>
+
+                        <h3>Añadir Ejercicios</h3>
+
+                        <form >
                             <div>
-                                <p>Ejercicio:</p>
+
                                 {isExerciseFromList ? (
-                                    <p>{tExercise.name}</p>
+                                    <>
+
+                                        <p>{tExercise.name}</p>
+                                    </>
                                 ) : (
-                                    <input
-                                        type="text"
-                                        value={tExercise.name}
-                                        onChange={(e) =>
-                                            setTExercise({ ...tExercise, name: e.target.value })
-                                        }
-                                    />
+                                    <>
+                                        <p>Ejercicio:</p>
+                                        <input
+                                            type="text"
+                                            value={tExercise.name}
+                                            onChange={(e) =>
+                                                setTExercise({ ...tExercise, name: e.target.value })
+                                            }
+                                        />
+                                    </>
                                 )}
                             </div>
-                            <div className={styles.superset}>
-                                <DynamicForm tExercise={tExercise} setTExercise={setTExercise} />
-                            </div>
+                            <div><DynamicForm tExercise={tExercise} setTExercise={setTExercise} /></div>
+
+
                             <div>
                                 <p>Comentarios:</p>
                                 <textarea
@@ -281,98 +441,20 @@ const Training = (props) => {
                                     }
                                 />
                             </div>
-                            <button onClick={handleAddExerciseClick} className={styles.create}>
+                            <button onClick={handleAddExerciseClick} className={styles.addexercisebutton}>
                                 Confirmar
                             </button>
-                        </form>
-                    </>
-                )}
-                {step === 'three' && (
-                    <>
-                        <AiFillDatabase size={50} />
-                        <form>
-                            <h3>Banco de Ejercicios</h3>
-                            <table>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Equipamiento</th>
-                                    <th>Comentarios</th>
-                                    <th>Opciones</th>
-                                </tr>
-                                {exercises.map((exercise) => (
-                                    <tr key={exercise} className={styles.exddbb}>
-                                        <td>{exercise.name}</td>
-                                        <td>{exercise.material}</td>
-                                        <td>{exercise.comments}</td>
-                                        <td>
-                                            <FaPlus
-                                                size={20}
-                                                onClick={(e) => {
-                                                    console.log('HOLA')
-                                                    setTExercise({
-                                                        name: exercise.name,
-                                                        comments: exercise.comments,
-                                                        material: exercise.material,
-                                                    });
-                                                    setStep('two')
-                                                }}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </table>
+
                         </form>
 
+
                     </>
+
                 )}
+
                 {step === 'four' && (
-                    <div >
-                        <h3>Entrenamiento en Proceso</h3>
-                        <div>
-                            {newTrain.name && <p>Nombre: {newTrain.name}</p>}
-                            {newTrain.description && (
-                                <p>Descripción: {newTrain.description}</p>
-                            )}
-                        </div>
-                        <div className={styles.myexs}>
-                            {currentTraining.map((exercise, index) => (
-                                <div key={index} className={styles.thisTraining}>
-                                    <div>
-                                        <p>Nombre: </p>
-                                        <p>{exercise.name}</p>
-                                    </div>
-                                    <div>
-                                        <div className={styles.supersets}>
-                                            {exercise.superset && exercise.superset.map((exercise, index) => (
-                                                <div className={styles.superset} key={index}>
-                                                    <div>
-                                                        <p>Serie {index + 1}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p>Repeticiones:</p>
-                                                        <p key={index}>{exercise.repetitions}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p>Materiales: </p>
-                                        <p>{exercise.material}</p>
-                                    </div>
-                                    <div>
-                                        <p>Comentarios: </p>
-                                        <p>{exercise.comments}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => handleRemoveExercise(index)}
-                                        className={styles.create}
-                                    >
-                                        <FaRegTrashAlt size={20} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                    <div>
+
                         <button
                             onClick={(e) =>
                                 updateTrainingId
@@ -388,13 +470,15 @@ const Training = (props) => {
                         </button>
                     </div>
                 )}
-                <div
-                    className={styles.closebutton}
-                    onClick={handleCloseTrainingModal}
-                >
-                    X
-                </div>
+
+
                 <ToastContainer style={{ position: 'fixed', top: '20vh', right: '10%' }} />
+            </div>
+            <div
+                className={styles.closebutton}
+                onClick={handleCloseTrainingModal}
+            >
+                X
             </div>
         </div >
     );

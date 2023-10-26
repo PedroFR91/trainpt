@@ -92,6 +92,7 @@
 }
 
 .modalContent {
+  margin-top: 20vh;
   width: 150px;
   height: 150px;
   border: 3px solid #ffffff80;
@@ -195,27 +196,34 @@
 }
 
 .exContent {
-  width: 100%;
-  height: 100vh;
+  position: absolute;
+  top: 5vh;
+  width: 50%;
+  height: fit-content;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
-  position: relative;
 }
 
 .exContent form,
 .dynamic {
   width: 100%;
+  min-height: fit-content;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  background-color: #ffffff11;
   padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .exContent form div {
-  width: 500px;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -226,13 +234,13 @@
   cursor: pointer;
 }
 
-.exContent form p {
+.exContent form div p {
   font-size: 1.5rem;
   color: #ffffff;
-  width: 90%;
+  width: 100%;
+
   justify-content: space-between;
 }
-
 .exContent form div input {
   width: 60%;
   height: 30px;
@@ -254,7 +262,26 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
-
+.exContent form h3 {
+  margin: 1rem 0;
+}
+.exContent form table {
+  width: 100%;
+}
+.exContent form table tr th {
+  text-align: center;
+  color: #212121;
+  width: 25%;
+}
+.exContent form table tr td {
+  text-align: center;
+}
+.exContent form table tr:nth-child(2n + 1) {
+  background-color: #ffffff11;
+}
+.exContent form table tr:first-child {
+  background-color: #f69d21;
+}
 .tContent {
   width: 100%;
   min-height: 100vh;
@@ -460,44 +487,51 @@
   padding: 0.5rem;
   background-color: #212121;
 }
-
 .thisTraining {
   width: 100%;
-  background-color: #ffffff11;
+  height: 20vh;
   color: #ffffff;
   padding: 0.5rem;
   margin: 0.5rem;
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
   align-items: center;
+  border-radius: 10px;
+  border: 1px solid red;
 }
 
-.thisTraining div {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  margin: 0.5rem;
-}
-
-.supersets,
-.superset {
+.exinfo {
+  width: 30%;
+  height: fit-content;
   display: flex;
   flex-direction: column;
-  border: 1px solid #ffffff;
+  background-color: #ffffff11;
+  border-radius: 10px;
   padding: 0.5rem;
 }
-
-.myexs {
-  width: 50%;
+.exinfo > div {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  justify-content: space-between;
+  width: 100%;
 }
 
+.supersets {
+  width: 50px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff11;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+}
+.superset {
+  width: 50%;
+  display: flex;
+}
 .secondWidth {
   position: fixed;
   bottom: 0;
@@ -528,7 +562,6 @@
   width: 90%;
   justify-content: space-between;
 }
-
 .secondWidth div input {
   width: 60%;
   height: 30px;
@@ -539,7 +572,6 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
-
 .secondWidth div textarea {
   width: 60%;
   height: 90px;
@@ -550,19 +582,6 @@
   color: #ffffff;
   background-color: rgba(0, 0, 0, 0.9);
 }
-
-.superset {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #ffffff80;
-  border-radius: 10px;
-  padding: 0.5rem;
-}
-
-.superset div {
-  padding: 0.5rem;
-}
-
 .closebuttontwo {
   position: absolute;
   width: 3rem;
@@ -577,11 +596,9 @@
   z-index: 20;
   background-color: rgba(255, 255, 255, 0.9);
 }
-
 .dynamic {
   z-index: 20;
 }
-
 .dynamic > div {
   display: flex;
   flex-direction: column;
@@ -637,19 +654,16 @@
   align-items: center;
 }
 .trainsteps {
-  width: 50%;
-  height: 15vh;
+  width: 100%;
+  height: 10vh;
   display: flex;
-  justify-content: space-evenly;
 }
 .trainsteps > div {
-  border: 1px solid #f69d21;
-  width: 20%;
+  width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
-  align-content: center;
+  align-items: center;
   text-align: center;
 }
 .trainsteps > div p,
@@ -660,6 +674,48 @@
   border: 1px solid red;
 }
 
+.next,
+.prev {
+  height: 100%;
+  width: 20%;
+  text-align: center;
+}
+
+.mydinamic {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ffffff;
+  padding: 0.5rem;
+  border-radius: 10px;
+}
+.exform {
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 1rem;
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%);
+  background-color: #212121;
+  z-index: 30;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+}
+.addexercisebutton {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  max-width: 200px;
+  background-color: #f69d21;
+  color: #212121;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-top: 1rem;
+  padding: 0.5rem;
+}
 @media screen and (max-width: 767px) {
   .editor {
     width: 100%;
@@ -683,7 +739,7 @@
     flex-direction: row;
   }
 
-  .exContent form div {
+  .exContent form > div {
     width: 100%;
   }
 
