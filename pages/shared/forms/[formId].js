@@ -6,7 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from '../../../firebase.config';
 import { serverTimestamp } from 'firebase/firestore';
 import { initialForm } from "../../../forms/initialForm";
-import styles from '../../../styles/forms.module.css';
+import styles from './sharedform.module.css';
 import { AiOutlineUpload } from 'react-icons/ai';
 
 const FormPage = () => {
