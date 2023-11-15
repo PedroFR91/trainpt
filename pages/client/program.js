@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import MyImages from '../../components/client/myImages';
+import Link from 'next/link';
 const program = () => {
   const revision = '10 Enero';
   const { myData, myUid } = useContext(AuthContext);
@@ -82,6 +83,8 @@ const program = () => {
       <div className={styles.programlayout}>
         <ClientProfile />
         {/* <MyImages /> */}
+        <Link href={`/shared/subcription/${myUid}`} style={{ color: '#fff' }}>Mi suscripción</Link>
+        <Link href={'/chat/chat'} style={{ color: '#fff' }}>CHAT</Link>
         <div className={styles.nextrevision}>Próxima revisión:{revision}</div>
         <TrainersList />
       </div>

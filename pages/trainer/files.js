@@ -406,7 +406,7 @@ const files = () => {
           <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
         </div>
       )}
-      <Chat />
+
     </div>
   );
 };

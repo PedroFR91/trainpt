@@ -8,6 +8,7 @@ export function ContextAuthProvider({ children }) {
   const [isLogged, setIsLogged] = useState(false);
   const [myUid, setMyUid] = useState('');
   const [myData, setMyData] = useState(null);
+  const [selectedClientId, setSelectedClientId] = useState(null);
   const auth = getAuth();
 
   useEffect(() => {
@@ -38,7 +39,10 @@ export function ContextAuthProvider({ children }) {
   }, []);
 
   return (
-    <Context.Provider value={{ isLogged, setIsLogged, myData, myUid }}>
+    <Context.Provider value={{
+      isLogged, setIsLogged, myData, myUid, selectedClientId,
+      setSelectedClientId,
+    }}>
       {children}
     </Context.Provider>
   );

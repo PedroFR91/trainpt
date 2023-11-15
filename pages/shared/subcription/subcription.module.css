@@ -1,0 +1,29 @@
+.subscription {
+  width: 100vw;
+  min-height: 100vh;
+
+  background-color: #232323;
+  color: #ffffff;
+}
+.subscriptionSteps {
+  list-style-type: none;
+  padding: 0;
+}
+
+.subscriptionSteps li {
+  padding: 5px;
+  margin-bottom: 5px;
+}
+
+/* subscription.module.css */
+.currentStatus {
+  color: orange;
+}
+
+.completedStatus {
+  color: green; /* o el color que elijas para los pasos completados */
+}
+
+.defaultStatus {
+  color: grey;
+}

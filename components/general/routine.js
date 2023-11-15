@@ -415,35 +415,38 @@ const routine = () => {
         {!routinesList && !trainingsList && !exercisesList && (
           <div className={styles.top}>
             <div
-              onClick={() => setShowRoutineModal(true)}
+
               className={styles.routine}
             >
               <FaCalendarDay size={50} />
-              <p>Crear Rutina</p>
+              <p onClick={() => setShowRoutineModal(true)}>Crear Rutina</p>
+              <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
             </div>
             <div
-              onClick={() => {
-                setShowTrainingModal(true);
-                setCurrent(true);
-              }}
+
               className={styles.routine}
             >
               <FaRunning size={50} />
-              <p>Crear Entrenamiento</p>
+              <p onClick={() => {
+                setShowTrainingModal(true);
+                setCurrent(true);
+              }}>Crear Entrenamiento</p>
+              <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
             </div>
             <div
-              onClick={() => setShowExerciseModal(true)}
+
               className={styles.routine}
             >
               <FaDumbbell size={50} />
-              <p>Crear Ejercicio</p>
-            </div>
-            <div className={styles.selectmenu}>
-              <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
-              <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
+              <p onClick={() => setShowExerciseModal(true)}>Crear Ejercicio</p>
               <div onClick={viewExercisesList}>Ver Mis Ejercicios</div>
             </div>
+
+
+
+
           </div>
+
         )}
         {(routinesList || trainingsList || exercisesList) && (
           <div className={styles.bottom}>

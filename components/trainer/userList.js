@@ -14,6 +14,7 @@ import {
   FaSignOutAlt,
 } from 'react-icons/fa';
 import { MdFoodBank } from 'react-icons/md'
+import { useRouter } from "next/router";
 const userList = () => {
   const [show, setShow] = useState(false);
   const [current, setCurrent] = useState("");
@@ -21,6 +22,7 @@ const userList = () => {
   const [routine, setRoutine] = useState([]);
   const [myForm, setMyForm] = useState([]);
   const [clients, setClients] = useState([]);
+  const router = useRouter();
 
   const showClient = (data) => {
     if (myData.link && myData.link.includes(data.id)) {
@@ -67,31 +69,30 @@ const userList = () => {
   }, []);
 
   useEffect(() => {
-    if (myData) {
-      console.log("Use effect de clients fuera");
-      console.log(myData.link);
-      if (myData.link && myData.link.length > 0) {
-        // Realizar la consulta para obtener los clientes vinculados al entrenador actual
-        const q = query(
-          collection(db, "users"),
-          where("id", "in", myData.link)
-        );
-        const unsub = onSnapshot(q, (snapShot) => {
-          let list = [];
-          snapShot.docs.forEach((doc) => {
-            list.push({ id: doc.id, ...doc.data() });
-          });
-          // Actualizar el estado con los clientes vinculados
-          setClients(list);
-          console.log(list);
-        });
+    // Consultar la colección 'subscriptions' para obtener los clientes del entrenador
+    const q = query(collection(db, "subscriptions"), where("trainerId", "==", myUid));
+    const unsub = onSnapshot(q, (querySnapshot) => {
+      const clientIds = querySnapshot.docs.map((doc) => doc.data().clientId);
 
-        return () => {
-          unsub();
-        };
+      if (clientIds.length > 0) {
+        // Consultar la colección 'users' para obtener los datos de los clientes
+        const clientsQuery = query(collection(db, "users"), where("id", "in", clientIds));
+        onSnapshot(clientsQuery, (clientsSnapshot) => {
+          const clientsData = clientsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          setClients(clientsData); // Actualizar el estado con los datos de los clientes
+        });
       }
-    }
-  }, [myData]);
+    });
+
+    return () => unsub();
+  }, [myUid]);
+
+  const handleSubscriptionLinkClick = (userId) => {
+    // Guarda el rol del usuario en el almacenamiento local antes de navegar
+    localStorage.setItem('userRole', myData.role);
+    // Navega a la página de suscripción
+    router.push(`/shared/subcription/${userId}`);
+  };
 
   return (
     <div className={styles.container}>
@@ -115,36 +116,16 @@ const userList = () => {
                   )}
                 </div>
 
-                {myData.status &&
-                  myData.status.find((status) => status.id === data.id) && (
-                    <>
-                      <p>Estatus:</p>
-                      <p
-                        className={`${styles.status} ${myData.status.find((status) => status.id === data.id)
-                          .name === "pendiente"
-                          ? styles.yellowStatus
-                          : myData.status.find(
-                            (status) => status.id === data.id
-                          ).name === "inicial"
-                            ? styles.blueStatus
-                            : myData.status.find(
-                              (status) => status.id === data.id
-                            ).name === "archivos"
-                              ? styles.greenStatus
-                              : ""
-                          }`}
-                      ><span></span>
-                        {
-                          myData.status.find((status) => status.id === data.id)
-                            .name
-                        }
-                      </p>
-                    </>
 
-                  )}
                 <Link href={`/shared/clients/${data.id}`} >
                   <span className={styles.spanbutton} >Ver Info</span>
                 </Link>
+                <span
+                  className={styles.spanbutton}
+                  onClick={() => handleSubscriptionLinkClick(data.id)}
+                >
+                  Ver Suscripción
+                </span>
               </div>
             </div>
           ))}
