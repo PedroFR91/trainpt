@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
-import styles from '../../styles/chat.module.css';
+import styles from './chat.module.css';
 import { FaArrowAltCircleRight, FaCommentAlt } from 'react-icons/fa';
 import {
   addDoc,

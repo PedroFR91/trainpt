@@ -1,8 +1,7 @@
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import styles from '../../../styles/myprofile.module.css';
-import { onSnapshot, collection, query, where } from 'firebase/firestore'; // Asegúrate de importar las bibliotecas de Firebase necesarias
-import { db } from '../../../firebase.config';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import Modal from '../../../components/trainer/Modal';
 import AddTextClient from '../../../components/client/addTextClient';
 import MyRatesClient from '../../../components/client/myRatesClient';

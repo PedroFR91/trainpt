@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import React from 'react'
 import Photos from '../../../components/client/photos';
 import Measures from '../../../components/client/measures';
-import Form from '../../../components/client/forms'
+
 import Train from '../../../components/client/train'
 import Docs from '../../../components/client/docs'
 const clientsId = () => {
