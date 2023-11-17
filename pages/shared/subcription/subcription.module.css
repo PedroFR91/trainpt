@@ -2,8 +2,21 @@
   width: 100vw;
   min-height: 100vh;
 
+  padding-top: 10vh;
+
   background-color: #232323;
   color: #ffffff;
+}
+.subscription > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.subscription h1 {
+  margin: 1rem;
+}
+.subscription button {
+  margin: 1rem;
 }
 .subscriptionSteps {
   list-style-type: none;

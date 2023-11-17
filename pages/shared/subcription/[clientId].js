@@ -1,71 +1,102 @@
 import React, { useContext, useEffect, useState } from "react";
-import { query, collection, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { query, collection, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../../firebase.config";
 import { useRouter } from 'next/router';
 import AuthContext from '../../../context/AuthContext';
 import styles from './subcription.module.css';
-
+import Link from "next/link";
+import { Button } from "@mui/material";
+import TrainerHeader from '../../../components/trainer/trainerHeader'
+import Form from '../../../components/forms/form'
 const Subscription = () => {
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
+    const [trainer, setTrainer] = useState(null);
     const router = useRouter();
     const { clientId } = router.query;
-    const { user } = useContext(AuthContext); // Asume que AuthContext proporciona un objeto de usuario
+    const { user, myData } = useContext(AuthContext); // Asume que AuthContext proporciona un objeto de usuario
 
 
-    const trainerSubscriptionStatus = {
-        previous: {
-            description: 'Pendiente de aceptar cliente',
-            button: <button onClick={() => handleUpdateStatus('form')}>Aceptar Cliente</button>,
+    const trainerSubscriptionStatus = [
+        {
+            step: 'previous',
+            description: 'Un cliente ha solicitado tus servicios',
+            button: <button onClick={() => handleUpdateStatus('form')}>Aceptar Petición</button>,
+            section: <Link href={'/trainer/forms'}>Selecciona el formulario inicial que deseas enviarle</Link>
         },
-        form: {
+        {
+            step: 'form',
             description: 'Pendiente respuesta formulario',
-            button: <button onClick={() => handleUpdateStatus('revision')}>Enviar Formulario</button>,
+            button: <button onClick={() => handleUpdateStatus('revision')}>Enviar Formulario Inicial</button>,
+            section: '',
         },
-        revision: {
+        {
+            step: 'revision',
             description: 'Pendiente de recibir revisión',
             button: <button onClick={() => handleUpdateStatus('complete')}>Completar Revisión</button>,
+            section: <div>REVISION</div>
         },
-        complete: {
+        {
+            step: 'complete',
             description: 'Completo',
             button: <span>Revisión Completa</span>,
         },
-    };
+    ];
 
     // Estados de la suscripción para el cliente
-    const clientSubscriptionStatus = {
-        form: {
+    const clientSubscriptionStatus = [
+        {
+            step: 'previous',
+            description: 'Esperando a tu entrenador',
+
+        },
+        {
+            step: 'form',
             description: 'Pendiente de completar formulario',
             button: <a href='/formulario-inicial'>Ir al formulario inicial</a>,
         },
-        revision: {
+        {
+            step: 'revision',
             description: 'Pendiente de enviar revisión',
             button: <a href='/mis-archivos'>Ver mis archivos</a>,
         },
-        complete: {
+        {
+            step: 'complete',
             description: 'Completo',
             button: <a href={`/chat/chat`}>Ir al chat con el entrenador</a>,
         },
-    };
-    +
-        useEffect(() => {
-            if (router.isReady && clientId) {
-                const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
-                getDocs(subsQuery).then(querySnapshot => {
-                    if (!querySnapshot.empty) {
-                        const docData = querySnapshot.docs[0].data();
-                        const docId = querySnapshot.docs[0].id; // Aquí capturas el ID del documento
-                        setSubscription({ ...docData, id: docId }); // Guarda los datos de la suscripción y el ID del documento en el estado
-                    } else {
-                        console.error("No se encontró la suscripción para el cliente:", clientId);
-                    }
-                    setLoading(false);
-                }).catch(error => {
-                    console.error("Error al obtener la suscripción:", error);
-                    setLoading(false);
-                });
-            }
-        }, [clientId, router.isReady]);
+    ];
+
+    useEffect(() => {
+        if (router.isReady && clientId) {
+            const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
+            getDocs(subsQuery).then(querySnapshot => {
+                if (!querySnapshot.empty) {
+                    const docData = querySnapshot.docs[0].data();
+                    const docId = querySnapshot.docs[0].id; // Aquí capturas el ID del documento
+                    setSubscription({ ...docData, id: docId }); // Guarda los datos de la suscripción y el ID del documento en el estado
+                } else {
+                    console.error("No se encontró la suscripción para el cliente:", clientId);
+                }
+                setLoading(false);
+            }).catch(error => {
+                console.error("Error al obtener la suscripción:", error);
+                setLoading(false);
+            });
+        }
+        if (subscription && subscription.trainerId) {
+            const trainerRef = doc(db, 'users', subscription.trainerId);
+            getDoc(trainerRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    setTrainer(docSnap.data());
+                } else {
+                    console.error("No se encontró el entrenador:", subscription.trainerId);
+                }
+            }).catch(error => {
+                console.error("Error al obtener los datos del entrenador:", error);
+            });
+        }
+    }, [subscription, clientId, router.isReady]);
 
     const getStatusClassName = (statusKey) => {
         // Si no hay suscripción o el estado de la suscripción es indefinido, se aplica el estilo por defecto
@@ -86,7 +117,8 @@ const Subscription = () => {
 
         try {
             await updateDoc(subscriptionRef, {
-                status: nextStatus // Actualiza al siguiente estado
+                status: nextStatus, // Actualiza al siguiente estado
+                Initialform: 'Gkpw4Rpsce5lcA70W825'
             });
             console.log(`Estado de suscripción actualizado a '${nextStatus}'.`);
 
@@ -96,48 +128,52 @@ const Subscription = () => {
         } catch (error) {
             console.error("Error al actualizar el estado de la suscripción:", error);
         }
+
     };
 
     if (loading) {
         return <div>Cargando estado de la suscripción...</div>;
     }
 
-    const stepsToShow = user?.role === 'trainer' ? trainerSubscriptionStatus : clientSubscriptionStatus;
+    const stepsToShow = trainer?.role === 'trainer' ? trainerSubscriptionStatus : clientSubscriptionStatus;
 
     return (
-        <div className={styles.subscription}>
-            {subscription ? (
-                <div>
-                    <h1>Estado de la Suscripción para Cliente: {clientId}</h1>
-                    <h1>Entrenador: {subscription.trainerId}</h1>
-                    <ul className={styles.subscriptionSteps}>
-                        {Object.entries(stepsToShow).map(([key, desc]) => (
-                            <li key={key} className={getStatusClassName(key)}>
-                                {desc}
-                                {subscription.status === key && (
-                                    <>
-                                        {key === 'previous' && (
-                                            <button onClick={() => handleUpdateStatus('form')}>Aceptar Cliente</button>
-                                        )}
-                                        {key === 'form' && (
-                                            <button onClick={() => handleUpdateStatus('revision')}>Enviar Formulario</button>
-                                        )}
-                                        {key === 'revision' && (
-                                            <button onClick={() => handleUpdateStatus('complete')}>Completar Revisión</button>
-                                        )}
-                                        {key === 'complete' && (
-                                            <span>Revisión Completa</span>
-                                        )}
-                                    </>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            ) : (
-                <div>No se encontró la suscripción para el cliente: {clientId}</div>
-            )}
-        </div>
+        <>
+            <TrainerHeader />
+            <div className={styles.subscription}>
+                {subscription ? (
+                    <div>
+                        <h1>Hola, {myData?.username}. Desde aquí puedes comprobar el estado de tu suscripción.</h1>
+                        {trainer?.role === 'client' && <h1>Has seleccionado como entrenador a  {trainer?.username} </h1>}
+                        <div>
+                            <button>
+                                <Link href={`/shared/trainers/${trainer?.id}`}>Ver perfil</Link>
+                            </button>
+                            <button><Link href={'/chat/chat'}>Ir al chat</Link></button>
+                        </div>
+
+
+                        <ul className={styles.subscriptionSteps}>
+                            {stepsToShow?.map(({ step, description, button, section }) => (
+                                <li key={step} className={getStatusClassName(step)}>
+                                    <p>{description}</p>
+
+                                    {subscription.status === step
+                                        && button
+                                    }
+                                    {subscription.status === step
+                                        && section
+                                    }
+
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : (
+                    <div>No se encontró la suscripción para el cliente: {clientId}</div>
+                )}
+            </div>
+        </>
     );
 };
 

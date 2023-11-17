@@ -5,6 +5,7 @@ import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import Modal from '../../../components/trainer/Modal';
 import AddTextClient from '../../../components/client/addTextClient';
 import MyRatesClient from '../../../components/client/myRatesClient';
+import { db } from '../../../firebase.config';
 const Mytrainer = () => {
     const router = useRouter();
     const { mytrainer } = router.query;
@@ -12,6 +13,7 @@ const Mytrainer = () => {
     const [rates, setRates] = useState([]);
 
     useEffect(() => {
+        if (!mytrainer) return;
         // Consultar los datos del entrenador (userData)
         const userQuery = query(
             collection(db, "users"),

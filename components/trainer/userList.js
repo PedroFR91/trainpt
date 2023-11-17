@@ -89,7 +89,7 @@ const userList = () => {
 
   const handleSubscriptionLinkClick = (userId) => {
     // Guarda el rol del usuario en el almacenamiento local antes de navegar
-    localStorage.setItem('userRole', myData.role);
+    localStorage.setItem('userRole', myData?.role);
     // Navega a la página de suscripción
     router.push(`/shared/subcription/${userId}`);
   };
