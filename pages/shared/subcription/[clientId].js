@@ -15,7 +15,7 @@ const Subscription = () => {
     const router = useRouter();
     const { clientId } = router.query;
     const { user, myData } = useContext(AuthContext); // Asume que AuthContext proporciona un objeto de usuario
-
+    const [currentUser, setCurrentUser] = useState(null);
 
     const trainerSubscriptionStatus = [
         {
@@ -40,6 +40,7 @@ const Subscription = () => {
             step: 'complete',
             description: 'Completo',
             button: <span>Revisión Completa</span>,
+            section: <div>{new Date().toLocaleDateString()}</div>
         },
     ];
 
@@ -68,6 +69,10 @@ const Subscription = () => {
     ];
 
     useEffect(() => {
+
+        setCurrentUser(user || myData);
+
+
         if (router.isReady && clientId) {
             const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
             getDocs(subsQuery).then(querySnapshot => {
@@ -96,7 +101,7 @@ const Subscription = () => {
                 console.error("Error al obtener los datos del entrenador:", error);
             });
         }
-    }, [subscription, clientId, router.isReady]);
+    }, [user, myData, subscription, clientId, router.isReady]);
 
     const getStatusClassName = (statusKey) => {
         // Si no hay suscripción o el estado de la suscripción es indefinido, se aplica el estilo por defecto
@@ -135,7 +140,7 @@ const Subscription = () => {
         return <div>Cargando estado de la suscripción...</div>;
     }
 
-    const stepsToShow = trainer?.role === 'trainer' ? trainerSubscriptionStatus : clientSubscriptionStatus;
+    const stepsToShow = currentUser?.role === 'client' ? clientSubscriptionStatus : trainerSubscriptionStatus;
 
     return (
         <>
@@ -144,7 +149,7 @@ const Subscription = () => {
                 {subscription ? (
                     <div>
                         <h1>Hola, {myData?.username}. Desde aquí puedes comprobar el estado de tu suscripción.</h1>
-                        {trainer?.role === 'client' && <h1>Has seleccionado como entrenador a  {trainer?.username} </h1>}
+                        {currentUser?.role === 'client' && <h1>Has seleccionado como entrenador a  {trainer?.username} </h1>}
                         <div>
                             <button>
                                 <Link href={`/shared/trainers/${trainer?.id}`}>Ver perfil</Link>
@@ -152,18 +157,12 @@ const Subscription = () => {
                             <button><Link href={'/chat/chat'}>Ir al chat</Link></button>
                         </div>
 
-
                         <ul className={styles.subscriptionSteps}>
                             {stepsToShow?.map(({ step, description, button, section }) => (
                                 <li key={step} className={getStatusClassName(step)}>
                                     <p>{description}</p>
-
-                                    {subscription.status === step
-                                        && button
-                                    }
-                                    {subscription.status === step
-                                        && section
-                                    }
+                                    {subscription.status === step && button}
+                                    {subscription.status === step && section}
 
                                 </li>
                             ))}
