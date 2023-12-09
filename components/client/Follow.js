@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styles from "../../styles/forms.module.css";
 import { follow } from "../../forms/initialForm";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
 import { AiOutlineSend, AiOutlineUpload } from "react-icons/ai";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import AuthContext from '../../context/AuthContext';
 
 const Follow = (props) => {
+  const { myUid } = useContext(AuthContext);
   const [formStructure, setFormStructure] = useState({
     follow
   });
@@ -18,7 +20,8 @@ const Follow = (props) => {
       // Agregar el formulario a Firestore y obtener su ID
       const formRef = await addDoc(collection(db, "forms"), {
         ...formStructure,
-        type: "Inicial",
+        type: "Seguimiento",
+        trainerId: myUid,
         timeStamp: serverTimestamp(),
       });
 
@@ -213,11 +216,9 @@ const Follow = (props) => {
         </div>
         <div onClick={handleCreate}>
           <div>
-            <p>Enviar Formulario</p>
+            <p>Guardar Formulario</p>
           </div>
-          <div>
-            <AiOutlineSend size={20} />
-          </div>
+
         </div>
       </form>
       <div

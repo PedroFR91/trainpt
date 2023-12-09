@@ -42,9 +42,8 @@ const calendar = () => {
     const timeStampMillis =
       timeStamp.seconds * 1000 + timeStamp.nanoseconds / 1000000;
     const date = new Date(timeStampMillis);
-    const formattedDate = `${date.getDate()}/${
-      date.getMonth() + 1
-    }/${date.getFullYear()}`;
+    const formattedDate = `${date.getDate()}/${date.getMonth() + 1
+      }/${date.getFullYear()}`;
     return formattedDate;
   };
 
@@ -167,21 +166,7 @@ const calendar = () => {
           </div>
         </div>
       )}
-      <div className={styles.container}>
-        <h1>{currentDate.format("MMMM YYYY")}</h1>
-        <div className={styles.daysOfWeekContainer}>{generateDaysOfWeek()}</div>
-        <div className={styles.daysContainer}>{generateCalendar()}</div>
 
-        <div className={styles.controls}>
-          <button onClick={handlePrevMonth} className={styles.button}>
-            <AiOutlineArrowLeft />
-          </button>
-
-          <button onClick={handleNextMonth} className={styles.button}>
-            <AiOutlineArrowRight />
-          </button>
-        </div>
-      </div>
     </>
   );
 };

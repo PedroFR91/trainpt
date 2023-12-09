@@ -4,16 +4,6 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import Link from "next/link";
-import {
-  FaCamera,
-  FaChartLine,
-  FaFile,
-  FaMale,
-  FaProcedures,
-  FaRunning,
-  FaSignOutAlt,
-} from 'react-icons/fa';
-import { MdFoodBank } from 'react-icons/md'
 import { useRouter } from "next/router";
 const userList = () => {
   const [show, setShow] = useState(false);
@@ -95,44 +85,44 @@ const userList = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <h1>Mis Clientes</h1>
-      <div className={styles.list}>
-        {!show &&
-          clients &&
-          clients.map((data) => (
-            <div>
-              <div key={data.id} className={styles.userdata}>
-                <div>
-                  {data.img ? (
-                    <>
-                      <img src={data.img} alt={"myprofileimg"} />
-                      <div>{data.username}</div></>
-                  ) : (
-                    <>
-                      <img src="/face.jpg" alt={"myprofileimg"} />
-                      <div>{data.username}</div>
-                    </>
-                  )}
-                </div>
 
 
-                <Link href={`/shared/clients/${data.id}`} >
-                  <span className={styles.spanbutton} >Ver Info</span>
-                </Link>
-                <span
-                  className={styles.spanbutton}
-                  onClick={() => handleSubscriptionLinkClick(data.id)}
-                >
-                  Ver Suscripción
-                </span>
+    <div className={styles.list}>
+      {!show &&
+        clients &&
+        clients.map((data) => (
+          <div>
+            <div key={data.id} className={styles.userdata}>
+              <div>
+                {data.img ? (
+                  <>
+                    <img src={data.img} alt={"myprofileimg"} />
+                    <div>{data.username}</div></>
+                ) : (
+                  <>
+                    <img src="/face.jpg" alt={"myprofileimg"} />
+                    <div>{data.username}</div>
+                  </>
+                )}
               </div>
+
+
+              <Link href={`/shared/clients/${data.id}`} >
+                <span className={styles.spanbutton} >Ver Info</span>
+              </Link>
+              <span
+                className={styles.spanbutton}
+                onClick={() => handleSubscriptionLinkClick(data.id)}
+              >
+                Ver Suscripción
+              </span>
             </div>
-          ))}
+          </div>
+        ))}
 
-      </div>
+    </div>
 
-    </div >
+
   );
 };
 

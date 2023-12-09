@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { query, collection, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
+import { query, collection, where, getDocs, doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../../firebase.config";
 import { useRouter } from 'next/router';
 import AuthContext from '../../../context/AuthContext';
@@ -8,6 +8,8 @@ import Link from "next/link";
 import { Button } from "@mui/material";
 import TrainerHeader from '../../../components/trainer/trainerHeader'
 import Form from '../../../components/forms/form'
+import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa";
+import { BsFillShareFill } from "react-icons/bs";
 const Subscription = () => {
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
@@ -16,13 +18,59 @@ const Subscription = () => {
     const { clientId } = router.query;
     const { user, myData } = useContext(AuthContext); // Asume que AuthContext proporciona un objeto de usuario
     const [currentUser, setCurrentUser] = useState(null);
+    const [myForm, setMyForm] = useState([]);
+    const [routines, setRoutines] = useState([]);
+    const [selectedRoutineId, setSelectedRoutineId] = useState(null);
+
+
+    useEffect(() => {
+        const unsub = onSnapshot(
+            collection(db, "forms"),
+            (snapShot) => {
+                let list = [];
+                snapShot.docs.forEach((doc) => {
+                    let data = doc.data();
+                    if (data.trainerId === subscription?.trainerId) {
+                        list.push({ id: doc.id, ...data });
+                    }
+                });
+                setMyForm(list);
+            },
+            (error) => {
+                console.log(error);
+            }
+        );
+        return () => {
+            unsub();
+        };
+    }, [subscription]);
+
+    useEffect(() => {
+        const unsub = onSnapshot(
+            collection(db, "routines"),
+            (snapShot) => {
+                let list = [];
+                snapShot.docs.forEach((doc) => {
+                    list.push({ id: doc.id, ...doc.data() });
+                });
+                setRoutines(list);
+            },
+            (error) => {
+                console.log(error);
+            }
+        );
+        return () => {
+            unsub();
+
+        };
+    }, []);
 
     const trainerSubscriptionStatus = [
         {
             step: 'previous',
             description: 'Un cliente ha solicitado tus servicios',
             button: <button onClick={() => handleUpdateStatus('form')}>Aceptar Petición</button>,
-            section: <Link href={'/trainer/forms'}>Selecciona el formulario inicial que deseas enviarle</Link>
+            section: <div>Se le enviará el formulario inicial</div>
         },
         {
             step: 'form',
@@ -34,7 +82,35 @@ const Subscription = () => {
             step: 'revision',
             description: 'Pendiente de recibir revisión',
             button: <button onClick={() => handleUpdateStatus('complete')}>Completar Revisión</button>,
-            section: <div>REVISION</div>
+            section: <> <h3>Asignar Una Rutina Disponible</h3>
+                <table>
+                    <tr>
+                        <th>Nombre de la Rutina</th>
+                        <th>Descripción</th>
+                        <th>Entrenamientos</th>
+                        <th>Opciones</th>
+                    </tr>
+                    {routines.map((routine) => (
+                        <tr key={routine.id}>
+                            <td>{routine.name}</td>
+                            <td>{routine.description}</td>
+                            <td>
+                                {routine.trainings.map((training, index) => (
+                                    <div key={index}>
+                                        <p>{training.name}</p>
+                                    </div>
+                                ))}
+                            </td>
+                            <td>
+                                <BsFillShareFill
+                                    size={20}
+                                    onClick={() => handleSelectRoutine(routine.id)}
+                                />
+
+                            </td>
+                        </tr>
+                    ))}
+                </table></>
         },
         {
             step: 'complete',
@@ -54,11 +130,11 @@ const Subscription = () => {
         {
             step: 'form',
             description: 'Pendiente de completar formulario',
-            button: <a href='/formulario-inicial'>Ir al formulario inicial</a>,
+            button: <Link href={{ pathname: `/shared/forms/${myForm[0]?.id}`, query: { clientId: clientId } }}>Ir al formulario inicial</Link>,
         },
         {
             step: 'revision',
-            description: 'Pendiente de enviar revisión',
+            description: 'Pendiente de completar rutina',
             button: <a href='/mis-archivos'>Ver mis archivos</a>,
         },
         {
@@ -101,7 +177,7 @@ const Subscription = () => {
                 console.error("Error al obtener los datos del entrenador:", error);
             });
         }
-    }, [user, myData, subscription, clientId, router.isReady]);
+    }, [subscription, clientId]);
 
     const getStatusClassName = (statusKey) => {
         // Si no hay suscripción o el estado de la suscripción es indefinido, se aplica el estilo por defecto
@@ -136,6 +212,30 @@ const Subscription = () => {
 
     };
 
+    const handleSelectRoutine = async (routineId) => {
+        setSelectedRoutineId(routineId);
+
+        if (!subscription || !subscription.id) {
+            console.error("No se ha definido la suscripción o el ID de la suscripción.");
+            return;
+        }
+
+        // Actualizar la suscripción con el ID de la rutina
+        const subscriptionRef = doc(db, 'subscriptions', subscription.id);
+        try {
+            await updateDoc(subscriptionRef, {
+                routineId: routineId, // Actualiza con el ID de la rutina seleccionada
+            });
+            console.log(`Suscripción actualizada con la rutina ${routineId}.`);
+        } catch (error) {
+            console.error("Error al actualizar la suscripción con la rutina:", error);
+        }
+        handleUpdateStatus('complete')
+    };
+
+
+
+
     if (loading) {
         return <div>Cargando estado de la suscripción...</div>;
     }
@@ -160,9 +260,12 @@ const Subscription = () => {
                         <ul className={styles.subscriptionSteps}>
                             {stepsToShow?.map(({ step, description, button, section }) => (
                                 <li key={step} className={getStatusClassName(step)}>
-                                    <p>{description}</p>
+                                    <h3>{description}</h3>
+
                                     {subscription.status === step && button}
                                     {subscription.status === step && section}
+
+
 
                                 </li>
                             ))}

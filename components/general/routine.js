@@ -26,8 +26,11 @@ import {
   FaCopy,
   FaCalendar,
   FaDatabase,
+
 } from "react-icons/fa";
+import { BsFillShareFill } from "react-icons/bs";
 import Training from "./training";
+import { IoIosArrowForward } from "react-icons/io";
 const routine = () => {
   const [data, setData] = useState([""]);
   const [exercises, setExercises] = useState([]);
@@ -407,6 +410,43 @@ const routine = () => {
     }
     setSeriesData(values);
   };
+  const next = (step) => {
+    switch (step) {
+      case 'one':
+        setStep('two');
+        break;
+      case 'two':
+        setStep('three');
+        break;
+      case 'three':
+        setStep('four');
+        break;
+      case 'four':
+        setStep('five');
+        break;
+      default:
+        break;
+    }
+  }
+  const prev = (step) => {
+    switch (step) {
+      case 'five':
+        setStep('four');
+        break;
+      case 'four':
+        setStep('three');
+        break;
+      case 'three':
+        setStep('two');
+        break;
+      case 'two':
+        setStep('one');
+        break;
+
+      default:
+        break;
+    }
+  }
 
 
   return (
@@ -415,7 +455,6 @@ const routine = () => {
         {!routinesList && !trainingsList && !exercisesList && (
           <div className={styles.top}>
             <div
-
               className={styles.routine}
             >
               <FaCalendarDay size={50} />
@@ -600,62 +639,103 @@ const routine = () => {
         >
           <div className={styles.exContent} styles={{ display: showTrainingModal ? 'none' : '' }}>
             <div className={styles.trainsteps}>
-              <div onClick={() => { setStep('one') }}
+              {step === 'one' && <div
                 style={step === 'one' ? {
                   backgroundColor: '#f69d21', color: '#000000',
                   borderColor: '#000000'
                 } : { backgroundColor: '#000000' }}>
-                <p>Define tu rutina</p>
-                <p>
-                  <FaCalendarDay size={50} />
-                </p>
-              </div>
-              <div onClick={() => { setStep('two') }}
+                <div>
+                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                </div>
+                <div>
+                  <p>Define tu rutina</p>
+                  <p>
+                    <FaCalendarDay size={50} />
+                  </p>
+                </div>
+                <div>
+                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
+                </div>
+              </div>}
+              {step === 'two' && <div
                 style={step === 'two' ? {
                   backgroundColor: '#f69d21', color: '#000000',
                   borderColor: '#000000'
                 } : { backgroundColor: '#000000' }}>
-                <p>Crea un entrenamiento</p>
-                <p>
-                  <FaRunning size={50} />
-                </p>
-              </div>
-              <div onClick={() => { setStep('three') }}
+                <div>
+                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                </div>
+                <div>
+                  <p>Crea un entrenamiento</p>
+                  <p>
+                    <FaRunning size={50} />
+                  </p>
+                </div>
+                <div>
+                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
+                </div>
+              </div>}
+              {step === 'three' && <div
                 style={step === 'three' ? {
                   backgroundColor: '#f69d21', color: '#000000',
                   borderColor: '#000000'
                 } : { backgroundColor: '#000000' }}>
-                <p>Añade entrenamientos existentes</p>
-                <p>
-                  <FaDatabase size={50} />
-                </p>
-              </div>
-              <div onClick={() => { setStep('four') }}
+                <div>
+                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                </div>
+                <div>
+                  <p>Añade entrenamientos existentes</p>
+                  <p>
+                    <FaDatabase size={50} />
+                  </p>
+                </div>
+                <div>
+                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
+                </div>
+
+              </div>}
+              {step === 'four' && <div
                 style={step === 'four' ? {
                   backgroundColor: '#f69d21', color: '#000000',
                   borderColor: '#000000'
                 } : { backgroundColor: '#000000' }}>
-                <p>Organiza tu rutina</p>
-                <p>
-                  <FaCalendar size={50} />
-                </p>
-              </div>
-              <div onClick={() => { setStep('five') }}
+                <div>
+                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                </div>
+                <div>
+                  <p>Organiza tu rutina</p>
+                  <p>
+                    <FaCalendar size={50} />
+                  </p>
+                </div>
+                <div>
+                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
+                </div>
+
+              </div>}
+              {step === 'five' && <div
                 style={step === 'five' ? {
                   backgroundColor: '#f69d21', color: '#000000',
                   borderColor: '#000000'
                 } : { backgroundColor: '#000000' }}>
-                <p>Envía entrenamiento</p>
-                <p>
-                  <FaRunning size={50} />
-                </p>
-              </div>
+                <div>
+                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                </div>
+                <div>
+                  <p>Envía entrenamiento</p>
+                  <p>
+                    <FaRunning size={50} />
+                  </p>
+                </div>
+                <div>
+                  <IoIosArrowForward size={50} style={step === 'five' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => { next(step) }} />
+                </div>
+
+              </div>}
             </div>
             <form onSubmit={handleCreateRoutine}>
-
               {step === 'one' &&
                 <>
-                  <FaCalendarDay size={50} />
                   <div>
                     <p>Nombre:</p>
                     <input
@@ -680,11 +760,13 @@ const routine = () => {
                   </div>
                 </>}
               {step === 'two' &&
-                <> <h3 onClick={() => {
-                  setShowTrainingModal(true);
-                  setShowRoutineModal(false);
-                  setCurrent(true);
-                }} >Crea tus nuevos entrenamientos</h3>
+                <>
+                  <h3 onClick={() => {
+                    setShowTrainingModal(true);
+                    setShowRoutineModal(false);
+                    setCurrent(true);
+                  }} >Crea tus nuevos entrenamientos</h3>
+                  <p>Puedes crear un entrenamiento para añadirlo a tu rutina</p>
                 </>}
               {step === 'three' && <>  <h2>Añade Tus Entrenamientos</h2>
                 <h3>Selecciona desde tu Banco de ejercicios</h3>

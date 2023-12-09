@@ -1,23 +1,6 @@
-.container {
-  width: 100%;
-  height: 85vh;
-  position: absolute;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.container h1 {
-  color: #ffffff;
-}
-
 .list {
   width: 100%;
-  height: 85vh;
-  position: fixed;
-  bottom: 0;
+  height: fit-content;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

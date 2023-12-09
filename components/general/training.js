@@ -326,7 +326,6 @@ const Training = (props) => {
                                                         <p>Serie {index + 1}</p>
                                                     </div>
                                                     <div>
-
                                                         <p key={index}>Repeticiones:{exercise.repetitions}</p>
                                                     </div>
                                                 </div>
@@ -356,7 +355,6 @@ const Training = (props) => {
                             </div>
                         </>
                     ))}
-
                 </form>
                 {step === 'two' && (
                     <form>
@@ -451,7 +449,6 @@ const Training = (props) => {
                     </>
 
                 )}
-
                 {step === 'four' && (
                     <div>
 
@@ -470,8 +467,6 @@ const Training = (props) => {
                         </button>
                     </div>
                 )}
-
-
                 <ToastContainer style={{ position: 'fixed', top: '20vh', right: '10%' }} />
             </div>
             <div

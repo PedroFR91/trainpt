@@ -1,0 +1,5 @@
+Today, I will continue working on developing the 
+views for report creation. I am finalizing the 
+pagination design for the reports and making 
+formatting adjustments according to the design 
+specifications in Figma.

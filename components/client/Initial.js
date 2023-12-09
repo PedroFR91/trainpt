@@ -5,8 +5,10 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
 import { AiOutlineSend, AiOutlineUpload } from "react-icons/ai";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-
+import AuthContext from '../../context/AuthContext';
+import { useContext } from "react";
 const Initial = (props) => {
+  const { myUid } = useContext(AuthContext);
   const [formStructure, setFormStructure] = useState({
     ...initialForm,
     gender: "man",
@@ -21,6 +23,7 @@ const Initial = (props) => {
       const formRef = await addDoc(collection(db, "forms"), {
         ...formStructure,
         type: "Inicial",
+        trainerId: myUid,
         timeStamp: serverTimestamp(),
       });
 
@@ -305,11 +308,9 @@ const Initial = (props) => {
         </div>
         <div onClick={handleCreate}>
           <div>
-            <p>Enviar Formulario</p>
+            <p>Guardar Formulario</p>
           </div>
-          <div>
-            <AiOutlineSend size={20} />
-          </div>
+
         </div>
       </form>
       <div

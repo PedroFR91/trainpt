@@ -250,16 +250,25 @@ const forms = () => {
           </div>
         )}
         {showinitial && (
-          <Initial
-            showinitial={showinitial}
-            setShowInitial={setShowInitial}
-            myUid={myUid}
-          />
+          <>
+            <h1>Formulario Inicial</h1>
+            <h3>Se enviará automáticamente a todos los clientes nuevos </h3>
+            <Initial
+              showinitial={showinitial}
+              setShowInitial={setShowInitial}
+              myUid={myUid}
+            />
+          </>
         )}
         {showfollow && (
-          <Follow showfollow={showfollow}
-            setShowFollow={setShowFollow}
-            myUid={myUid} />
+          <>
+            <h1>Formulario Seguimiento</h1>
+            <h3>El cliente lo enviará periódicamente para realizarle el seguimiento </h3>
+            <Follow showfollow={showfollow}
+              setShowFollow={setShowFollow}
+              myUid={myUid} />
+          </>
+
         )}
         {showmyforms && (
           <>
@@ -267,28 +276,28 @@ const forms = () => {
             <table className={styles.myddbbitem}>
               <thead>
                 <tr>
-                  <th>Nombre</th>
+
                   <th>Tipo</th>
-                  <th>ID</th>
+                  {/* <th>ID</th> */}
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {myForm.map((form) => (
                   <tr key={form.id}>
-                    <td>{form.name}</td>
+
                     <td>{form.type}</td>
-                    <td>{form.id}</td>
+                    {/* <td>{form.id}</td> */}
                     <td
 
                       className={styles.myddbbitem}
                     >
                       <Link href={`/shared/forms/${form.id}`}>Ver</Link>
-                      <div onClick={() => {
+                      {/* <div onClick={() => {
                         setShowClient(true), setCurrentForm(form);
                       }}>
                         Asignar
-                      </div>
+                      </div> */}
 
                     </td>
                   </tr>
@@ -306,7 +315,7 @@ const forms = () => {
           </>
         )}
       </div>
-      {showClient && (
+      {/* {showClient && (
         <div className={styles.share}>
           {clients
             .filter((data) => data.role === "client")
@@ -327,7 +336,7 @@ const forms = () => {
             ))}
           <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

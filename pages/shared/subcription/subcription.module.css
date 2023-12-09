@@ -30,7 +30,13 @@
 
 /* subscription.module.css */
 .currentStatus {
-  color: orange;
+  color: #232323;
+  font-weight: 800;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .completedStatus {

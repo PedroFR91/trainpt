@@ -6,7 +6,6 @@ import AuthContext from '../../context/AuthContext';
 import { useAuthUser } from '../../hooks/useAuthUser';
 import { auth } from '../../firebase.config';
 import { signOut } from 'firebase/auth';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaHome,
   FaUser,
@@ -14,7 +13,7 @@ import {
   FaClipboard,
   FaFolder,
 } from 'react-icons/fa';
-import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiX, FiLogOut, FiArrowDownRight, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 
 const TrainerHeader = () => {
   useAuthUser();
@@ -39,7 +38,7 @@ const TrainerHeader = () => {
 
   return (
     <div className={styles.container}>
-   <Link href={'/trainer/home'}>
+      <Link href={'/trainer/home'}>
         <Image
           src='/logo.png'
           priority
@@ -49,79 +48,67 @@ const TrainerHeader = () => {
           className={styles.logo}
         />
       </Link>
-      <button className={styles.menuButton} onClick={toggleMenu}>
-        <AnimatePresence>
-          {!isOpen && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <FiMenu size={50} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {isOpen && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <FiX size={50} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              className={styles.menu}
-              initial={{ x: '-100%' }}
-              animate={{ x: '0' }}
-              exit={{ x: '-100%' }}
-              transition={{ duration: 0.3 }}
-            >
-              <Link passHref href={'./home'}>
-                <div className={styles.menuItem}>
-                  <FaHome size={50} /> Inicio
-                </div>
-              </Link>
-              <Link passHref href={'./profile'}>
-                <div className={styles.menuItem}>
-                  <FaUser size={50} /> Perfil
-                </div>
-              </Link>
-              <Link passHref href={'./routines'}>
-                <div className={styles.menuItem}>
-                  <FaDumbbell size={50} /> Rutinas
-                </div>
-              </Link>
-              <Link passHref href={'./forms'}>
-                <div className={styles.menuItem}>
-                  <FaClipboard size={50} /> Formularios
-                </div>
-              </Link>
-              <Link passHref href={'./files'}>
-                <div className={styles.menuItem}>
-                  <FaFolder size={50} /> Archivos
-                </div>
-              </Link>
-              {isLogged && (
-                <div onClick={exit}>
-                  <Link passHref href={'../'}>
-                    <div className={styles.menuItem}>
-                      <FiLogOut size={50} />
-                      Cerrar Sesión
-                    </div>
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          </>
+
+
+      <div
+        className={styles.menu}
+      >
+        <Link passHref href={'/trainer/home'}>
+          <div className={styles.menuItem}>
+            <FaHome size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'/trainer/profile'}>
+          <div className={styles.menuItem}>
+            <FaUser size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'/trainer/routines'}>
+          <div className={styles.menuItem}>
+            <FaDumbbell size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'/trainer/forms'}>
+          <div className={styles.menuItem}>
+            <FaClipboard size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'/trainer/files'}>
+          <div className={styles.menuItem}>
+            <FaFolder size={50} />
+          </div>
+        </Link>
+        {isLogged && (
+          <div onClick={exit}>
+            <Link passHref href={'../'}>
+              <div className={styles.menuItem}>
+                <FiLogOut size={50} />
+
+              </div>
+            </Link>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
+
+
+      <button className={styles.menuButton} onClick={toggleMenu}>
+        {!isOpen && (
+          <span
+          >
+            <FiArrowRight size={50} />
+          </span>
+        )}
+        {isOpen && (
+          <span
+          >
+            <FiArrowLeft size={50} />
+          </span>
+        )}
+
+      </button>
+
+
+
     </div>
   );
 };

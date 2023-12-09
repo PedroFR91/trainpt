@@ -6,16 +6,20 @@ import Rates from '../../components/trainer/myrates';
 import PreviousImages from '../../components/trainer/previousClientsImg';
 const profile = () => {
   return (
-    <div className={styles.containerProfile}>
+    <>
       <TrainerHeader />
-      <div className={styles.layout}>
-        <Profile />
-        <div className={styles.subdivision}>
-          <Rates />
-          <PreviousImages />
+      <div className={styles.containerProfile}>
+
+        <div className={styles.layout}>
+          <Profile />
+          <div className={styles.subdivision}>
+            <Rates />
+            <PreviousImages />
+          </div>
         </div>
       </div>
-    </div>
+    </>
+
   );
 };
 

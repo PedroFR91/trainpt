@@ -8,7 +8,6 @@ const routines = () => {
     <div className={styles.container}>
       <TrainerHeader />
       <Routine />
-
     </div>
   );
 };

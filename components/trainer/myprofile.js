@@ -44,34 +44,36 @@ const myprofile = () => {
   return (
     <>
       {myData && (
-        <div className={styles.myprofile} >
-          <img
-            src={myData.img ? myData.img : "/face.jpg"}
-            alt={"img"}
-            className={styles.myprofileimg}
-          />
-          <input
-            type="file"
-            id="file"
-            onChange={(e) => setFile(e.target.files[0])}
-            hidden
-          />
-          <button
-            className={styles.profilesection}
-            htmlFor="file"
-            onClick={(e) => {
-              e.preventDefault();
-              document.getElementById("file").click();
-            }}
-          >
-            <AiFillEdit size={30} />
-          </button>
-          <h2>{myData.username}</h2>
-          <div className={styles.myprofileinfo}>
-            <AddText />
+        <>
+          <h1>Mi perfil</h1>
+          <div className={styles.myprofile} >
+            <img
+              src={myData.img ? myData.img : "/face.jpg"}
+              alt={"img"}
+              className={styles.myprofileimg}
+            />
+            <input
+              type="file"
+              id="file"
+              onChange={(e) => setFile(e.target.files[0])}
+              hidden
+            />
+            <button
+              className={styles.profilesection}
+              htmlFor="file"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("file").click();
+              }}
+            >
+              <AiFillEdit size={30} />
+            </button>
+            <h2>{myData.username}</h2>
+            <div className={styles.myprofileinfo}>
+              <AddText />
+            </div>
           </div>
-        </div>
-      )}
+        </>)}
     </>
   );
 };

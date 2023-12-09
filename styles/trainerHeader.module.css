@@ -1,27 +1,17 @@
 .container {
   position: fixed;
   top: 0;
-  width: 100%;
-  height: 10vh;
+  width: 100px;
+  height: 100vh;
   border-bottom: 1px solid #fffffff0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-evenly;
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.9);
 }
-
-.logo {
-  position: absolute;
-  top: 0.5rem;
-  left: 50%;
-  transform: translate(-50%, 0);
-}
-
 .menuButton {
-  position: absolute;
-  left: 15px;
-  top: 15px;
   z-index: 15;
   background: none;
   border: none;
@@ -30,18 +20,11 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.menuButton:hover {
+.menuButton span:hover {
   color: #f69d21;
 }
-
 .menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 30%;
-  height: 100%;
-  background-color: #212121;
-  box-shadow: 1px 1px 5px #ffffff;
+  width: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,25 +33,19 @@
 }
 
 .menuItem {
-  width: 300px;
+  width: 50px;
   height: 80px;
   padding: 1rem 0;
   font-size: 1.2rem;
-  color: #ffffff;
   text-decoration: none;
   transition: all 0.3s;
-  border: 1px solid #ffffff;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
+  color: #212121;
 }
 
 .menuItem:hover {
   font-size: 1.3rem;
-  color: #212121;
   cursor: pointer;
-  border-color: #f69d21;
-  background-color: #f69d21dd;
+  color: #f69d21dd;
 }
 
 @media screen and (max-width: 767px) {

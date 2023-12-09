@@ -230,182 +230,159 @@ const files = () => {
   return (
     <div className={styles.container}>
       <TrainerHeader />
-      <div className={styles.menu}>
-        <div className={styles.menuItem} onClick={() => setViewUpload(true)}>
-          <FaUpload size={50} /> Subir Video
+
+
+      <div className={styles.uploadFiles}>
+
+        <div className={styles.videoArea}>
+          <h1>Sube tu vídeo</h1>
+          <p>
+            Desde aquí puedes subir la URL del vídeo que quieras añadir a tu
+            reproductor.
+          </p>
+          <input
+            type="text"
+            placeholder="Título del video"
+            onChange={(e) => setVideoTitle(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Pegue aquí su URL"
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <button onClick={addVideo}>Subir</button>
+          <div
+            className={styles.closebutton}
+            onClick={() => setViewUpload(false)}
+          >
+            X
+          </div>
         </div>
-        <div className={styles.menuItem} onClick={() => setViewMyVideos(true)}>
-          <FaPlayCircle size={50} /> Ver Videos
-        </div>
-        <div
-          className={styles.menuItem}
-          onClick={() => setViewUploadFiles(true)}
-        >
-          <FaFileUpload size={50} /> Subir Archivo
-        </div>
-        <div className={styles.menuItem} onClick={() => setViewMyFiles(true)}>
-          <FaFileArchive size={50} /> Ver Archivos
-        </div>
-      </div>
-      {(viewUpload || viewMyVideos || viewUploadFiles || viewMyFiles) && (
-        <div className={styles.uploadFiles}>
-          {viewUpload && (
-            <div className={styles.videoArea}>
-              <h1>Sube tu vídeo</h1>
-              <p>
-                Desde aquí puedes subir la URL del vídeo que quieras añadir a tu
-                reproductor.
-              </p>
-              <input
-                type="text"
-                placeholder="Título del video"
-                onChange={(e) => setVideoTitle(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Pegue aquí su URL"
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <button onClick={addVideo}>Subir</button>
-              <div
-                className={styles.closebutton}
-                onClick={() => setViewUpload(false)}
-              >
-                X
-              </div>
-            </div>
-          )}
-          {viewMyVideos && (
-            <>
-              <h1 style={{ marginTop: "20vh" }}>Mis Videos</h1>
-              <div className={styles.myVideos}>
-                <div className={styles.video}>
-                  <ReactPlayer url={url} width={"80%"} />
+        <h1 style={{ marginTop: "20vh" }}>Mis Videos</h1>
+        <div className={styles.myVideos}>
+
+          <div className={styles.video}>
+            <ReactPlayer url={url} width={"80%"} />
+          </div>
+          <div className={styles.videoList}>
+            <h2>¿Qué quieres ver?</h2>
+            {videoList.map((video) => (
+              <>
+                <div>
+                  <p
+                    key={video.id}
+                    onClick={() => selectVideo(video.url)}
+                  >
+                    {video.title ? video.title : "Sin título"}
+                  </p>
+                  <p>
+                    <FaTrashAlt
+                      size={20}
+                      onClick={() => deleteVideo(video.id)}
+                    />
+                  </p>
                 </div>
-                <div className={styles.videoList}>
-                  <h2>¿Qué quieres ver?</h2>
-                  {videoList.map((video) => (
-                    <>
-                      <div>
-                        <p
-                          key={video.id}
-                          onClick={() => selectVideo(video.url)}
-                        >
-                          {video.title ? video.title : "Sin título"}
-                        </p>
-                        <p>
-                          <FaTrashAlt
-                            size={20}
-                            onClick={() => deleteVideo(video.id)}
-                          />
-                        </p>
-                      </div>
-                    </>
-                  ))}
-                </div>
-                <div
-                  className={styles.closebutton}
-                  onClick={() => setViewMyVideos(false)}
-                >
-                  X
-                </div>
-              </div>
-            </>
-          )}
-          {viewUploadFiles && (
-            <div className={styles.uploadArea}>
-              <h1>Suba sus archivos</h1>
-              <input
-                type="text"
-                placeholder="Ingrese el título de su archivo aquí"
-                onChange={(e) => setFileTitle(e.target.value)}
-              />
-              <div className={styles.filePickerContainer}>
-                <label htmlFor="filepicker" className={styles.customFilePicker}>
-                  Seleccionar archivo
-                </label>
-                <input
-                  type="file"
-                  id="filepicker"
-                  accept="image/*,.pdf,.doc,.docx,.xml"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  className={styles.ocult}
+              </>
+            ))}
+          </div>
+          <div
+            className={styles.closebutton}
+            onClick={() => setViewMyVideos(false)}
+          >
+            X
+          </div>
+        </div>
+
+        <div className={styles.uploadArea}>
+          <h1>Suba sus archivos</h1>
+          <input
+            type="text"
+            placeholder="Ingrese el título de su archivo aquí"
+            onChange={(e) => setFileTitle(e.target.value)}
+          />
+          <div className={styles.filePickerContainer}>
+            <label htmlFor="filepicker" className={styles.customFilePicker}>
+              Seleccionar archivo
+            </label>
+            <input
+              type="file"
+              id="filepicker"
+              accept="image/*,.pdf,.doc,.docx,.xml"
+              onChange={(e) => setFile(e.target.files[0])}
+              className={styles.ocult}
+            />
+          </div>
+          <button onClick={handleUpload}>Subir Archivo</button>
+          <div
+            className={styles.closebutton}
+            onClick={() => setViewUploadFiles(false)}
+          >
+            X
+          </div>
+        </div>
+
+
+        <div className={styles.gallery}>
+          <h1 style={{ marginTop: "20vh" }}>Mi galería</h1>
+          {myfiles.length > 0 ? (
+            myfiles.map((item) => (
+              <div key={item.id}>
+                {item.fileType === ("image/jpeg" || "image/png") ? (
+                  <img src={item.img} alt={item.title} width="100%" />
+                ) : (
+                  <FaFilePdf size={100} />
+                )}
+
+                <p>{item.title ? item.title : "Sin título"}</p>
+                <a href={item.img} target="_blank">
+                  Ver/Descargar
+                </a>
+                <a onClick={() => {
+                  setShowClient(true);
+                }}>
+                  Asignar
+                </a>
+                <FaTrashAlt
+                  size={20}
+                  onClick={() => deleteFile(item.id)}
+                  className={styles.links}
                 />
               </div>
-              <button onClick={handleUpload}>Subir Archivo</button>
-              <div
-                className={styles.closebutton}
-                onClick={() => setViewUploadFiles(false)}
-              >
-                X
-              </div>
-            </div>
+            ))
+          ) : (
+            <h1>Aún no has subido ningún archivo</h1>
           )}
-          {viewMyFiles && (
-            <>
-              <h1 style={{ marginTop: "20vh" }}>Mi galería</h1>
-              <div className={styles.gallery}>
-                {myfiles.length > 0 ? (
-                  myfiles.map((item) => (
-                    <div key={item.id}>
-                      {item.fileType === ("image/jpeg" || "image/png") ? (
-                        <img src={item.img} alt={item.title} width="100%" />
-                      ) : (
-                        <FaFilePdf size={100} />
-                      )}
+        </div>
+        <div
+          className={styles.closebutton}
+          onClick={() => setViewMyFiles(false)}
+        >
+          X
+        </div>
+      </div>
 
-                      <p>{item.title ? item.title : "Sin título"}</p>
-                      <a href={item.img} target="_blank">
-                        Ver/Descargar
-                      </a>
-                      <a onClick={() => {
-                        setShowClient(true);
-                      }}>
-                        Asignar
-                      </a>
-                      <FaTrashAlt
-                        size={20}
-                        onClick={() => deleteFile(item.id)}
-                        className={styles.links}
-                      />
-                    </div>
-                  ))
+
+      {/* <div className={styles.share}>
+        {clients
+          .filter((data) => data.role === "client")
+          .map((data) => (
+            <div
+              key={data.id}
+              onClick={() => selectTrainer(currentForm.id, data.id)}
+            >
+              <div>
+                {data.img ? (
+                  <img src={data.img} alt={"myprofileimg"} />
                 ) : (
-                  <h1>Aún no has subido ningún archivo</h1>
+                  <img src="/face.jpg" alt={"myprofileimg"} />
                 )}
               </div>
-              <div
-                className={styles.closebutton}
-                onClick={() => setViewMyFiles(false)}
-              >
-                X
-              </div>
-            </>
-          )}
-        </div>
-      )}
-      {showClient && (
-        <div className={styles.share}>
-          {clients
-            .filter((data) => data.role === "client")
-            .map((data) => (
-              <div
-                key={data.id}
-                onClick={() => selectTrainer(currentForm.id, data.id)}
-              >
-                <div>
-                  {data.img ? (
-                    <img src={data.img} alt={"myprofileimg"} />
-                  ) : (
-                    <img src="/face.jpg" alt={"myprofileimg"} />
-                  )}
-                </div>
-                <p>{data.username}</p>
-              </div>
-            ))}
-          <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
-        </div>
-      )}
+              <p>{data.username}</p>
+            </div>
+          ))}
+        <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
+      </div> */}
+
 
     </div>
   );

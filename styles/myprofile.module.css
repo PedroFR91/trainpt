@@ -1,8 +1,9 @@
 .containerProfile {
   width: 100%;
-  min-height: 100vh;
+  min-height: fit-content;
   background-color: #212121;
   color: #ffffff;
+  z-index: 10;
 }
 
 .layout {
@@ -11,7 +12,7 @@
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  margin-top: 20vh;
+
   border: 2px solid black;
 }
 
@@ -36,7 +37,7 @@
   align-items: center;
   padding: 1rem;
   border-radius: 10px;
-  font-family: 'Roboto';
+  font-family: "Roboto";
   z-index: 0;
   margin: 1rem;
   background-color: #ffffffbb;
@@ -50,7 +51,6 @@
   transform: perspective(500px) rotateY(0deg) rotateX(0deg);
   /* Mantener la transformación en cero al hacer hover */
 }
-
 
 .profilesection {
   transform: translate(40px, -25px);
@@ -78,7 +78,6 @@
 
 .profilesection:hover {
   cursor: pointer;
-
 }
 
 .myprofileimg {
@@ -87,8 +86,6 @@
   width: 150px;
   height: 150px;
   object-fit: cover;
-
-
 }
 
 .myprofileinfo {
@@ -186,7 +183,6 @@
   align-items: center;
 
   color: #ffffff;
-
 }
 
 .displayTextTwo {

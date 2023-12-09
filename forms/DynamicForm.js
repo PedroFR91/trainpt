@@ -51,7 +51,7 @@ function DynamicForm({ tExercise, setTExercise }) {
                     </div>
                 </div>
             ))}
-            <button onClick={handleAddExercise} className={styles.addexercisebutton}>
+            <button type='button' onClick={handleAddExercise} className={styles.addexercisebutton}>
                 <p style={{ color: '#212121' }}>Añadir Serie</p>
                 <FaPlus />
             </button>

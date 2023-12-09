@@ -1,7 +1,7 @@
 // pages/client/form/[formId].js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from '../../../firebase.config';
 import { serverTimestamp } from 'firebase/firestore';
@@ -15,6 +15,29 @@ const FormPage = () => {
   const { clientId } = router.query;
 
   const [formStructure, setFormStructure] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+
+    if (router.isReady && clientId) {
+      const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
+      getDocs(subsQuery).then(querySnapshot => {
+        if (!querySnapshot.empty) {
+          const docData = querySnapshot.docs[0].data();
+          const docId = querySnapshot.docs[0].id; // Aquí capturas el ID del documento
+          setSubscription({ ...docData, id: docId }); // Guarda los datos de la suscripción y el ID del documento en el estado
+        } else {
+          console.error("No se encontró la suscripción para el cliente:", clientId);
+        }
+        setLoading(false);
+      }).catch(error => {
+        console.error("Error al obtener la suscripción:", error);
+        setLoading(false);
+      });
+    }
+
+  }, [clientId]);
+
 
   useEffect(() => {
     const fetchFormStructure = async () => {
@@ -43,37 +66,6 @@ const FormPage = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
 
-    // Validar que todos los campos obligatorios estén llenos
-    const requiredFields = [
-      'name',
-      'gender',
-      'weight',
-      'height',
-      'front',
-      'back',
-      'lateral',
-    ];
-
-    const allRequiredFieldsFilled = requiredFields.every(
-      (fieldName) => formStructure[fieldName] !== null && formStructure[fieldName].trim() !== ''
-    );
-
-    if (!allRequiredFieldsFilled) {
-      alert("Rellene todos los campos obligatorios");
-      return;
-    }
-
-    // Validar que al menos un campo de medidas o dieta esté lleno
-    const measuresFields = ['chest', 'shoulders', 'biceps', 'hips', 'abdomen', 'cuadriceps', 'gemelos'];
-    const anyMeasuresFieldFilled = measuresFields.some(
-      (fieldName) => formStructure.measures[fieldName] !== null && formStructure.measures[fieldName].trim() !== ''
-    );
-
-    if (!anyMeasuresFieldFilled && (!formStructure.intolerances || formStructure.intolerances.trim() === '') && (!formStructure.preferredFoods || formStructure.preferredFoods.trim() === '')) {
-      alert("Rellene al menos un campo de medidas o dieta");
-      return;
-    }
-
     try {
       // Agregar el formulario a Firestore y obtener su ID
       const formRef = await addDoc(collection(db, "forms"), {
@@ -83,20 +75,20 @@ const FormPage = () => {
         timeStamp: serverTimestamp(),
       });
 
-      // Limpiar el estado del formulario
-      setFormStructure({
-        ...initialForm,
-        gender: "man",
-        front: '',
-        back: '',
-        lateral: '',
-      });
-
       console.log("Formulario creado con éxito", formRef.id);
-      // Redirigir a la página anterior
+
+      // Actualizar el estado de la suscripción a 'revision'
+      if (subscription && subscription.id) {
+        await updateDoc(doc(db, 'subscriptions', subscription.id), {
+          status: 'revision',
+        });
+        console.log(`Estado de suscripción actualizado a 'revision'.`);
+      }
+
+      // Redirigir a la página anterior o donde corresponda
       router.back();
     } catch (error) {
-      console.error("Error al crear el formulario:", error);
+      console.error("Error al crear el formulario o actualizar la suscripción:", error);
     }
   };
 
@@ -140,6 +132,7 @@ const FormPage = () => {
       }
     }
   };
+
 
   if (!formStructure) {
     return <div>Cargando...</div>; // Muestra un mensaje de carga mientras se obtienen los datos del formulario
@@ -263,7 +256,7 @@ const FormPage = () => {
             <input
               type='text'
               name='chest'
-              value={formStructure.measures.chest}
+              value={formStructure.measures?.chest}
               onChange={handleMeasuresChange}
             />
           </div>
@@ -273,7 +266,7 @@ const FormPage = () => {
             <input
               type='text'
               name='shoulders'
-              value={formStructure.measures.shoulders}
+              value={formStructure.measures?.shoulders}
               onChange={handleMeasuresChange}
             />
           </div>
@@ -283,7 +276,7 @@ const FormPage = () => {
             <input
               type='text'
               name='biceps'
-              value={formStructure.measures.biceps}
+              value={formStructure.measures?.biceps}
               onChange={handleMeasuresChange}
             />
           </div>
@@ -293,7 +286,7 @@ const FormPage = () => {
             <input
               type='text'
               name='hips'
-              value={formStructure.measures.hips}
+              value={formStructure.measures?.hips}
               onChange={handleMeasuresChange}
             />
           </div>
@@ -303,7 +296,7 @@ const FormPage = () => {
             <input
               type='text'
               name='abdomen'
-              value={formStructure.measures.abdomen}
+              value={formStructure.measures?.abdomen}
               onChange={handleMeasuresChange}
             />
           </div>
@@ -313,7 +306,7 @@ const FormPage = () => {
             <input
               type='text'
               name='cuadriceps'
-              value={formStructure.measures.cuadriceps}
+              value={formStructure.measures?.cuadriceps}
               onChange={handleMeasuresChange}
             />
           </div>
@@ -323,7 +316,7 @@ const FormPage = () => {
             <input
               type='text'
               name='gemelos'
-              value={formStructure.measures.gemelos}
+              value={formStructure.measures?.gemelos}
               onChange={handleMeasuresChange}
             />
           </div>
