@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { FaRunning, FaDumbbell, FaPlus, FaRegTrashAlt, FaMinus, FaEdit } from 'react-icons/fa';
-import { AiFillDatabase, AiOutlineSend } from 'react-icons/ai';
-import { MdCreate } from 'react-icons/md'
+import { FaRunning, FaDumbbell, FaPlus, FaRegTrashAlt, FaEdit } from 'react-icons/fa';
+import { AiFillDatabase } from 'react-icons/ai';
 import styles from "../../styles/routines.module.css";
 import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase.config';
@@ -10,12 +9,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import DynamicForm from '../../forms/DynamicForm'
 import { IoIosArrowForward } from 'react-icons/io'
 const Training = (props) => {
+    console.log(props.updateTraining)
     const [newTrain, setNewTrain] = useState({
         name: "",
         material: "",
         comments: "",
     })
-    const [toggle, setToggle] = useState(false);
     const [message, setMessage] = useState(false);
     const [addNewEx, setAddNewEx] = useState(false);
     const [selectExercises, setSelectExercises] = useState(false);
@@ -26,9 +25,19 @@ const Training = (props) => {
     const [updateTrainingId, setUpdateTrainingId] = useState(null);
     const [isExerciseFromList, setIsExerciseFromList] = useState(false);
     const [exercises, setExercises] = useState([]);
-    const [viewCreate, setViewCreate] = useState(false);
     const [step, setStep] = useState('one');
-    // Para crear entrenamientos
+
+    useEffect(() => {
+        if (props.updateTraining) {
+            setNewTrain({
+                name: props.updateTraining.name,
+                description: props.updateTraining.description,
+            });
+            setCurrentTraining(props.updateTraining.exercises || []);
+            setUpdateTrainingId(props.updateTraining.id);
+        }
+    }, [props.updateTraining]);
+
     useEffect(() => {
         const unsubExercises = onSnapshot(
             collection(db, "exercises"),
@@ -112,52 +121,24 @@ const Training = (props) => {
             console.error("Error updating document: ", error);
         }
     };
-    const handleCopyTraining = async (id, updatedTraining) => {
-        try {
-            const docRef = doc(db, "trainings", id);
-            await addDoc(docRef, updatedTraining);
-            console.log("Document updated");
-        } catch (error) {
-            console.error("Error updating document: ", error);
-        }
-    };
-    const handleAssignExercise = async (e, trainingId) => {
-        e.preventDefault();
-        const exerciseId = e.target.value;
-        try {
-            const trainingRef = doc(db, "trainings", trainingId);
-            const trainingData = (await getDoc(trainingRef)).data();
 
-            const updatedExercises = [...trainingData.exercises, exerciseId];
-            await updateDoc(trainingRef, { exercises: updatedExercises });
-        } catch (error) {
-            console.error("Error al asignar el ejercicio al entrenamiento: ", error);
-        }
-    };
-    const handleAssignTraining = async (e, routineId) => {
-        e.preventDefault();
-        const trainingId = e.target.value; // Aquí asumo que el id del entrenamiento se encuentra en el valor del botón
-        try {
-            const trainingRef = doc(db, "trainings", trainingId);
-            const routineRef = doc(db, "routines", routineId);
-            const routineData = (await getDoc(routineRef)).data();
-
-            const updatedRoutine = {
-                ...routineData,
-                trainings: [...routineData.trainings, { ...trainingRef }],
-            };
-
-            await setDoc(routineRef, updatedRoutine);
-        } catch (error) {
-            console.error("Error al asignar el entrenamiento a la rutina: ", error);
-        }
-    };
     const handleCloseTrainingModal = () => {
-        setShowTrainingModal(false);
-        // setCurrent(false);
-        // setTrainingData('');
-        // Restablece cualquier estado relacionado con el modal de entrenamiento aquí
+        setShowTrainingModal(false); // Ocultar el modal
+
+        // Resetear el estado del entrenamiento a sus valores iniciales
+        setNewTrain({
+            name: "",
+            description: "",
+            // Asegúrate de incluir aquí cualquier otro campo que sea parte de tu estado de entrenamiento
+        });
+
+        setCurrentTraining([]); // Vaciar la lista de ejercicios actuales del entrenamiento
+        setUpdateTrainingId(null); // Resetear el ID del entrenamiento a editar, si es necesario
+
+        // Resetear cualquier otro estado relevante aquí
+        // Por ejemplo, si tienes estados para controlar pasos o vistas dentro del modal, también deberías resetearlos aquí
     };
+
     const handleAddExerciseClick = (e) => {
         console.log(tExercise)
         e.preventDefault();
@@ -375,7 +356,7 @@ const Training = (props) => {
                                         <FaPlus
                                             size={20}
                                             onClick={(e) => {
-                                                console.log('HOLA')
+
                                                 setTExercise({
                                                     name: exercise.name,
                                                     comments: exercise.comments,

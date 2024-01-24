@@ -13,20 +13,26 @@
   position: absolute;
   bottom: 0;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: #212121;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .top {
-  width: 100%;
-  min-height: fit-content;
+  width: 100vw;
+  height: 100vh;
+
   display: flex;
   justify-content: space-around;
+  align-items: center;
   margin-top: 2rem;
   background-color: #212121;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .bottom {
@@ -48,8 +54,8 @@
 }
 
 .routine {
-  width: 200px;
-  height: 200px;
+  width: 33.3333%;
+  height: 100%;
   padding: 1rem 0;
   font-size: 1.2rem;
   color: #ffffff;
@@ -64,10 +70,33 @@
 
 .routine:hover {
   font-size: 1.3rem;
-  color: #212121;
+
   cursor: pointer;
   border-color: #f69d21;
-  background-color: #f69d21dd;
+  background-color: #f69d2133;
+}
+
+.routine p {
+  width: 250px;
+  height: 40px;
+
+  text-align: center;
+  line-height: 40px;
+
+  background-color: #f69d21;
+  color: #212121;
+  border-radius: 8px;
+}
+.routine p:hover {
+  width: 250px;
+  height: 40px;
+
+  text-align: center;
+
+  background-color: #212121;
+  color: #ffffff;
+
+  border-radius: 8px;
 }
 
 .modalContent {
@@ -101,82 +130,53 @@
   justify-content: flex-start;
   align-items: center;
   background-color: #212121;
-
+  padding-top: 10vh;
   z-index: 10;
 }
 
-.myddbbitem table {
-  width: 90%;
-}
-
-.myddbbitem table tr:first-child {
-  background-color: #f69d21dd;
-  color: #212121;
-  font-size: 1.3rem;
-  font-weight: bold;
-}
-
-.myddbbitem table div tr:first-child {
-  background-color: #212121;
-  font-size: 1.3rem;
-  font-weight: normal;
-}
-
 .exercise {
-  width: 100%;
-  height: 55vh;
+  width: 300px;
+  height: 200px;
+
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  padding: 1rem;
   overflow-y: scroll;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+
+  margin: 1rem;
 }
 
 .exercise div {
   width: 100%;
-}
 
-.myddbbitem table tr {
-  width: 100%;
-  height: 15vh;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin: 0.5rem auto;
-  padding: 0.5rem;
-}
-
-.myddbbitem table tr td,
-.myddbbitem table tr th {
-  width: 25%;
-  height: 100%;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  color: #ffffff;
-}
-
-.myddbbitem table tr td {
-  background-color: #ffffff33;
-}
-.myddbbitem table tr td p:hover,
-.myddbbitem table tr td:hover {
-  cursor: pointer;
 }
 
 .modal {
   z-index: 10;
   background: #212121;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .exContent {
   position: absolute;
   top: 5vh;
   width: 50%;
-  height: fit-content;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import moment from "moment/min/moment-with-locales.js";
 import styles from "../../styles/calendar.module.css";
 import { db } from "../../firebase.config";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import { AiOutlineArrowLeft, AiOutlineArrowRight } from "react-icons/ai";
+import { useRouter } from 'next/router';
+import AuthContext from '../../context/AuthContext'
 const calendar = () => {
   moment.locale("es");
   const [currentDate, setCurrentDate] = useState(moment());
@@ -12,12 +14,26 @@ const calendar = () => {
   const [firebaseDates, setFirebaseDates] = useState([]);
   const [formData, setFormData] = useState([]);
   const [selectedFormData, setSelectedFormData] = useState(null);
+  const [reviewFrequency, setReviewFrequency] = useState("semanal");
+
+  const router = useRouter();
+  const startDateFromQuery = router.query.startDate;
+  const [currentDateInCalendar, setCurrentDateInCalendar] = useState(moment(startDateFromQuery, "YYYY-MM-DD") || moment());
+  const [initialStartDate, setInitialStartDate] = useState(null);
+
+  const [reviewDates, setReviewDates] = useState([]);
+  const { myUid } = useContext(AuthContext);
+  const trainerId = myUid
+
+  useEffect(() => {
+    setReviewDates(calculateReviewDates());
+  }, [selectedDate, reviewFrequency]);
 
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, "forms"),
       (snapShot) => {
-        let list = [];
+        let list = []; // 'list' se define aquí
         const formDataList = snapShot.docs.map((doc) => doc.data().formData);
 
         snapShot.docs.forEach((doc) => {
@@ -28,6 +44,11 @@ const calendar = () => {
         setFirebaseDates(list);
         setFormData(formDataList);
         console.log("Datos de Firebase:", list);
+
+        // Mueve la lógica para establecer la fecha de inicio aquí
+        if (list.length > 0 && !initialStartDate) {
+          setInitialStartDate(list[0]); // Asume que la primera fecha es la de inicio
+        }
       },
       (error) => {
         console.log(error);
@@ -36,7 +57,8 @@ const calendar = () => {
     return () => {
       unsub();
     };
-  }, []);
+  }, []); // Dependencias del useEffect
+
 
   const formatDate = (timeStamp) => {
     const timeStampMillis =
@@ -48,12 +70,17 @@ const calendar = () => {
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(moment(currentDate).add(1, "months"));
+    const newDate = moment(currentDate).add(1, "months");
+    console.log("Siguiente mes:", newDate.format("MMMM YYYY")); // Depuración
+    setCurrentDate(newDate);
   };
 
   const handlePrevMonth = () => {
-    setCurrentDate(moment(currentDate).subtract(1, "months"));
+    const newDate = moment(currentDate).subtract(1, "months");
+    console.log("Mes anterior:", newDate.format("MMMM YYYY")); // Depuración
+    setCurrentDate(newDate);
   };
+
 
   const handleOpenModal = (date) => {
     setSelectedDate(date.format("D/M/YYYY"));
@@ -84,36 +111,27 @@ const calendar = () => {
   const generateCalendar = () => {
     const days = [];
     const daysInMonth = currentDate.daysInMonth();
-
-    // Obtén el primer día de la semana del 1 de septiembre (viernes)
     const firstDay = moment(currentDate).date(1).isoWeekday();
-
-    // Ajusta el contador de días para comenzar desde el 1 de septiembre
     let dayCounter = 1 - (firstDay - 1);
 
-    // Llena los días anteriores al 1 de septiembre con días vacíos
     for (let i = 1; i < firstDay; i++) {
-      days.push(
-        <div key={`empty-${i}`} className={styles.emptyDay}>
-          {/* Puedes mostrar un espacio vacío o simplemente dejarlo sin contenido */}
-        </div>
-      );
+      days.push(<div key={`empty-${i}`} className={styles.emptyDay}></div>);
       dayCounter++;
     }
 
-    // Agrega los días del mes a partir del 1 de septiembre
     for (let i = dayCounter; i <= daysInMonth; i++) {
       const date = moment(currentDate).date(i);
       const formattedDate = date.format("D/M/YYYY");
-      console.log("formattedDate:", formattedDate);
 
       const hasEvent = firebaseDates.includes(formattedDate);
+      const isStartDate = formattedDate === moment(currentDateInCalendar).format("D/M/YYYY");
+      const isReviewDate = reviewDates.includes(formattedDate);
 
       days.push(
         <div
           key={i}
           onClick={() => handleOpenModal(date, selectedFormData)}
-          className={`${styles.days} ${hasEvent ? styles.eventDay : ""}`}
+          className={`${styles.days} ${hasEvent ? styles.eventDay : ""} ${isStartDate ? styles.startDate : ""} ${isReviewDate ? styles.reviewDate : ""}`}
         >
           {i}
         </div>
@@ -122,6 +140,119 @@ const calendar = () => {
 
     return days;
   };
+
+
+  const calculateReviewDates = () => {
+    let dates = [];
+    let currentDate = moment(selectedDate, "D/M/YYYY");
+
+    while (currentDate.isBefore(moment().add(1, "year"))) {
+      dates.push(currentDate.format("D/M/YYYY"));
+
+      switch (reviewFrequency) {
+        case "semanal":
+          currentDate = currentDate.add(1, "weeks");
+          break;
+        case "quincenal":
+          currentDate = currentDate.add(2, "weeks");
+          break;
+        case "mensual":
+          currentDate = currentDate.add(1, "months");
+          break;
+        default:
+          break;
+      }
+    }
+    return dates;
+  };
+
+  const fetchSubscriptionId = async () => {
+    if (!myUid) {
+      console.error("El trainerId está indefinido.");
+      return null;
+    }
+
+    const querySnapshot = await getDocs(query(collection(db, 'subscriptions'), where("trainerId", "==", myUid)));
+    if (!querySnapshot.empty) {
+      const subscription = querySnapshot.docs[0];
+      return subscription.id;
+    } else {
+      console.error("No se encontró la suscripción para el entrenador:", myUid);
+      return null;
+    }
+  };
+  const fetchStartDate = async (trainerId) => {
+    const querySnapshot = await getDocs(query(collection(db, 'subscriptions'), where("trainerId", "==", trainerId)));
+    if (!querySnapshot.empty) {
+      const subscription = querySnapshot.docs[0]; // Asume que hay una única suscripción para este entrenador
+      const startDate = subscription.data().startDate; // Obtiene startDate de la suscripción
+      return startDate;
+    } else {
+      console.error("No se encontró la suscripción para el entrenador:", trainerId);
+      return null;
+    }
+  };
+  useEffect(() => {
+    const loadStartDate = async () => {
+      if (trainerId) {
+        const startDate = await fetchStartDate(trainerId);
+        if (startDate) {
+          setCurrentDate(moment(startDate, "YYYY-MM-DD"));
+        }
+      }
+    };
+
+    loadStartDate();
+  }, [trainerId]);
+
+  useEffect(() => {
+    if (initialStartDate) {
+      // Hacemos una copia de las fechas actuales
+      let updatedFirebaseDates = [...firebaseDates];
+
+      // Eliminar la fecha de inicio antigua, si existe
+      updatedFirebaseDates = updatedFirebaseDates.filter(date => date !== initialStartDate);
+
+      // Agregar la nueva fecha de inicio
+      const newStartDateFormatted = moment(currentDateInCalendar).format("D/M/YYYY");
+      if (!updatedFirebaseDates.includes(newStartDateFormatted)) {
+        updatedFirebaseDates.push(newStartDateFormatted);
+      }
+
+      // Comprobar si realmente necesitamos actualizar el estado
+      if (updatedFirebaseDates.length !== firebaseDates.length || !firebaseDates.includes(newStartDateFormatted)) {
+        setFirebaseDates(updatedFirebaseDates);
+        setInitialStartDate(newStartDateFormatted);
+      }
+    }
+  }, [currentDateInCalendar, initialStartDate]);
+
+
+
+
+  const handleDateChange = async (e) => {
+    const selectedStartDate = e.target.value;
+    setCurrentDateInCalendar(moment(selectedStartDate, "YYYY-MM-DD"));
+
+    const subscriptionId = await fetchSubscriptionId(myUid);
+    if (subscriptionId) {
+      const subscriptionRef = doc(db, 'subscriptions', subscriptionId);
+      try {
+        await updateDoc(subscriptionRef, {
+          startDate: selectedStartDate
+        });
+        console.log("Fecha de inicio actualizada con éxito en Firebase.");
+      } catch (error) {
+        console.error("Error al actualizar la fecha de inicio en Firebase:", error);
+      }
+    } else {
+      console.log("No se pudo obtener el ID de la suscripción.");
+    }
+  };
+
+  console.log(myUid)
+
+
 
   return (
     <>
@@ -140,6 +271,21 @@ const calendar = () => {
       </div>
       {modalVisible && (
         <div className={styles.modal}>
+          <div className={styles.dateInputContainer}>
+            <input
+              type="date"
+              value={moment(currentDateInCalendar).format("YYYY-MM-DD")} // Asegúrate de usar el formato correcto para el valor del input
+              onChange={handleDateChange}
+            />
+
+            <button >Actualizar Fecha</button>
+          </div>
+          <p>Establecer la frecuencia de revisión para: {selectedDate}</p>
+          <select value={reviewFrequency} onChange={(e) => setReviewFrequency(e.target.value)}>
+            <option value="semanal">Semanal</option>
+            <option value="quincenal">Cada dos semanas</option>
+            <option value="mensual">Mensual</option>
+          </select>
           <p>Estos son los eventos del día: {selectedDate}</p>
           {selectedFormData ? (
             <div>

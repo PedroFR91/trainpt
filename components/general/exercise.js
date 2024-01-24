@@ -2,7 +2,6 @@ import {
     serverTimestamp,
     doc,
     collection,
-    deleteDoc,
     updateDoc,
     addDoc,
 } from "firebase/firestore";
@@ -14,29 +13,31 @@ import {
 } from "react-icons/fa";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 const exercise = (props) => {
 
-    const [exercises, setExercises] = useState([]);
-    const [newexercise, setNewExercise] = useState({});
-    const [message, setMessage] = useState(false);
+    const [newexercise, setNewExercise] = useState({
+        name: "",
+        material: "",
+        comments: "",
+    });
+
     const [updateExerciseId, setUpdateExerciseId] = useState(null);
-    const [tExercise, setTExercise] = useState([]);
+
     const { setShowExerciseModal } = props;
 
     useEffect(() => {
-        if (updateExerciseId) {
-            const exerciseToUpdate = exercises.find(
-                (exercise) => exercise.id === updateExerciseId
-            );
-            setNewExercise(exerciseToUpdate);
-        } else {
+        if (props.updateExercise) {
             setNewExercise({
-                exercise_name: "",
-                material: "",
-                comments: "",
+                name: props.updateExercise.name,
+                material: props.updateExercise.material,
+                comments: props.updateExercise.comments,
             });
+            setUpdateExerciseId(props.updateExercise.id);
         }
-    }, [updateExerciseId, exercises]);
+    }, [props.updateExercise]);
+
+
     // Para crear ejercicios
     const handleFormSubmit = async (e) => {
         e.preventDefault();
@@ -46,6 +47,7 @@ const exercise = (props) => {
             material: newexercise.material,
             comments: newexercise.comments,
         };
+
 
         if (updateExerciseId) {
             // Estamos en modo "Actualizar"
@@ -62,6 +64,7 @@ const exercise = (props) => {
             material: "",
             comments: "",
         });
+        handleCloseExerciseModal()
     };
     const handleCreateExercise = async (exerciseData) => {
         try {
@@ -85,10 +88,22 @@ const exercise = (props) => {
         } catch (error) {
             console.error("Error updating document: ", error);
         }
+        // Limpiar el formulario (según tu implementación actual)
+        setNewExercise({
+            name: "",
+            material: "",
+            comments: "",
+        });
+        handleCloseExerciseModal()
     };
     //Modales
     const handleCloseExerciseModal = () => {
         setShowExerciseModal(false);
+        setNewExercise({
+            name: "",
+            material: "",
+            comments: "",
+        });
     };
     const notify = (msg) => toast(msg);
     return (
@@ -147,6 +162,7 @@ const exercise = (props) => {
                 </div>
                 <ToastContainer style={{ position: 'fixed', top: '20vh', right: '10%' }} />
             </div>
+
         </div>
     )
 }

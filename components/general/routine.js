@@ -1,13 +1,11 @@
 import {
   serverTimestamp,
-  setDoc,
   doc,
   onSnapshot,
   collection,
   deleteDoc,
   updateDoc,
   addDoc,
-  getDoc,
   query,
 } from "firebase/firestore";
 import React, { useContext, useEffect, useState } from "react";
@@ -22,11 +20,7 @@ import {
   FaDumbbell,
   FaRegEdit,
   FaRegTrashAlt,
-  FaPlus,
   FaCopy,
-  FaCalendar,
-  FaDatabase,
-
 } from "react-icons/fa";
 import { BsFillShareFill } from "react-icons/bs";
 import Training from "./training";
@@ -37,8 +31,7 @@ const routine = () => {
   const [newexercise, setNewExercise] = useState({});
   const [trainings, setTrainings] = useState([]);
   const [routines, setRoutines] = useState([]);
-  const [visible, setVisible] = useState(false);
-  const { myData, myUid } = useContext(AuthContext);
+  const { myData } = useContext(AuthContext);
   const [showClient, setShowClient] = useState(false);
   const [currentRoutine, setCurrentRoutine] = useState(null);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -47,29 +40,25 @@ const routine = () => {
   const [routinesList, setRoutinesList] = useState(false);
   const [trainingsList, setTrainingsList] = useState(false);
   const [exercisesList, setExercisesList] = useState(false);
-  const [selectExercises, setSelectExercises] = useState(false);
-  const [selectedTrainings, setSelectedTrainings] = useState([]);
-  const [selectedDays, setSelectedDays] = useState([]);
   const [message, setMessage] = useState(false);
   const [updateExerciseId, setUpdateExerciseId] = useState(null);
-  const [updateTrainingId, setUpdateTrainingId] = useState(null);
   const [updateRoutineId, setUpdateRoutineId] = useState(null)
   const [copyTrainingId, setCopyTrainingId] = useState(null);
-  const [trainingExercises, setTrainingExercises] = useState([]);
-  const [addExercise, setAddExercise] = useState(false);
-
-  const [tExercise, setTExercise] = useState([]);
-  const [showExerciseFields, setShowExerciseFields] = useState(false);
-  const [isExerciseFromList, setIsExerciseFromList] = useState(false);
   const [current, setCurrent] = useState(false);
-  const [addNewEx, setAddNewEx] = useState(false);
   const auth = getAuth();
-  const user = auth.currentUser;
-  const [seriesData, setSeriesData] = useState([{ repetitions: "", sets: "" }]);
   const [myMessage, setMyMessage] = useState("");
 
   const [clients, setClients] = useState([]);
   const [step, setStep] = useState('one')
+
+  const [updateExercise, setUpdateExercise] = useState({})
+  const [updateTraining, setUpdateTraining] = useState({})
+  const [numDays, setNumDays] = useState(1);
+
+  const [routineData, setRoutineData] = useState({
+    days: [], // Días de entrenamiento
+    dayTrainings: {} // Entrenamientos asignados a cada día
+  });
 
   useEffect(() => {
     if (myData) {
@@ -139,56 +128,7 @@ const routine = () => {
       unsubTrainings();
     };
   }, []);
-  // Para crear ejercicios
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
 
-    const exerciseData = {
-      name: newexercise.name,
-      material: newexercise.material,
-      comments: newexercise.comments,
-    };
-
-    if (updateExerciseId) {
-      // Estamos en modo "Actualizar"
-      await handleUpdateExercise(updateExerciseId, exerciseData);
-      setUpdateExerciseId(null); // resetear el modo a "Crear"
-    } else {
-      // Estamos en modo "Crear"
-      await handleCreateExercise(exerciseData);
-    }
-
-    // Limpiar el formulario (según tu implementación actual)
-    setNewExercise({
-      name: "",
-      material: "",
-      comments: "",
-    });
-  };
-  const handleCreateExercise = async (exerciseData) => {
-    try {
-      await addDoc(collection(db, "exercises"), {
-        ...exerciseData,
-        timeStamp: serverTimestamp(),
-      });
-
-      setMessage(true);
-      setTimeout(() => {
-        setMessage(false);
-      }, 3000);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const handleUpdateExercise = async (id, updateData) => {
-    try {
-      const docRef = doc(db, "exercises", id);
-      await updateDoc(docRef, updateData);
-      console.log("Document updated");
-    } catch (error) {
-      console.error("Error updating document: ", error);
-    }
-  };
   const handleDeleteExercise = async (id) => {
     try {
       await deleteDoc(doc(db, "exercises", id));
@@ -197,19 +137,7 @@ const routine = () => {
       console.error("Error deleting document: ", error);
     }
   };
-  const handleAddExercise = () => {
-    setCurrentTraining([...currentTraining, exerciseData]);
-    setTExercise({
-      name: "",
-      repetitions: "",
-      sets: "",
-    });
-  };
-  const handleRemoveExercise = (index) => {
-    const newTraining = [...currentTraining];
-    newTraining.splice(index, 1);
-    setCurrentTraining(newTraining);
-  };
+
   useEffect(() => {
     if (updateExerciseId) {
       const exerciseToUpdate = exercises.find(
@@ -232,7 +160,6 @@ const routine = () => {
       console.error("Error deleting document: ", error);
     }
   };
-
   const selectTrainer = async (cr, id) => {
     await updateDoc(doc(db, "routines", cr), {
       link: id,
@@ -277,6 +204,8 @@ const routine = () => {
     } catch (error) {
       console.log(error);
     }
+
+    handleCloseRoutineModal()
   };
 
   const handleDeleteRoutine = async (id) => {
@@ -287,81 +216,12 @@ const routine = () => {
       console.error("Error deleting document: ", error);
     }
   };
-  const handleUpdateRoutine = async (e, id, routineData) => {
-    e.preventDefault();
-    try {
-      const routineData = {
-        nameroutine: routineData.nameroutine,
-        desroutine: routineData.desroutine,
-        trainings: routineData.trainings,
-        days: routineData.days,
-        // Agrega otros campos que necesites actualizar
-      };
-
-      const docRef = doc(db, "routines", id);
-      await updateDoc(docRef, routineData);
-
-      console.log("Rutina actualizada");
-      setMyMessage("actualizada");
-      setMessage(true);
-
-      // Limpia los campos del formulario o realiza otras acciones necesarias
-
-      setTimeout(() => {
-        setMessage(false);
-        // Cierra el modal u otras acciones después de actualizar
-      }, 3000);
-    } catch (error) {
-      console.error("Error al actualizar la rutina: ", error);
-    }
-  };
-
-  //Modales
-
-  const handleAddExerciseToTraining = (exerciseId, checked) => {
-    if (checked) {
-      setTrainingData((prevData) => ({
-        ...prevData,
-        exercises: [...prevData.exercises, exerciseId],
-      }));
-    } else {
-      setTrainingData((prevData) => ({
-        ...prevData,
-        exercises: prevData.exercises.filter((id) => id !== exerciseId),
-      }));
-    }
-  };
 
   const handleCloseRoutineModal = () => {
     setShowRoutineModal(false);
     // Restablece cualquier estado relacionado con el modal de rutina aquí
   };
 
-  const handleAddTrainingToRoutine = (trainingId) => {
-    setSelectedDays((prevSelectedDays) => {
-      const updatedDays = { ...prevSelectedDays };
-      for (const day of Object.keys(updatedDays)) {
-        if (updatedDays[day] === trainingId) {
-          updatedDays[day] = null;
-        }
-      }
-      if (!updatedDays[selectedDays[0]]) {
-        updatedDays[selectedDays[0]] = trainingId;
-      }
-      return updatedDays;
-    });
-  };
-
-  const handleSelectDay = (day) => {
-    setSelectedDays((prevSelectedDays) => {
-      if (!Array.isArray(prevSelectedDays)) {
-        prevSelectedDays = []; // Si no es un array, inicialízalo como un array vacío.
-      }
-      return prevSelectedDays.includes(day)
-        ? prevSelectedDays.filter((selectedDay) => selectedDay !== day)
-        : [...prevSelectedDays, day];
-    });
-  };
 
   const viewRoutinesList = () => {
     setRoutinesList(true);
@@ -379,37 +239,6 @@ const routine = () => {
     setExercisesList(true);
   };
 
-  const handleSelectExercise = (exercise) => {
-    setIsExerciseFromList(true);
-    setShowExerciseFields(true);
-    setTExercise({
-      name: exercise.exercise_name,
-      repetitions: "",
-      sets: "",
-    });
-  };
-
-  const handleAddExerciseClick = (e) => {
-    console.log(tExercise)
-    e.preventDefault();
-    setCurrentTraining([...currentTraining, tExercise]);
-    setAddNewEx(false);
-    setSelectExercises(false);
-    setTExercise([]);
-  };
-
-  const handleAddSeries = () => {
-    setSeriesData([...seriesData, { repetitions: "", sets: "" }]);
-  };
-  const handleInputChange = (index, event) => {
-    const values = [...seriesData];
-    if (event.target.name === "repetitions") {
-      values[index].repetitions = event.target.value;
-    } else {
-      values[index].sets = event.target.value;
-    }
-    setSeriesData(values);
-  };
   const next = (step) => {
     switch (step) {
       case 'one':
@@ -421,8 +250,7 @@ const routine = () => {
       case 'three':
         setStep('four');
         break;
-      case 'four':
-        setStep('five');
+
         break;
       default:
         break;
@@ -430,9 +258,7 @@ const routine = () => {
   }
   const prev = (step) => {
     switch (step) {
-      case 'five':
-        setStep('four');
-        break;
+
       case 'four':
         setStep('three');
         break;
@@ -447,7 +273,33 @@ const routine = () => {
         break;
     }
   }
+  const handleTrainingAssignment = (e, day) => {
+    const trainingId = e.target.value; // Extraer el ID del entrenamiento del evento
 
+    setRoutineData(prevData => {
+      const updatedDayTrainings = { ...prevData.dayTrainings };
+
+      // Si el día ya tiene entrenamientos asignados, añade el nuevo entrenamiento.
+      // Si no, crea un nuevo arreglo con el entrenamiento.
+      if (updatedDayTrainings[day]) {
+        updatedDayTrainings[day].push(trainingId);
+      } else {
+        updatedDayTrainings[day] = [trainingId];
+      }
+
+      return {
+        ...prevData,
+        dayTrainings: updatedDayTrainings
+      };
+    });
+  };
+
+  const handleNumDaysChange = (e) => {
+    setNumDays(e.target.value);
+    // Actualiza el estado de los días seleccionados en función del número elegido
+    const selectedDays = Array.from({ length: e.target.value }, (_, i) => `Día ${i + 1}`);
+    setRoutineData({ ...routineData, days: selectedDays });
+  };
 
   return (
     <div className={styles.routinesContainer}>
@@ -457,35 +309,28 @@ const routine = () => {
             <div
               className={styles.routine}
             >
-              <FaCalendarDay size={50} />
+              <FaCalendarDay size={150} />
               <p onClick={() => setShowRoutineModal(true)}>Crear Rutina</p>
-              <div onClick={viewRoutinesList}>Ver Mis Rutinas</div>
+              <p onClick={viewRoutinesList}>Ver Mis Rutinas</p>
             </div>
             <div
-
               className={styles.routine}
             >
-              <FaRunning size={50} />
+              <FaRunning size={150} />
               <p onClick={() => {
                 setShowTrainingModal(true);
                 setCurrent(true);
               }}>Crear Entrenamiento</p>
-              <div onClick={viewTrainingList}>Ver Mis Entrenamientos</div>
+              <p onClick={viewTrainingList}>Ver Mis Entrenamientos</p>
             </div>
             <div
-
               className={styles.routine}
             >
-              <FaDumbbell size={50} />
+              <FaDumbbell size={150} />
               <p onClick={() => setShowExerciseModal(true)}>Crear Ejercicio</p>
-              <div onClick={viewExercisesList}>Ver Mis Ejercicios</div>
+              <p onClick={viewExercisesList}>Ver Mis Ejercicios</p>
             </div>
-
-
-
-
           </div>
-
         )}
         {(routinesList || trainingsList || exercisesList) && (
           <div className={styles.bottom}>
@@ -493,126 +338,138 @@ const routine = () => {
               {routinesList && (
                 <div className={styles.myddbbitem}>
                   <h3>Mis Rutinas</h3>
-                  <table>
-                    <tr>
-                      <th>Nombre de la Rutina</th>
-                      <th>Descripción</th>
-                      <th>Entrenamientos</th>
-                      <th>Opciones</th>
-                    </tr>
-                    {routines.map((routine) => (
-                      <tr key={routine.id}>
-                        <td>{routine.name}</td>
-                        <td>{routine.description}</td>
-                        <td>
-                          {routine.trainings.map((training, index) => (
-                            <div key={index}>
-                              <p>{training.name}</p>
-                            </div>
-                          ))}
-                        </td>
-                        <td>
-                          <FaRegEdit size={20}
-                            onClick={() => {
-                              setUpdateRoutineId(routine.id);
-                              setShowRoutineModal(true);
-                            }} />
-                          <BsFillShareFill
-                            size={20}
-                            onClick={() => {
-                              setShowClient(true);
-                              setCurrentRoutine(routine.id);
-                            }}
-                          />
-                          <FaRegTrashAlt size={20} onClick={() => { handleDeleteRoutine(routine.id) }} />
 
-                        </td>
-                      </tr>
-                    ))}
-                  </table>
+
+                  {routines.map((routine) => (
+                    <div key={routine.id} style={{
+                      border: '1px solid #ffffff', borderRadius: '8px', padding: '1rem', display: 'flex',
+                      flexDirection: 'column', justifyContent: 'space-evenly', alignItems: 'center'
+                    }}>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}><p>Nombre de la Rutina</p><p>{routine.name}</p></div>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}><p>Descripción</p><p style={{ width: '200px' }}>{routine.description}</p></div>
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <p>Entrenamientos</p>
+                        {routine.trainings.map((training, index) => (
+                          <div key={index}>
+                            <p>{training.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ width: '100px', display: 'flex', justifyContent: 'space-between' }}>
+                        <FaRegEdit size={20}
+                          onClick={() => {
+                            setUpdateRoutineId(routine.id);
+                            setShowRoutineModal(true);
+                          }} />
+                        <BsFillShareFill
+                          size={20}
+                          onClick={() => {
+                            setShowClient(true);
+                            setCurrentRoutine(routine.id);
+                          }}
+                        />
+                        <FaRegTrashAlt size={20} onClick={() => { handleDeleteRoutine(routine.id) }} />
+
+                      </div>
+                    </div>
+                  ))}
+
                 </div>
               )}
               {trainingsList && (
                 <div className={styles.myddbbitem}>
                   <h3>Mis entrenamientos</h3>
-                  <table>
-                    <tr>
-                      <th>Nombre del Entrenamiento</th>
-                      <th>Descripción</th>
-                      <th>Ejercicios</th>
-                      <th>Opciones</th>
-                    </tr>
-                    {trainings.map((training) => (
-                      <tr key={training.id}>
-                        <td>{training.name}</td>
-                        <td>{training.description}</td>
-                        <td>
-                          {training.exercises.map((exercise) => (
-                            <div key={exercise.id}>
-                              <p>{exercise.name}</p>
-                            </div>
-                          ))}
-                        </td>
-                        <td>
+
+
+                  {trainings.map((training) => (
+                    <div key={training.id} style={{
+                      border: '1px solid #ffffff', width: '500px', height: '200px', padding: '1rem',
+                      borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <p>Nombre del Entrenamiento</p>
+                        <p>{training.name}</p>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <p>Descripción</p>
+                        <p>{training.description}</p>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <p>Ejercicios</p>
+                        {training.exercises.map((exercise) => (
+                          <div key={exercise.id}>
+                            <p>Ejercicios{exercise.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>                 <FaRegEdit
+                        size={20}
+                        onClick={() => {
+                          setUpdateTraining(training);
+                          setShowTrainingModal(true);
+                          setCurrent(true);
+                        }}
+                      />
+                        <FaCopy
+                          size={20}
+                          onClick={() => {
+                            setCopyTrainingId(training.id);
+                            setShowTrainingModal(true);
+                          }}
+                        />
+                        <FaRegTrashAlt
+                          size={20}
+                          onClick={() => handleDeleteTraining(training.id)}
+                        /></div>
+
+
+
+
+                    </div>
+                  ))}
+
+                </div>
+              )}
+              {exercisesList && (
+                <>
+
+                  <div className={styles.myddbbitem}>
+                    <h3>Mis ejercicios</h3>
+
+                    {exercises.map((exercise) => (
+                      <div key={exercise} className={styles.exercise}>
+                        <div>
+                          <p>Nombre</p>
+                          <p>{exercise.name}</p>
+                        </div>
+                        <div>
+                          <p>Material</p>
+                          <p>{exercise.material}</p>
+                        </div>
+                        <div>
+                          <p>Comentarios</p>
+                          <p>{exercise.comments}</p>
+                        </div>
+                        <div>
                           <FaRegEdit
                             size={20}
                             onClick={() => {
-                              setUpdateTrainingId(training.id);
-                              setShowTrainingModal(true);
-                              setCurrent(true);
-                            }}
-                          />
-                          <FaCopy
-                            size={20}
-                            onClick={() => {
-                              setCopyTrainingId(training.id);
-                              setShowTrainingModal(true);
+                              setUpdateExercise(exercise);
+                              setShowExerciseModal(true);
                             }}
                           />
                           <FaRegTrashAlt
                             size={20}
-                            onClick={() => handleDeleteTraining(training.id)}
+                            onClick={() => handleDeleteExercise(exercise.id)}
                           />
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </table>
-                </div>
-              )}
-              {exercisesList && (
-                <div className={styles.myddbbitem}>
-                  <h3>Mis ejercicios</h3>
-                  <table>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Equipamiento</th>
-                      <th>Comentarios</th>
-                      <th>Opciones</th>
-                    </tr>
-                    <div className={styles.exercise}>
-                      {exercises.map((exercise) => (
-                        <tr key={exercise}>
-                          <td>{exercise.name}</td>
-                          <td>{exercise.material}</td>
-                          <td>{exercise.comments}</td>
-                          <td>
-                            <FaRegEdit
-                              size={20}
-                              onClick={() => {
-                                setUpdateExerciseId(exercise.id);
-                                setShowExerciseModal(true);
-                              }}
-                            />
-                            <FaRegTrashAlt
-                              size={20}
-                              onClick={() => handleDeleteExercise(exercise.id)}
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </div>
-                  </table>
-                </div>
+
+
+                  </div>
+
+                </>
               )}
             </div>
             <div
@@ -628,225 +485,254 @@ const routine = () => {
           </div>
         )}
       </div>
-      {showExerciseModal && (
-        <Exercise
-          showExerciseModal={showExerciseModal} setShowExerciseModal={setShowExerciseModal}
-        />
-      )}
-      {showTrainingModal && <Training showTrainingModal={showTrainingModal} setShowTrainingModal={setShowTrainingModal} />}
-      {showRoutineModal && (
-        <div className={styles.modal}
-        >
-          <div className={styles.exContent} styles={{ display: showTrainingModal ? 'none' : '' }}>
-            <div className={styles.trainsteps}>
-              {step === 'one' && <div
-                style={step === 'one' ? {
-                  backgroundColor: '#f69d21', color: '#000000',
-                  borderColor: '#000000'
-                } : { backgroundColor: '#000000' }}>
-                <div>
-                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
-                </div>
-                <div>
-                  <p>Define tu rutina</p>
-                  <p>
-                    <FaCalendarDay size={50} />
-                  </p>
-                </div>
-                <div>
-                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
-                </div>
-              </div>}
-              {step === 'two' && <div
-                style={step === 'two' ? {
-                  backgroundColor: '#f69d21', color: '#000000',
-                  borderColor: '#000000'
-                } : { backgroundColor: '#000000' }}>
-                <div>
-                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
-                </div>
-                <div>
-                  <p>Crea un entrenamiento</p>
-                  <p>
-                    <FaRunning size={50} />
-                  </p>
-                </div>
-                <div>
-                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
-                </div>
-              </div>}
-              {step === 'three' && <div
-                style={step === 'three' ? {
-                  backgroundColor: '#f69d21', color: '#000000',
-                  borderColor: '#000000'
-                } : { backgroundColor: '#000000' }}>
-                <div>
-                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
-                </div>
-                <div>
-                  <p>Añade entrenamientos existentes</p>
-                  <p>
-                    <FaDatabase size={50} />
-                  </p>
-                </div>
-                <div>
-                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
-                </div>
+      {
+        showExerciseModal && (
+          <Exercise
+            showExerciseModal={showExerciseModal} setShowExerciseModal={setShowExerciseModal} updateExercise={updateExercise}
+          />
+        )
+      }
+      {showTrainingModal && <Training showTrainingModal={showTrainingModal} setShowTrainingModal={setShowTrainingModal} updateTraining={updateTraining} />}
+      {
+        showRoutineModal && (
+          <div className={styles.modal}
+          >
+            <div className={styles.exContent} styles={{ display: showTrainingModal ? 'none' : '' }}>
+              <div className={styles.trainsteps}>
+                {step === 'one' &&
+                  <div
+                    style={step === 'one' ? {
+                      backgroundColor: '#f69d21', color: '#000000',
+                      borderColor: '#000000'
+                    } : { backgroundColor: '#000000' }}>
+                    <div>
+                      <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
+                    </div>
+                    <div>
+                      <p>Define tu rutina</p>
+                      <p>
+                        <FaCalendarDay size={50} />
+                      </p>
+                    </div>
+                    <div>
+                      <IoIosArrowForward size={50} onClick={() => { next(step) }} />
+                    </div>
+                  </div>}
+                {step === 'two' && (
+                  <div style={step === 'two' ? {
+                    backgroundColor: '#f69d21', color: '#000000',
+                    borderColor: '#000000'
+                  } : { backgroundColor: '#000000' }}>
+                    <div>
 
-              </div>}
-              {step === 'four' && <div
-                style={step === 'four' ? {
-                  backgroundColor: '#f69d21', color: '#000000',
-                  borderColor: '#000000'
-                } : { backgroundColor: '#000000' }}>
-                <div>
-                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
-                </div>
-                <div>
-                  <p>Organiza tu rutina</p>
-                  <p>
-                    <FaCalendar size={50} />
-                  </p>
-                </div>
-                <div>
-                  <IoIosArrowForward size={50} onClick={() => { next(step) }} />
-                </div>
+                      <IoIosArrowForward size={50} style={{ rotate: '180deg' }} onClick={() => prev(step)} />
+                    </div>
+                    <div>
+                      <p>¿Quieres crear algún entrenamiento nuevo?</p>
+                      <FaCalendarDay size={50} />
+                    </div>
+                    <div>
+                      <IoIosArrowForward size={50} onClick={() => next(step)} />
+                    </div>
 
-              </div>}
-              {step === 'five' && <div
-                style={step === 'five' ? {
-                  backgroundColor: '#f69d21', color: '#000000',
-                  borderColor: '#000000'
-                } : { backgroundColor: '#000000' }}>
-                <div>
-                  <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
-                </div>
-                <div>
-                  <p>Envía entrenamiento</p>
-                  <p>
-                    <FaRunning size={50} />
-                  </p>
-                </div>
-                <div>
-                  <IoIosArrowForward size={50} style={step === 'five' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => { next(step) }} />
-                </div>
+                  </div>
+                )}
+                {step === 'three' && (
+                  <div style={step === 'three' ? {
+                    backgroundColor: '#f69d21', color: '#000000',
+                    borderColor: '#000000'
+                  } : { backgroundColor: '#000000' }}>
+                    <div>
+                      <IoIosArrowForward size={50} style={{ rotate: '180deg' }} onClick={() => prev(step)} />
+                    </div>
+                    <div>
+                      <p>Asigna entrenamientos a los días</p>
+                      <FaRunning size={50} />
+                    </div>
+                    <div>
+                      <IoIosArrowForward size={50} onClick={() => next(step)} />
+                    </div>
 
-              </div>}
-            </div>
-            <form onSubmit={handleCreateRoutine}>
-              {step === 'one' &&
-                <>
+                  </div>
+                )}
+                {step === 'four' && <div
+                  style={step === 'four' ? {
+                    backgroundColor: '#f69d21', color: '#000000',
+                    borderColor: '#000000'
+                  } : { backgroundColor: '#000000' }}>
                   <div>
-                    <p>Nombre:</p>
-                    <input
-                      type="text"
-                      value={data.nameroutine}
-                      onChange={(e) => {
-                        setData({ ...data, nameroutine: e.target.value });
-                        console.log(data);
-                      }}
-                    />
+                    <IoIosArrowForward size={50} style={step === 'one' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => prev(step)} />
                   </div>
                   <div>
-                    <p>Descripción:</p>
-                    <textarea
-                      type="text"
-                      value={data.desroutine}
-                      onChange={(e) => {
-                        setData({ ...data, desroutine: e.target.value });
-                        console.log(data);
-                      }}
-                    />
+                    <p>Revisa y envía tu rutina</p>
+                    <p>
+                      <FaRunning size={50} />
+                    </p>
                   </div>
-                </>}
-              {step === 'two' &&
-                <>
-                  <h3 onClick={() => {
-                    setShowTrainingModal(true);
-                    setShowRoutineModal(false);
-                    setCurrent(true);
-                  }} >Crea tus nuevos entrenamientos</h3>
-                  <p>Puedes crear un entrenamiento para añadirlo a tu rutina</p>
-                </>}
-              {step === 'three' && <>  <h2>Añade Tus Entrenamientos</h2>
-                <h3>Selecciona desde tu Banco de ejercicios</h3>
-                <div className={styles.addtrainings}>
+                  <div>
+                    <IoIosArrowForward size={50} style={step === 'four' ? { color: 'transparent' } : { rotate: '180deg' }} onClick={() => { next(step) }} />
+                  </div>
 
-                  {trainings.map((training) => (
-                    <div key={training.id} className={styles.trainingCheckbox}>
+                </div>}
+              </div>
+              <form onSubmit={handleCreateRoutine}>
+                {step === 'one' &&
+                  <>
+                    <div>
+                      <p>Nombre:</p>
                       <input
-                        type="checkbox"
-                        id={training.id}
-                        value={training.id}
+                        type="text"
+                        value={data.nameroutine}
                         onChange={(e) => {
-                          // Verificar si el entrenamiento está seleccionado
-                          const selectedTrainings = data.trainings || [];
-                          if (e.target.checked) {
-                            // Agregarlo a la lista si está marcado
-                            selectedTrainings.push({
-                              id: training.id,
-                              name: training.name,
-                            });
-                          } else {
-                            // Quitarlo de la lista si está desmarcado
-                            const index = selectedTrainings.findIndex(
-                              (item) => item.id === training.id
-                            );
-                            if (index !== -1) {
-                              selectedTrainings.splice(index, 1);
-                            }
-                          }
-                          setData({ ...data, trainings: selectedTrainings });
+                          setData({ ...data, nameroutine: e.target.value });
+                          console.log(data);
                         }}
                       />
-                      <label htmlFor={training.id}>{training.name}</label>
                     </div>
-                  ))}
-                </div></>}
-              {step === 'four' && <> <h3>Días de entrenamiento</h3>
-                <div className={styles.myday}>
-                  <input
-                    type="text"
-                    value={data.days || ''}
-                    onChange={(e) => setData({ ...data, days: e.target.value })}
-                  />
-                </div>
-              </>}
+                    <div>
+                      <p>Descripción:</p>
+                      <textarea
+                        type="text"
+                        value={data.desroutine}
+                        onChange={(e) => {
+                          setData({ ...data, desroutine: e.target.value });
+                          console.log(data);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p>Selecciona los días que entrenarás a la semana</p>
+                      <select value={numDays} onChange={handleNumDaysChange}>
+                        {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </div>
 
-              {step === 'five' && <>  <button className={styles.create} onClick={handleCreateRoutine}>
-                Crear Rutina
-              </button></>}
-            </form>
+                    <div>
+                      {routineData.days.map((day, index) => (
+                        <div key={index}>
+                          <p>{day}</p>
 
+                        </div>
+                      ))}
+                    </div>
+                  </>}
+                {step === 'two' &&
+                  <>
+                    <h1>Crea tus entrenamientos</h1>
+                    <button onClick={() => {
+                      setShowTrainingModal(true);
+                      setShowRoutineModal(false);
+                      setCurrent(true);
+                    }} >Crea nuevo entrenamiento</button>
+
+                  </>}
+                {step === 'three' && <>  <h2>Añade Tus Entrenamientos</h2>
+                  <h3>Selecciona desde tu Banco de ejercicios</h3>
+
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {routineData.days && routineData.days.map((day, index) => (
+                      <div key={index} >
+                        <p>{day}</p>
+                        <select onChange={(e) => handleTrainingAssignment(e, day)}>
+                          <option value="">Selecciona un entrenamiento</option>
+                          {trainings.map((training) => (
+                            <option key={training.id} value={training.id}>
+                              {training.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div></>}
+
+                {step === 'four' && (
+                  <>
+                    <button className={styles.create} onClick={handleCreateRoutine}>
+                      Crear Rutina
+                    </button>
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                      <h3>Resumen de la Rutina</h3>
+                      <p>Nombre de la Rutina: {data.nameroutine}</p>
+                      <p>Descripción: {data.desroutine}</p>
+                      <p>Días de Entrenamiento: {data.days}</p>
+                      <h4>Entrenamientos Asignados:</h4>
+                      {routineData.days.map((day) => (
+                        <div key={day}>
+                          <h5>{day}</h5>
+                          {Array.isArray(routineData.dayTrainings[day]) && routineData.dayTrainings[day].map((trainingId) => {
+                            const training = trainings.find(t => t.id === trainingId);
+                            return (
+                              training ? (
+                                <div key={training.id} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                  <h3>{training.name}</h3>
+                                  <p>{training.description}</p>
+                                  <h4>Ejercicios:</h4>
+                                  {training.exercises.map((exercise, index) => (
+                                    <div key={index} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                      <p>Nombre del ejercicio: {exercise.name}</p>
+                                      <p>Comentarios: {exercise.comments}</p>
+                                      <p>Material: {exercise.material}</p>
+                                      {exercise.superset && (
+                                        <>
+                                          <h5>Supersets:</h5>
+                                          {exercise.superset.map((superset, supersetIndex) => (
+                                            <div key={supersetIndex}>
+                                              <p>Repeticiones: {superset.repetitions}</p>
+                                              <p>Sets: {superset.sets}</p>
+                                            </div>
+                                          ))}
+                                        </>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : null
+                            );
+                          })}
+                        </div>
+                      ))}
+
+
+                    </div>
+                  </>
+                )}
+
+              </form>
+
+            </div>
+            <div className={styles.closebutton} onClick={handleCloseRoutineModal}>
+              X
+            </div>
           </div>
-          <div className={styles.closebutton} onClick={handleCloseRoutineModal}>
-            X
-          </div>
-        </div>
-      )}
-      {showClient && (
-        <div className={styles.share}>
-          {clients
-            .filter((data) => data.role === "client")
-            .map((data) => (
-              <div
-                key={data.id}
-                onClick={() => selectTrainer(currentRoutine, data.id)}
-              >
-                <div>
-                  {data.img ? (
-                    <img src={data.img} alt={"myprofileimg"} />
-                  ) : (
-                    <img src="/face.jpg" alt={"myprofileimg"} />
-                  )}
+        )
+      }
+      {
+        showClient && (
+          <div className={styles.share}>
+            {clients
+              .filter((data) => data.role === "client")
+              .map((data) => (
+                <div
+                  key={data.id}
+                  onClick={() => selectTrainer(currentRoutine, data.id)}
+                >
+                  <div>
+                    {data.img ? (
+                      <img src={data.img} alt={"myprofileimg"} />
+                    ) : (
+                      <img src="/face.jpg" alt={"myprofileimg"} />
+                    )}
+                  </div>
+                  <p>{data.username}</p>
                 </div>
-                <p>{data.username}</p>
-              </div>
-            ))}
-          <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
-        </div>
-      )}
-    </div>
+              ))}
+            <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
+          </div>
+        )
+      }
+    </div >
   );
 };
 

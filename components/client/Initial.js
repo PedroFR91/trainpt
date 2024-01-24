@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "../../styles/forms.module.css";
 import { initialForm } from "../../forms/initialForm";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
 import { AiOutlineSend, AiOutlineUpload } from "react-icons/ai";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
@@ -12,8 +12,42 @@ const Initial = (props) => {
   const [formStructure, setFormStructure] = useState({
     ...initialForm,
     gender: "man",
-
   });
+  const [additionalFields, setAdditionalFields] = useState([]);
+
+  const addField = (type) => {
+    const newField = {
+      type: type,
+      label: "",
+      value: "",
+      newOption: "", // Nuevo campo para manejar la opción que se está agregando
+      options: type === "select" ? [] : undefined,
+    };
+    setAdditionalFields([...additionalFields, newField]);
+  };
+
+
+  const handleLabelChange = (e, index) => {
+    const updatedFields = [...additionalFields];
+    updatedFields[index].label = e.target.value;
+    setAdditionalFields(updatedFields);
+  };
+
+  const handleNewOptionChange = (e, index) => {
+    const updatedFields = [...additionalFields];
+    updatedFields[index].newOption = e.target.value;
+    setAdditionalFields(updatedFields);
+  };
+
+  const addSelectOption = (index) => {
+    const updatedFields = [...additionalFields];
+    if (updatedFields[index].newOption.trim() !== "") {
+      updatedFields[index].options.push(updatedFields[index].newOption);
+      updatedFields[index].newOption = ""; // Limpiar después de añadir
+    }
+    setAdditionalFields(updatedFields);
+  };
+
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -27,6 +61,12 @@ const Initial = (props) => {
         timeStamp: serverTimestamp(),
       });
 
+      // Actualizar el documento del usuario con el ID del formulario
+      const userDocRef = doc(db, "users", myUid); // Asumiendo que myUid es el ID del usuario
+      await updateDoc(userDocRef, {
+        initialForm: formRef.id
+      });
+
       // Limpiar el estado del formulario
       setFormStructure({
         ...initialForm,
@@ -36,11 +76,12 @@ const Initial = (props) => {
         lateral: null,
       });
 
-      console.log("Formulario creado con éxito", formRef.id);
+      console.log("Formulario creado con éxito y guardado en el usuario", formRef.id);
     } catch (error) {
-      console.error("Error al crear el formulario:", error);
+      console.error("Error al crear el formulario y actualizar el usuario:", error);
     }
   };
+
 
   const handleChange = (event) => {
     const { name, type, value } = event.target;
@@ -306,6 +347,52 @@ const Initial = (props) => {
             />
           </div>
         </div>
+        <h3>Preguntas extra:</h3>
+        <button onClick={() => addField("text")}>Añadir Campo de Texto</button>
+        <button onClick={() => addField("select")}>Añadir Campo de Selección</button>
+        {additionalFields.map((field, index) => (
+          <div key={index}>
+            <div>
+              <input
+                type="text"
+                placeholder="Etiqueta"
+                value={field.label}
+                onChange={(e) => handleLabelChange(e, index)}
+              />
+            </div>
+
+            <label>
+              {field.label}
+              {field.type === "text" ? (
+                <input
+                  type="text"
+                  value={field.value}
+                  onChange={(e) => handleAdditionalFieldChange(e, index)}
+                />
+              ) : (
+                <>
+                  <select onChange={(e) => handleAdditionalFieldChange(e, index)}>
+                    {field.options.map((option, optionIndex) => (
+                      <option key={optionIndex} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Nueva Opción"
+                      value={field.newOption}
+                      onChange={(e) => handleNewOptionChange(e, index)}
+                    />
+                    <button onClick={() => addSelectOption(index)}>Añadir Opción</button>
+                  </div>
+                </>
+              )}
+            </label>
+          </div>
+        ))}
+
         <div onClick={handleCreate}>
           <div>
             <p>Guardar Formulario</p>

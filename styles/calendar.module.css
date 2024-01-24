@@ -94,7 +94,9 @@
   border: 1px solid var(--orange);
   cursor: pointer;
 }
-.eventDay {
+.eventDay,
+.startDate,
+.reviewDate {
   background-color: green;
 }
 .container h1 {

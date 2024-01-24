@@ -10,17 +10,20 @@ import TrainerHeader from '../../../components/trainer/trainerHeader'
 import Form from '../../../components/forms/form'
 import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa";
 import { BsFillShareFill } from "react-icons/bs";
+import MyRoutines from "../../../components/general/myroutines";
 const Subscription = () => {
     const [subscription, setSubscription] = useState(null);
-    const [loading, setLoading] = useState(true); // Estado para manejar la carga
+    const [loading, setLoading] = useState(true);
     const [trainer, setTrainer] = useState(null);
     const router = useRouter();
     const { clientId } = router.query;
-    const { user, myData } = useContext(AuthContext); // Asume que AuthContext proporciona un objeto de usuario
+    const { myData } = useContext(AuthContext);
     const [currentUser, setCurrentUser] = useState(null);
     const [myForm, setMyForm] = useState([]);
     const [routines, setRoutines] = useState([]);
     const [selectedRoutineId, setSelectedRoutineId] = useState(null);
+    const [initialFormDetails, setInitialFormDetails] = useState(null);
+    const startDate = new Date().toLocaleDateString()
 
 
     useEffect(() => {
@@ -75,48 +78,19 @@ const Subscription = () => {
         {
             step: 'form',
             description: 'Pendiente respuesta formulario',
-            button: <button onClick={() => handleUpdateStatus('revision')}>Enviar Formulario Inicial</button>,
             section: '',
         },
         {
             step: 'revision',
-            description: 'Pendiente de recibir revisión',
-            button: <button onClick={() => handleUpdateStatus('complete')}>Completar Revisión</button>,
-            section: <> <h3>Asignar Una Rutina Disponible</h3>
-                <table>
-                    <tr>
-                        <th>Nombre de la Rutina</th>
-                        <th>Descripción</th>
-                        <th>Entrenamientos</th>
-                        <th>Opciones</th>
-                    </tr>
-                    {routines.map((routine) => (
-                        <tr key={routine.id}>
-                            <td>{routine.name}</td>
-                            <td>{routine.description}</td>
-                            <td>
-                                {routine.trainings.map((training, index) => (
-                                    <div key={index}>
-                                        <p>{training.name}</p>
-                                    </div>
-                                ))}
-                            </td>
-                            <td>
-                                <BsFillShareFill
-                                    size={20}
-                                    onClick={() => handleSelectRoutine(routine.id)}
-                                />
+            description: <div>Revisa el formulario inicial y envía la rutina a tu cliente</div>,
+            section: <MyRoutines />
 
-                            </td>
-                        </tr>
-                    ))}
-                </table></>
         },
         {
             step: 'complete',
-            description: 'Completo',
+            description: <div>¡Listos para comenzar!, puedes editar la fecha de comienzo o de las revisiones desde tu calendario</div>,
             button: <span>Revisión Completa</span>,
-            section: <div>{new Date().toLocaleDateString()}</div>
+            section: <div> <Link href={`/trainer/home?startDate=${startDate}`}>Ir al Calendario</Link></div>
         },
     ];
 
@@ -124,18 +98,19 @@ const Subscription = () => {
     const clientSubscriptionStatus = [
         {
             step: 'previous',
-            description: 'Esperando a tu entrenador',
+            description: 'Esperando la respuesta de  tu entrenador',
 
         },
         {
             step: 'form',
-            description: 'Pendiente de completar formulario',
-            button: <Link href={{ pathname: `/shared/forms/${myForm[0]?.id}`, query: { clientId: clientId } }}>Ir al formulario inicial</Link>,
+            description: <div>Tu entrenador te ha enviado el formulario<br /> inicial para conocer algunos datos sobre ti</div>,
+            section: <Link href={{ pathname: `/shared/forms/${myForm[0]?.id}`, query: { clientId: clientId } }}>Ir al formulario inicial</Link>,
+            button: <button onClick={() => handleUpdateStatus('revision')}>Enviar Formulario Inicial</button>,
         },
         {
             step: 'revision',
-            description: 'Pendiente de completar rutina',
-            button: <a href='/mis-archivos'>Ver mis archivos</a>,
+            description: <div>El entrenador te enviará tu rutina personalizada tras revisar tu formulario inicial</div>,
+
         },
         {
             step: 'complete',
@@ -145,17 +120,27 @@ const Subscription = () => {
     ];
 
     useEffect(() => {
-
-        setCurrentUser(user || myData);
-
-
         if (router.isReady && clientId) {
             const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
             getDocs(subsQuery).then(querySnapshot => {
                 if (!querySnapshot.empty) {
                     const docData = querySnapshot.docs[0].data();
-                    const docId = querySnapshot.docs[0].id; // Aquí capturas el ID del documento
-                    setSubscription({ ...docData, id: docId }); // Guarda los datos de la suscripción y el ID del documento en el estado
+                    const docId = querySnapshot.docs[0].id;
+                    setSubscription({ ...docData, id: docId });
+
+                    // Obtener el formulario inicial si existe
+                    if (docData.initialForm) {
+                        const formRef = doc(db, 'forms', docData.initialForm);
+                        getDoc(formRef).then(formSnap => {
+                            if (formSnap.exists()) {
+                                setInitialFormDetails(formSnap.data());
+                            } else {
+                                console.error("No se encontró el formulario inicial:", docData.initialForm);
+                            }
+                        }).catch(error => {
+                            console.error("Error al obtener el formulario inicial:", error);
+                        });
+                    }
                 } else {
                     console.error("No se encontró la suscripción para el cliente:", clientId);
                 }
@@ -165,19 +150,8 @@ const Subscription = () => {
                 setLoading(false);
             });
         }
-        if (subscription && subscription.trainerId) {
-            const trainerRef = doc(db, 'users', subscription.trainerId);
-            getDoc(trainerRef).then(docSnap => {
-                if (docSnap.exists()) {
-                    setTrainer(docSnap.data());
-                } else {
-                    console.error("No se encontró el entrenador:", subscription.trainerId);
-                }
-            }).catch(error => {
-                console.error("Error al obtener los datos del entrenador:", error);
-            });
-        }
-    }, [subscription, clientId]);
+    }, [router, clientId]);
+
 
     const getStatusClassName = (statusKey) => {
         // Si no hay suscripción o el estado de la suscripción es indefinido, se aplica el estilo por defecto
@@ -233,14 +207,12 @@ const Subscription = () => {
         handleUpdateStatus('complete')
     };
 
-
-
-
     if (loading) {
         return <div>Cargando estado de la suscripción...</div>;
+
     }
 
-    const stepsToShow = currentUser?.role === 'client' ? clientSubscriptionStatus : trainerSubscriptionStatus;
+    const stepsToShow = myData?.role === 'client' ? clientSubscriptionStatus : trainerSubscriptionStatus;
 
     return (
         <>
@@ -249,7 +221,7 @@ const Subscription = () => {
                 {subscription ? (
                     <div>
                         <h1>Hola, {myData?.username}. Desde aquí puedes comprobar el estado de tu suscripción.</h1>
-                        {currentUser?.role === 'client' && <h1>Has seleccionado como entrenador a  {trainer?.username} </h1>}
+                        {myData?.role === 'client' && <h1>Has seleccionado como entrenador a  {trainer?.username} </h1>}
                         <div>
                             <button>
                                 <Link href={`/shared/trainers/${trainer?.id}`}>Ver perfil</Link>
