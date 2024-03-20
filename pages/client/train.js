@@ -8,7 +8,7 @@ import AuthContext from '../../context/AuthContext';
 const Train = () => {
   const [routines, setRoutines] = useState([]);
   const [selectedTraining, setSelectedTraining] = useState(null);
-  const { myData, myUid } = useContext(AuthContext);
+  const { myUid } = useContext(AuthContext);
   const [realRepsValues, setRealRepsValues] = useState({});
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'routines'), (snapshot) => {
@@ -65,7 +65,7 @@ const Train = () => {
   };
   return (
     <div className={styles.container}>
-      <ClientHeader />
+
       <div className={styles.myRoutine}>
 
         {routines

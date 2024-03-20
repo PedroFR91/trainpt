@@ -1,92 +1,31 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import styles from '../../styles/program.module.css';
 import ClientHeader from '../../components/client/clientHeader';
 import ClientProfile from '../../components/client/clientProfile';
 import TrainersList from '../../components/client/trainersList';
 import AuthContext from '../../context/AuthContext';
-import { follow } from '../../forms/initialForm';
-import {
-  addDoc,
-  collection,
-  doc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase.config';
-import MyImages from '../../components/client/myImages';
+import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
+import MyRoutines from '../../components/client/myroutines';
+
 import Link from 'next/link';
 const program = () => {
-  const revision = '10 Enero';
-  const { myData, myUid } = useContext(AuthContext);
-  const [formDataFollow, setFormDataFollow] = useState(follow);
-  const [myForm, setMyForm] = useState([]);
-  const [expand, setExpand] = useState(true);
-
-  const handleSubmitFollow = (event) => {
-    event.preventDefault();
-    console.log(formDataFollow);
-    handleCreateFollow();
-  };
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'forms'),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setMyForm(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    return () => {
-      unsub();
-    };
-  }, []);
-  const handleCreateFollow = async (e) => {
-    try {
-      await addDoc(collection(db, 'forms'), {
-        ...formDataFollow,
-        link: myUid,
-        type: 'Semanal',
-        timeStamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const handleMeasuresChangeFollow = (event) => {
-    setFormDataFollow({
-      ...formDataFollow,
-      measures: {
-        ...formDataFollow.measures,
-        [event.target.name]: event.target.value,
-      },
-    });
-  };
-  const handlePhotosChangeFollow = (event) => {
-    setFormDataFollow({
-      ...formDataFollow,
-      photos: {
-        ...formDataFollow.photos,
-        [event.target.name]: event.target.files[0],
-      },
-    });
-  };
+  const { myUid } = useContext(AuthContext);
 
   return (
     <div className={styles.programContainer}>
-      <ClientHeader />
+      {/* <ClientHeader /> */}
       <div className={styles.programlayout}>
         <ClientProfile />
-        {/* <MyImages /> */}
-        <Link href={`/shared/subcription/${myUid}`} style={{ color: '#fff' }}>Mi suscripción</Link>
-        <Link href={'/chat/chat'} style={{ color: '#fff' }}>CHAT</Link>
-        <div className={styles.nextrevision}>Próxima revisión:{revision}</div>
+        <Link href={'/chat/chat'} style={{ color: '#fff' }}>
+          <IoChatbubbleEllipsesOutline size={50} className={styles.chatIcon} />
+        </Link>
         <TrainersList />
+        <h3>Mis Rutinas</h3>
+        <MyRoutines myUid={myUid} />
+        <h3>Mi Dieta</h3>
+        <h3>Mis Revisiones</h3>
+        <h3>Mis Medidas</h3>
+        <h3>Mis Fotos</h3>
       </div>
     </div>
   );

@@ -1,23 +1,12 @@
-.container {
-  width: 100%;
-  height: 100vh;
-  background-color: #212121;
-  z-index: -10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 .myRoutine {
-  padding-top: 20vh;
-  padding-left: 2rem;
   width: 100%;
-  height: 100vh;
+  height: fit-content;
   display: flex;
   flex-direction: column;
 }
 .routine {
-  border: 1px solid black;
-  width: 80%;
+  border: 1px solid #ffffff;
+  width: 90%;
   margin: 1rem auto;
   height: fit-content;
   display: flex;
@@ -25,15 +14,20 @@
   justify-content: space-between;
   align-items: stretch;
   padding: 2rem;
-  background-color: #ffffff;
+
   border-radius: 10px;
 }
 .routine > div {
   display: flex;
-  width: 50%;
+  width: 100%;
+
   flex-direction: column;
   justify-content: space-between;
   align-items: stretch;
+}
+.routine > div > div > p {
+  width: 100%;
+  height: 2rem;
 }
 .routine div p {
   display: flex;

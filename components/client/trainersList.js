@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import styles from '../../styles/program.module.css';
 import {
-  arrayUnion,
-  arrayRemove,
   collection,
   deleteDoc,
   doc,
   onSnapshot,
-  updateDoc,
   setDoc,
   query,
   where,
@@ -79,55 +76,56 @@ const TrainersList = () => {
 
 
   return (
-    <>
-      <h2>{currentTrainerId ? 'Mi Entrenador' : 'Entrenadores Disponibles'}</h2>
-      <div className={styles.trainersList}>
-        {currentTrainerId
-          ? data
-            .filter((trainer) => trainer.id === currentTrainerId)
-            .map((trainer) => (
-              <div key={trainer.id} className={styles.userdata}>
-                <div>
-                  {trainer.img ? (
+
+    <div className={styles.trainersList}>
+      {currentTrainerId
+        ? data
+          .filter((trainer) => trainer.id === currentTrainerId)
+          .map((trainer) => (
+            <div key={trainer.id} className={styles.userdata}>
+              <Link href={`/shared/trainers/${trainer.id}`} legacyBehavior>
+                {trainer.img ? (
+                  <div >
                     <img src={trainer.img} alt={'Imagen de perfil'} />
-                  ) : (
+                    <div>{trainer.username}</div>
+                  </div>
+                ) : (
+                  <div>
                     <img src='/face.jpg' alt={'Imagen de perfil'} />
-                  )}
-                </div>
-                <div>{trainer.username}</div>
-                <Link href={`/shared/trainers/${trainer.id}`} legacyBehavior>
-                  <a className={styles.button}>Ver Perfil</a>
-                </Link>
-                <div
-                  className={styles.button}
-                  onClick={() => deselectTrainer(trainer.id)}
-                >
-                  Cambiar
-                </div>
+                    <div>{trainer.username}</div>
+                  </div>
+                )}
+              </Link>
+              <button
+                className={styles.button}
+                onClick={() => deselectTrainer(trainer.id)}
+              >
+                Cambiar
+              </button>
+            </div>
+          ))
+        : data
+          .filter((trainer) => trainer.role === 'trainer')
+          .map((trainer) => (
+            <div key={trainer.id} className={styles.userdata}>
+              <div>
+                {trainer.img ? (
+                  <img src={trainer.img} alt={'Imagen de perfil'} />
+                ) : (
+                  <img src='/face.jpg' alt={'Imagen de perfil'} />
+                )}
               </div>
-            ))
-          : data
-            .filter((trainer) => trainer.role === 'trainer')
-            .map((trainer) => (
-              <div key={trainer.id} className={styles.userdata}>
-                <div>
-                  {trainer.img ? (
-                    <img src={trainer.img} alt={'Imagen de perfil'} />
-                  ) : (
-                    <img src='/face.jpg' alt={'Imagen de perfil'} />
-                  )}
-                </div>
-                <div>{trainer.username}</div>
-                <div
-                  className={styles.button}
-                  onClick={() => selectTrainer(trainer.id)}
-                >
-                  Seleccionar
-                </div>
+              <div>{trainer.username}</div>
+              <div
+                className={styles.button}
+                onClick={() => selectTrainer(trainer.id)}
+              >
+                Seleccionar
               </div>
-            ))}
-      </div>
-    </>
+            </div>
+          ))}
+    </div>
+
   );
 
 };

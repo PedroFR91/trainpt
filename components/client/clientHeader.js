@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import styles from '../../styles/clientHeader.module.css';
+import React, { useContext } from 'react';
+import styles from '../../styles/trainerHeader.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import AuthContext from '../../context/AuthContext';
@@ -11,18 +11,15 @@ import {
   FaChartLine,
   FaFile,
   FaMale,
-  FaProcedures,
   FaRunning,
-  FaSignOutAlt,
 } from 'react-icons/fa';
-import { useRouter } from 'next/router';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+
+import { FiLogOut } from 'react-icons/fi';
 
 const clientHeader = () => {
   useAuthUser();
   const { isLogged } = useContext(AuthContext);
-  const [isOpen, setIsOpen] = useState(false);
+
 
   const exit = (e) => {
     e.preventDefault();
@@ -37,9 +34,6 @@ const clientHeader = () => {
       });
   };
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
 
   return (
     <div className={styles.container}>
@@ -53,80 +47,45 @@ const clientHeader = () => {
           className={styles.logo}
         />
       </Link>
-      <button className={styles.menuButton} onClick={toggleMenu}>
-        <AnimatePresence>
-          {!isOpen && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <FiMenu size={50} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {isOpen && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <FiX size={50} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              className={styles.menu}
-              initial={{ x: '-100%' }}
-              animate={{ x: '0' }}
-              exit={{ x: '-100%' }}
-              transition={{ duration: 0.3 }}
-            >
-              <Link passHref href={'./program'}>
-                <div className={styles.menuItem}>
-                  <FaMale size={50} /> Inicio
-                </div>
-              </Link>
-              <Link passHref href={'./train'}>
-                <div className={styles.menuItem}>
-                  <FaRunning size={50} /> Entrenamiento
-                </div>
-              </Link>
-              <Link passHref href={'./forms'}>
-                <div className={styles.menuItem}>
-                  <FaFile size={50} /> Formularios
-                </div>
-              </Link>
-              <Link passHref href={'./photos'}>
-                <div className={styles.menuItem}>
-                  <FaCamera size={50} /> Fotos
-                </div>
-              </Link>
-              <Link passHref href={'./measures'}>
-                <div className={styles.menuItem}>
-                  <FaChartLine size={50} /> Medidas
-                </div>
-              </Link>
-              {isLogged && (
-                <div onClick={exit}>
-                  <Link passHref href={'../'}>
-                    <div className={styles.menuItem}>
-                      <FiLogOut size={50} />
-                      Cerrar Sesión
-                    </div>
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          </>
+      <div>
+        <Link passHref href={'./program'}>
+          <div className={styles.menuItem}>
+            <FaMale size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'./train'}>
+          <div className={styles.menuItem}>
+            <FaRunning size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'./forms'}>
+          <div className={styles.menuItem}>
+            <FaFile size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'./photos'}>
+          <div className={styles.menuItem}>
+            <FaCamera size={50} />
+          </div>
+        </Link>
+        <Link passHref href={'./measures'}>
+          <div className={styles.menuItem}>
+            <FaChartLine size={50} />
+          </div>
+        </Link>
+        {isLogged && (
+          <div onClick={exit}>
+            <Link passHref href={'../'}>
+              <div className={styles.menuItem}>
+                <FiLogOut size={50} />
+                Cerrar Sesión
+              </div>
+            </Link>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
+
+
     </div>
   );
 };

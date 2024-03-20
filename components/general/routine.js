@@ -45,7 +45,7 @@ const routine = () => {
   const [updateRoutineId, setUpdateRoutineId] = useState(null)
   const [copyTrainingId, setCopyTrainingId] = useState(null);
   const [current, setCurrent] = useState(false);
-  const auth = getAuth();
+
   const [myMessage, setMyMessage] = useState("");
 
   const [clients, setClients] = useState([]);
@@ -166,11 +166,13 @@ const routine = () => {
     });
     setShowClient(false);
   };
+  console.log(data.trainings)
+
   //Create Routine
   const handleCreateRoutine = async (e) => {
     e.preventDefault();
 
-    const selectedTrainings = data.trainings || [];
+    const selectedTrainings = trainings || [];
 
     // Obtener una lista de objetos con los IDs y nombres de los entrenamientos seleccionados
     const selectedTrainingsData = selectedTrainings.map((training) => ({
@@ -279,8 +281,6 @@ const routine = () => {
     setRoutineData(prevData => {
       const updatedDayTrainings = { ...prevData.dayTrainings };
 
-      // Si el día ya tiene entrenamientos asignados, añade el nuevo entrenamiento.
-      // Si no, crea un nuevo arreglo con el entrenamiento.
       if (updatedDayTrainings[day]) {
         updatedDayTrainings[day].push(trainingId);
       } else {
@@ -300,6 +300,7 @@ const routine = () => {
     const selectedDays = Array.from({ length: e.target.value }, (_, i) => `Día ${i + 1}`);
     setRoutineData({ ...routineData, days: selectedDays });
   };
+  console.log(trainings)
 
   return (
     <div className={styles.routinesContainer}>
@@ -369,18 +370,14 @@ const routine = () => {
                           }}
                         />
                         <FaRegTrashAlt size={20} onClick={() => { handleDeleteRoutine(routine.id) }} />
-
                       </div>
                     </div>
                   ))}
-
                 </div>
               )}
               {trainingsList && (
                 <div className={styles.myddbbitem}>
                   <h3>Mis entrenamientos</h3>
-
-
                   {trainings.map((training) => (
                     <div key={training.id} style={{
                       border: '1px solid #ffffff', width: '500px', height: '200px', padding: '1rem',
@@ -421,21 +418,14 @@ const routine = () => {
                           size={20}
                           onClick={() => handleDeleteTraining(training.id)}
                         /></div>
-
-
-
-
                     </div>
                   ))}
-
                 </div>
               )}
               {exercisesList && (
                 <>
-
                   <div className={styles.myddbbitem}>
                     <h3>Mis ejercicios</h3>
-
                     {exercises.map((exercise) => (
                       <div key={exercise} className={styles.exercise}>
                         <div>
@@ -465,10 +455,7 @@ const routine = () => {
                         </div>
                       </div>
                     ))}
-
-
                   </div>
-
                 </>
               )}
             </div>

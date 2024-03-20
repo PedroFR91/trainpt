@@ -13,7 +13,7 @@ import {
   FaClipboard,
   FaFolder,
 } from 'react-icons/fa';
-import { FiMenu, FiX, FiLogOut, FiArrowDownRight, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { FiLogOut, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 
 const TrainerHeader = () => {
   useAuthUser();
@@ -48,8 +48,6 @@ const TrainerHeader = () => {
           className={styles.logo}
         />
       </Link>
-
-
       <div
         className={styles.menu}
       >
@@ -89,26 +87,6 @@ const TrainerHeader = () => {
           </div>
         )}
       </div>
-
-
-      <button className={styles.menuButton} onClick={toggleMenu}>
-        {!isOpen && (
-          <span
-          >
-            <FiArrowRight size={50} />
-          </span>
-        )}
-        {isOpen && (
-          <span
-          >
-            <FiArrowLeft size={50} />
-          </span>
-        )}
-
-      </button>
-
-
-
     </div>
   );
 };
