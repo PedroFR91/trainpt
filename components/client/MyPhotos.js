@@ -5,11 +5,21 @@ import 'slick-carousel/slick/slick-theme.css'; // Importa tema opcional
 import styles from '../../styles/previousimg.module.css';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase.config';
-
+import { Carousel } from 'antd';
+const contentStyle = {
+    margin: 0,
+    height: '160px',
+    color: '#fff',
+    lineHeight: '160px',
+    textAlign: 'center',
+    background: '#364d79',
+};
 const MyPhotos = ({ myUid }) => {
     const [photos, setPhotos] = useState([]);
     const [fullscreen, setFullscreen] = useState(false);
-
+    const onChange = (currentSlide) => {
+        console.log(currentSlide);
+    };
 
     useEffect(() => {
         const q = query(collection(db, 'forms'), where('clientId', '==', myUid));
@@ -55,7 +65,8 @@ const MyPhotos = ({ myUid }) => {
                             day: '2-digit'
                         })}</p>
                     </div>
-                    <Slider {...settings} >
+                    <Carousel afterChange={onChange}>
+
                         <div>
                             <img src={photo.front} alt="Front" style={{ width: '100%' }} />
                             <p>Frente</p>
@@ -68,7 +79,8 @@ const MyPhotos = ({ myUid }) => {
                             <img src={photo.back} alt="Back" style={{ width: '100%' }} />
                             <p>Espalda</p>
                         </div>
-                    </Slider>
+
+                    </Carousel>
                 </div>
             ))}
         </div>

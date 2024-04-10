@@ -2,11 +2,16 @@ import { collection, onSnapshot, doc, getDoc, updateDoc } from 'firebase/firesto
 import React, { useEffect, useState } from 'react';
 import styles from '../../styles/train.module.css';
 import { db } from '../../firebase.config';
-
+import { Modal, Box, Typography } from '@mui/material';
+import { Button, List } from "antd";
 const myroutines = ({ myUid }) => {
     const [routines, setRoutines] = useState([]);
     const [selectedTraining, setSelectedTraining] = useState(null);
     const [realRepsValues, setRealRepsValues] = useState({});
+    const [open, setOpen] = useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, 'routines'), (snapshot) => {
             const routinesData = [];
@@ -23,16 +28,18 @@ const myroutines = ({ myUid }) => {
         };
     }, []);
     const showTraining = async (training) => {
-        // Realiza una consulta para obtener los detalles completos del entrenamiento
         const trainingRef = doc(db, 'trainings', training.id);
         const trainingDoc = await getDoc(trainingRef);
         if (trainingDoc.exists()) {
             const trainingData = trainingDoc.data();
             setSelectedTraining(trainingData);
+            handleOpen(); // Abrir el modal
         }
     };
+
     const closeTraining = () => {
         setSelectedTraining(null);
+        handleClose()
     };
     const handleRealRepsChange = (e, supersetIndex, exerciseIndex) => {
         const updatedValue = e.target.value;
@@ -60,6 +67,19 @@ const myroutines = ({ myUid }) => {
             // No es necesario actualizar el estado local aquí, Firebase debería reflejar los cambios en tiempo real
         }
     };
+    const style = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '100%',
+        height: '100%',
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        overflow: 'scroll', // Para permitir desplazamiento si el contenido es largo
+    };
+
     console.log(routines)
     return (
         <div className={styles.myRoutine}>
@@ -85,54 +105,71 @@ const myroutines = ({ myUid }) => {
                                         <div key={training.id}>
                                             <span>Nombre Entrenamiento:</span>
                                             <span>{training.name}</span>
-                                            <button onClick={() => showTraining(training)}>Ver Entrenamiento</button>
+                                            <Button type="primary" onClick={() => showTraining(training)}>Ver Entrenamiento</Button>
+
                                         </div>
                                     ))}
                                 </ul>
                             </div>
                         </div>
-                        <div>
-                            {selectedTraining && (
-                                <div>
-                                    <h2>Entrenamiento Seleccionado: {selectedTraining.name}</h2>
-                                    <button onClick={closeTraining}>Cerrar Entrenamiento</button>
-                                    <p>Descripción: {selectedTraining.description}</p>
-                                    <p>Ejercicios del Entrenamiento:</p>
-                                    <ul>
+                        <Modal
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="modal-modal-title"
+                            aria-describedby="modal-modal-description"
+                        >
+                            <Box sx={style}>
+                                {selectedTraining && (
+                                    <Box>
+                                        <Typography id="modal-modal-title" variant="h6" component="h2">
+                                            Entrenamiento Seleccionado: {selectedTraining.name}
+                                        </Typography>
+                                        <Button onClick={closeTraining} style={{ marginBottom: '20px' }}>Cerrar Entrenamiento</Button>
+                                        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                                            Descripción: {selectedTraining.description}
+                                        </Typography>
+                                        <Typography sx={{ mt: 2, fontWeight: 'bold' }}>
+                                            Ejercicios:
+                                        </Typography>
                                         {selectedTraining.exercises.map((exercise, exerciseIndex) => (
-                                            <li key={exerciseIndex}>
-                                                <span>Nombre del Ejercicio:</span>
-                                                <span>{exercise.name}</span>
-                                                <span>Descripción del Ejercicio:</span>
-                                                <span>{exercise.description}</span>
+                                            <Box key={exerciseIndex} sx={{ mt: 1 }}>
+                                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                                    {exerciseIndex + 1}. {exercise.name}
+                                                </Typography>
+                                                <Typography variant="body2">
+                                                    Descripción: {exercise.description}
+                                                </Typography>
                                                 {exercise.superset && exercise.superset.length > 0 && (
-                                                    <div>
-                                                        <p>Supersets:</p>
-                                                        <ul>
-                                                            {exercise.superset.map((superset, supersetIndex) => (
-                                                                <li key={supersetIndex}>
-                                                                    <span>Repetitions:</span>
-                                                                    <span>{superset.repetitions}</span>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={realRepsValues[`${exerciseIndex}-${supersetIndex}`] || ""}
-                                                                        onChange={(e) => handleRealRepsChange(e, supersetIndex, exerciseIndex)}
-                                                                    />
-                                                                    <button onClick={() => updateRealRepsInFirebase(supersetIndex, exerciseIndex)}>
-                                                                        Actualizar
-                                                                    </button>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
+                                                    <Box>
+                                                        <Typography sx={{ mt: 1 }}>Supersets:</Typography>
+                                                        {exercise.superset.map((superset, supersetIndex) => (
+                                                            <Box key={supersetIndex} display="flex" alignItems="center" sx={{ mt: 1 }}>
+                                                                <Typography variant="body2" sx={{ width: '100px' }}>
+                                                                    Repetitions: {superset.repetitions}
+                                                                </Typography>
+                                                                <input
+                                                                    type="text"
+                                                                    value={realRepsValues[`${exerciseIndex}-${supersetIndex}`] || ""}
+                                                                    onChange={(e) => handleRealRepsChange(e, supersetIndex, exerciseIndex)}
+                                                                    style={{ marginRight: '10px', width: '30px' }}
+                                                                />
+                                                                <Button
+                                                                    variant="contained"
+                                                                    onClick={() => updateRealRepsInFirebase(supersetIndex, exerciseIndex)}
+                                                                >
+                                                                    Actualizar
+                                                                </Button>
+                                                            </Box>
+                                                        ))}
+                                                    </Box>
                                                 )}
-                                            </li>
+                                            </Box>
                                         ))}
-                                    </ul>
+                                    </Box>
+                                )}
+                            </Box>
+                        </Modal>
 
-                                </div>
-                            )}
-                        </div>
                     </div>
                 ))}
         </div>
