@@ -1,30 +1,22 @@
 import React, { useState, useEffect, useContext } from 'react';
 import styles from '../../styles/program.module.css';
-import {
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  setDoc,
-  query,
-  where,
-  getDocs,
-} from 'firebase/firestore';
-
+import { collection, onSnapshot, query, where, setDoc, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
 import Link from 'next/link';
 
 const TrainersList = () => {
   const [data, setData] = useState([]);
-  const { myData, myUid } = useContext(AuthContext);
+  const { myUid } = useContext(AuthContext);
   const [currentTrainerId, setCurrentTrainerId] = useState(null);
+
   useEffect(() => {
-    // Escuchar todos los usuarios para listar entrenadores
     const unsub = onSnapshot(collection(db, 'users'), (snapShot) => {
       let list = [];
       snapShot.docs.forEach((doc) => {
-        list.push({ id: doc.id, ...doc.data() });
+        if (doc.data().role === 'trainer') {
+          list.push({ id: doc.id, ...doc.data() });
+        }
       });
       setData(list);
     }, (error) => {
@@ -35,7 +27,6 @@ const TrainersList = () => {
   }, []);
 
   useEffect(() => {
-    // Verificar si ya existe una suscripción para el cliente
     const q = query(collection(db, 'subscriptions'), where('clientId', '==', myUid));
     getDocs(q).then(querySnapshot => {
       if (!querySnapshot.empty) {
@@ -53,16 +44,15 @@ const TrainersList = () => {
     if (currentTrainerId) {
       const confirm = window.confirm("Ya tienes un entrenador seleccionado. ¿Quieres cambiar de entrenador? Esto cancelará tu suscripción actual.");
       if (!confirm) return;
-      await deselectTrainer(currentSubscription.trainerId);
+      await deselectTrainer(currentTrainerId);
     }
     const subscriptionRef = collection(db, 'subscriptions');
-    const newSubscription = await setDoc(doc(subscriptionRef), {
+    await setDoc(doc(subscriptionRef), {
       clientId: myUid,
       trainerId: trainerId,
       status: "previous"
     });
     setCurrentTrainerId(trainerId);
-
   };
 
   const deselectTrainer = async (trainerId) => {
@@ -74,9 +64,7 @@ const TrainersList = () => {
     setCurrentTrainerId(null);
   };
 
-
   return (
-
     <div className={styles.trainersList}>
       {currentTrainerId
         ? data
@@ -85,7 +73,7 @@ const TrainersList = () => {
             <div key={trainer.id} className={styles.userdata}>
               <Link href={`/shared/trainers/${trainer.id}`} legacyBehavior>
                 {trainer.img ? (
-                  <div >
+                  <div>
                     <img src={trainer.img} alt={'Imagen de perfil'} />
                     <div>{trainer.username}</div>
                   </div>
@@ -96,16 +84,12 @@ const TrainersList = () => {
                   </div>
                 )}
               </Link>
-              <button
-                className={styles.button}
-                onClick={() => deselectTrainer(trainer.id)}
-              >
+              <button className={styles.button} onClick={() => deselectTrainer(trainer.id)}>
                 Cambiar
               </button>
             </div>
           ))
         : data
-          .filter((trainer) => trainer.role === 'trainer')
           .map((trainer) => (
             <div key={trainer.id} className={styles.userdata}>
               <div>
@@ -116,18 +100,13 @@ const TrainersList = () => {
                 )}
               </div>
               <div>{trainer.username}</div>
-              <div
-                className={styles.button}
-                onClick={() => selectTrainer(trainer.id)}
-              >
+              <div className={styles.button} onClick={() => selectTrainer(trainer.id)}>
                 Seleccionar
               </div>
             </div>
           ))}
     </div>
-
   );
-
 };
 
 export default TrainersList;

@@ -3,14 +3,12 @@ import { query, collection, where, getDocs, doc, updateDoc, getDoc, onSnapshot }
 import { db } from "../../../firebase.config";
 import { useRouter } from 'next/router';
 import AuthContext from '../../../context/AuthContext';
-import styles from './subcription.module.css';
+
 import Link from "next/link";
-import { Button } from "@mui/material";
-import TrainerHeader from '../../../components/trainer/trainerHeader'
-import Form from '../../../components/forms/form'
-import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa";
-import { BsFillShareFill } from "react-icons/bs";
+
 import MyRoutines from "../../../components/general/myroutines";
+import { Steps } from 'antd';
+
 const Subscription = () => {
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -23,8 +21,7 @@ const Subscription = () => {
     const [routines, setRoutines] = useState([]);
     const [selectedRoutineId, setSelectedRoutineId] = useState(null);
     const [initialFormDetails, setInitialFormDetails] = useState(null);
-    const startDate = new Date().toLocaleDateString()
-
+    const startDate = new Date().toLocaleDateString();
 
     useEffect(() => {
         const unsub = onSnapshot(
@@ -94,7 +91,6 @@ const Subscription = () => {
         },
     ];
 
-    // Estados de la suscripción para el cliente
     const clientSubscriptionStatus = [
         {
             step: 'previous',
@@ -152,19 +148,6 @@ const Subscription = () => {
         }
     }, [router, clientId]);
 
-
-    const getStatusClassName = (statusKey) => {
-        // Si no hay suscripción o el estado de la suscripción es indefinido, se aplica el estilo por defecto
-        if (!subscription || !subscription.status) return styles.defaultStatus;
-
-        // Si el estado actual coincide con el estado del paso, se aplica el estilo 'currentStatus' (naranja)
-        if (subscription.status === statusKey) return styles.currentStatus;
-
-        // Si el estado actual aún no ha alcanzado el estado del paso, se aplica el estilo 'defaultStatus' (gris)
-        return styles.defaultStatus;
-    };
-
-
     const handleUpdateStatus = async (nextStatus) => {
         if (!subscription || !subscription.id) return;
 
@@ -214,10 +197,12 @@ const Subscription = () => {
 
     const stepsToShow = myData?.role === 'client' ? clientSubscriptionStatus : trainerSubscriptionStatus;
 
+    const currentStepIndex = stepsToShow.findIndex(step => step.step === subscription?.status) || 0;
+
     return (
         <>
-            <TrainerHeader />
-            <div className={styles.subscription}>
+
+            <div >
                 {subscription ? (
                     <div>
                         <h1>Hola, {myData?.username}. Desde aquí puedes comprobar el estado de tu suscripción.</h1>
@@ -229,19 +214,13 @@ const Subscription = () => {
                             <button><Link href={'/chat/chat'}>Ir al chat</Link></button>
                         </div>
 
-                        <ul className={styles.subscriptionSteps}>
-                            {stepsToShow?.map(({ step, description, button, section }) => (
-                                <li key={step} className={getStatusClassName(step)}>
-                                    <h3>{description}</h3>
-
-                                    {subscription.status === step && button}
-                                    {subscription.status === step && section}
-
-
-
-                                </li>
+                        <Steps current={currentStepIndex}>
+                            {stepsToShow.map(({ step, description }) => (
+                                <Steps.Step key={step} title={step} description={description} />
                             ))}
-                        </ul>
+                        </Steps>
+
+
                     </div>
                 ) : (
                     <div>No se encontró la suscripción para el cliente: {clientId}</div>

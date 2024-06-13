@@ -59,19 +59,34 @@ const program = () => {
       title: 'Ant Design Title 4',
     },
   ];
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const showModal = () => {
-    setIsModalOpen(true);
+  const [isTrainersModalOpen, setIsTrainersModalOpen] = useState(false);
+  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
+
+  const showTrainersModal = () => {
+    setIsTrainersModalOpen(true);
   };
 
-  const handleOk = () => {
-    setIsModalOpen(false);
+  const handleTrainersModalOk = () => {
+    setIsTrainersModalOpen(false);
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
+  const handleTrainersModalCancel = () => {
+    setIsTrainersModalOpen(false);
   };
+
+  const showReviewsModal = () => {
+    setIsReviewsModalOpen(true);
+  };
+
+  const handleReviewsModalOk = () => {
+    setIsReviewsModalOpen(false);
+  };
+
+  const handleReviewsModalCancel = () => {
+    setIsReviewsModalOpen(false);
+  };
+
   return (
     <div className={styles.programlayout}>
       <ClientProfile />
@@ -79,10 +94,10 @@ const program = () => {
         <IoChatbubbleEllipsesOutline size={50} className={styles.chatIcon} />
       </Link>
       <h1 style={{ color: '#000000' }}>Lista entrenadores</h1>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showTrainersModal}>
         Busca tu entrenador
       </Button>
-      <Modal title="Basic Modal" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+      <Modal title="Busca tu entrenador" open={isTrainersModalOpen} onOk={handleTrainersModalOk} onCancel={handleTrainersModalCancel}>
         <List
           itemLayout="horizontal"
           dataSource={data}
@@ -97,8 +112,8 @@ const program = () => {
           )}
         />
       </Modal>
-      <h1 >Mi Dieta</h1>
-      {/* <TrainersList /> */}
+
+      <TrainersList />
       <h3>Mi Dieta</h3>
       <Card
         style={{ width: 300 }}
@@ -108,11 +123,6 @@ const program = () => {
             src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
           />
         }
-      // actions={[
-      //   <SettingOutlined key="setting" />,
-      //   <EditOutlined key="edit" />,
-      //   <EllipsisOutlined key="ellipsis" />,
-      // ]}
       >
         <Meta
           avatar={<Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=8" />}
@@ -120,7 +130,7 @@ const program = () => {
           description="This is the description"
         />
       </Card>
-      <h3 >Mis Revisiones</h3>
+      <h3>Mis Revisiones</h3>
       <List
         itemLayout="horizontal"
         dataSource={data}
@@ -128,12 +138,12 @@ const program = () => {
         renderItem={(item, index) => (
           <List.Item>
             <List.Item.Meta
-              title={<a onClick={showModal}>10/04/2024</a>}
+              title={<a onClick={showReviewsModal}>10/04/2024</a>}
             />
           </List.Item>
         )}
       />
-      <Modal title="Mis Revisiones" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+      <Modal title="Mis Revisiones" open={isReviewsModalOpen} onOk={handleReviewsModalOk} onCancel={handleReviewsModalCancel}>
         <>
           <Checkbox
             checked={componentDisabled}
@@ -225,22 +235,9 @@ const program = () => {
         </>
       </Modal>
       <h3>Mis Medidas</h3>
-
-
       <h3>Mis Fotos</h3>
-
-      {/* <MyRoutines myUid={myUid} /> */}
-      {/* 
-      <MyDiet myUid={myUid} /> */}
-      {/*
-      <MyReviews myUid={myUid} />
-    */}
-
-      {/* <MyMeasurements myUid={myUid} /> */}
-
       <MyPhotos myUid={myUid} />
     </div>
-
   );
 };
 
