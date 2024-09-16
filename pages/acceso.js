@@ -3,7 +3,7 @@ import Image from "next/image";
 import AuthContext from "../context/AuthContext";
 import { useRouter } from "next/router";
 import { auth, db } from "../firebase.config";
-import { handleGoogleSignIn, handleEmailLogin, handleEmailRegister } from "../services/authService"; // Importar las funciones de authService
+import { handleGoogleSignIn, handleEmailLogin, handleEmailRegister, createGoogleUser } from "../services/authService";
 import styles from "../styles/Home.module.css";
 
 const Acceso = () => {
@@ -16,11 +16,28 @@ const Acceso = () => {
   const [selected, setSelected] = useState("trainer");
   const [error, setError] = useState(false);
   const [message, setMessage] = useState(null);
+  const [googleUser, setGoogleUser] = useState(null); // Estado para el usuario autenticado con Google
 
   const signInWithGoogle = async () => {
     try {
-      const response = await handleGoogleSignIn(auth, db, selected, router);
-      setMessage(response.message);
+      const response = await handleGoogleSignIn(auth, db, router);
+      if (response.message === "Seleccione su rol") {
+        setGoogleUser(response.user); // Guarda el usuario autenticado
+        setMessage("Seleccione su rol para continuar");
+      } else {
+        setMessage(response.message);
+      }
+    } catch (error) {
+      console.error(error);
+      setError(true);
+    }
+  };
+
+  const createGoogleUserWithRole = async (role) => {
+    if (!googleUser) return;
+    try {
+      await createGoogleUser(auth, db, googleUser, role, router);
+      setGoogleUser(null); // Limpia el estado después de crear el usuario
     } catch (error) {
       console.error(error);
       setError(true);
@@ -69,7 +86,17 @@ const Acceso = () => {
           zIndex: "-10",
         }}
       />
-      {toggleView ? (
+      {message && googleUser ? (
+        <div>
+          <p>{message}</p>
+          <button onClick={() => createGoogleUserWithRole("trainer")}>
+            Registrarse como Entrenador
+          </button>
+          <button onClick={() => createGoogleUserWithRole("client")}>
+            Registrarse como Cliente
+          </button>
+        </div>
+      ) : toggleView ? (
         <div>
           <form onSubmit={handleRegister}>
             <input
@@ -80,17 +107,14 @@ const Acceso = () => {
             <input
               type="email"
               placeholder="Correo"
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
             />
             <input
               type="password"
               placeholder="Contraseña"
               onChange={(e) => setPassword(e.target.value)}
             />
-            <select
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-            >
+            <select value={selected} onChange={(e) => setSelected(e.target.value)}>
               <option value="trainer">Entrenador</option>
               <option value="client">Cliente</option>
             </select>
@@ -115,13 +139,7 @@ const Acceso = () => {
                 justifyContent: "center",
               }}
             >
-              {" "}
-              <Image
-                src={"/google.png"}
-                alt={"google image for login"}
-                width={55}
-                height={40}
-              />
+              <Image src={"/google.png"} alt={"google image for login"} width={55} height={40} />
               <p>Accede con Google</p>
             </button>
           </form>
@@ -151,14 +169,8 @@ const Acceso = () => {
               <span>ó</span>
               <hr style={{ width: "30%" }}></hr>
             </div>
-
             <div onClick={signInWithGoogle}>
-              <Image
-                src={"/google.png"}
-                alt={"google image for login"}
-                width={55}
-                height={40}
-              />
+              <Image src={"/google.png"} alt={"google image for login"} width={55} height={40} />
               <p>Accede con Google</p>
             </div>
           </form>
@@ -166,9 +178,7 @@ const Acceso = () => {
       )}
       <div className={styles.toggleButton}>
         <div onClick={() => setToggleView(!toggleView)}>
-          {toggleView
-            ? "¿Estás registrado?, accede"
-            : "¿No tienes cuenta?, creala"}
+          {toggleView ? "¿Estás registrado?, accede" : "¿No tienes cuenta?, creala"}
         </div>
       </div>
     </div>

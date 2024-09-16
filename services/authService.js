@@ -3,26 +3,33 @@ import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 
 const googleProvider = new GoogleAuthProvider();
 
-export const handleGoogleSignIn = async (auth, provider, db, selectedRole, router) => {
-    const res = await signInWithPopup(auth, provider);
-    const user = res.user;
+export const handleGoogleSignIn = async (auth, db, router) => {
+    try {
+        const res = await signInWithPopup(auth, googleProvider);
+        const user = res.user;
 
-    // Verificar si el usuario ya tiene una cuenta con correo/contraseña
-    const userDocRef = doc(db, "users", user.uid);
-    const existingUserDoc = await getDoc(userDocRef);
-    const existingUserData = existingUserDoc.data();
+        // Verificar si el usuario ya existe en Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        const existingUserDoc = await getDoc(userDocRef);
 
-    if (existingUserData && existingUserData.email) {
-        // Actualizar datos del usuario si ya existe
-        const updatedUserData = {
-            ...existingUserData,
-            googleLinked: true,
-        };
-        await setDoc(userDocRef, updatedUserData);
-        router.push(selectedRole === "trainer" ? "/trainer/home" : "/client/program");
-        return { message: "Cuenta actualizada para acceso con Google." };
-    } else {
-        // Crear un nuevo usuario en Firestore
+        if (existingUserDoc.exists()) {
+            // Si el usuario ya existe, redirigir según su rol
+            const existingUserData = existingUserDoc.data();
+            router.push(existingUserData.role === "trainer" ? "/trainer/home" : "/client/program");
+        } else {
+            // Si el usuario no existe, muestra la selección de rol (cliente/entrenador)
+            return { message: "Seleccione su rol", user }; // Devuelve el usuario autenticado y un mensaje para el frontend
+        }
+    } catch (error) {
+        console.error("Error en la autenticación con Google:", error);
+        throw error;
+    }
+};
+
+export const createGoogleUser = async (auth, db, user, selectedRole, router) => {
+    try {
+        // Crear un nuevo usuario en Firestore con el rol seleccionado
+        const newUserDocRef = doc(db, "users", user.uid);
         const newUserData = {
             id: user.uid,
             email: user.email,
@@ -32,48 +39,52 @@ export const handleGoogleSignIn = async (auth, provider, db, selectedRole, route
             timeStamp: serverTimestamp(),
             googleLinked: true,
         };
-        await setDoc(userDocRef, newUserData);
+        await setDoc(newUserDocRef, newUserData);
         router.push(selectedRole === "trainer" ? "/trainer/home" : "/client/program");
-        return { message: "Cuenta creada con acceso Google." };
+    } catch (error) {
+        console.error("Error al crear el usuario en Firestore:", error);
+        throw error;
     }
 };
 
 export const handleEmailLogin = async (auth, db, email, password, router) => {
-    const res = await signInWithEmailAndPassword(auth, email, password);
-    const user = res.user;
+    try {
+        const res = await signInWithEmailAndPassword(auth, email, password);
+        const user = res.user;
 
-    const userDocRef = doc(db, "users", user.uid);
-    const userSnapshot = await getDoc(userDocRef);
-    const userData = userSnapshot.data();
+        const userDocRef = doc(db, "users", user.uid);
+        const userSnapshot = await getDoc(userDocRef);
+        const userData = userSnapshot.data();
 
-    if (userData && userData.role) {
-        router.push(userData.role === "trainer" ? "/trainer/home" : "/client/program");
-    } else {
-        throw new Error("No se encontraron datos del usuario.");
+        if (userData && userData.role) {
+            router.push(userData.role === "trainer" ? "/trainer/home" : "/client/program");
+        } else {
+            throw new Error("No se encontraron datos del usuario.");
+        }
+    } catch (error) {
+        console.error("Error en el inicio de sesión:", error);
+        throw error;
     }
 };
 
-export const handleEmailRegister = async (auth, provider, db, email, password, userName, selectedRole, router) => {
-    const credential = EmailAuthProvider.credential(email, password);
-    const res = await createUserWithEmailAndPassword(auth, email, password);
-    const user = res.user;
+export const handleEmailRegister = async (auth, db, email, password, userName, selectedRole, router) => {
+    try {
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        const user = res.user;
 
-    // Enlazar la cuenta de correo/contraseña con la cuenta de Google existente
-    if (auth.currentUser) {
-        await reauthenticateWithCredential(auth.currentUser, credential);
-        await linkWithPopup(auth.currentUser, provider);
+        const newUserDocRef = doc(db, "users", user.uid);
+        const newUserData = {
+            id: user.uid,
+            email: email,
+            username: userName,
+            role: selectedRole,
+            timeStamp: serverTimestamp(),
+            googleLinked: false,
+        };
+        await setDoc(newUserDocRef, newUserData);
+        router.push(selectedRole === "trainer" ? "/trainer/home" : "/client/program");
+    } catch (error) {
+        console.error("Error en el registro:", error);
+        throw error;
     }
-
-    // Crear un nuevo usuario en Firestore
-    const newUserDocRef = doc(db, "users", user.uid);
-    const newUserData = {
-        id: user.uid,
-        email: email,
-        username: userName,
-        role: selectedRole,
-        timeStamp: serverTimestamp(),
-        googleLinked: false,
-    };
-    await setDoc(newUserDocRef, newUserData);
-    router.push(selectedRole === "trainer" ? "/trainer/home" : "/client/program");
 };
