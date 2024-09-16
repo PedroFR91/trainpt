@@ -6,6 +6,7 @@ import ExerciseCreator from '../../components/general/ExerciseCreator';
 import TrainingCreator from '../../components/general/TrainingCreator';
 import RoutineCreator from '../../components/general/RoutineCreator';
 import { FaRegEdit, FaRegTrashAlt, FaCopy, FaEye } from 'react-icons/fa';
+import TrainerHeader from '../../components/trainer/trainerHeader';
 
 const App = () => {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -131,98 +132,102 @@ const App = () => {
   };
 
   return (
-    <div style={{ width: '300px', height: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', margin: 'auto', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-      <Button type="primary" onClick={() => setShowExerciseModal(true)}>Crear Ejercicio</Button>
-      <Button type="primary" onClick={() => setShowTrainingModal(true)}>Crear Entrenamiento</Button>
-      <Button type="primary" onClick={() => setShowRoutineModal(true)}>Crear Rutina</Button>
-      <Button type="default" onClick={() => setShowExercisesTable(!showExercisesTable)}>Ver Ejercicios</Button>
-      <Button type="default" onClick={() => setShowTrainingsTable(!showTrainingsTable)}>Ver Entrenamientos</Button>
-      <Button type="default" onClick={() => setShowRoutinesTable(!showRoutinesTable)}>Ver Rutinas</Button>
+    <>
+      <TrainerHeader />
+      <div style={{ width: '300px', height: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', margin: 'auto', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
 
-      {showExerciseModal && (
-        <ExerciseCreator visible={showExerciseModal} setVisible={setShowExerciseModal} currentExercise={currentExercise} />
-      )}
-      {showTrainingModal && (
-        <TrainingCreator visible={showTrainingModal} setVisible={setShowTrainingModal} currentTraining={currentTraining} />
-      )}
-      {showRoutineModal && (
-        <RoutineCreator visible={showRoutineModal} setVisible={setShowRoutineModal} currentRoutine={currentRoutine} />
-      )}
+        <Button type="primary" onClick={() => setShowExerciseModal(true)}>Crear Ejercicio</Button>
+        <Button type="primary" onClick={() => setShowTrainingModal(true)}>Crear Entrenamiento</Button>
+        <Button type="primary" onClick={() => setShowRoutineModal(true)}>Crear Rutina</Button>
+        <Button type="default" onClick={() => setShowExercisesTable(!showExercisesTable)}>Ver Ejercicios</Button>
+        <Button type="default" onClick={() => setShowTrainingsTable(!showTrainingsTable)}>Ver Entrenamientos</Button>
+        <Button type="default" onClick={() => setShowRoutinesTable(!showRoutinesTable)}>Ver Rutinas</Button>
 
-      {viewExerciseModal && (
-        <Modal
-          title="Ver Ejercicio"
-          visible={viewExerciseModal}
-          onCancel={() => setViewExerciseModal(false)}
-          footer={null}
-        >
-          <p><strong>Nombre:</strong> {currentExercise.name}</p>
-          <p><strong>Material:</strong> {currentExercise.material}</p>
-          <p><strong>Comentarios:</strong> {currentExercise.comments}</p>
-        </Modal>
-      )}
-      {viewTrainingModal && (
-        <Modal
-          title="Ver Entrenamiento"
-          visible={viewTrainingModal}
-          onCancel={() => setViewTrainingModal(false)}
-          footer={null}
-        >
-          <p><strong>Nombre:</strong> {currentTraining.name}</p>
-          <p><strong>Descripción:</strong> {currentTraining.description}</p>
-          <p><strong>Ejercicios:</strong></p>
-          <ul>
-            {currentTraining.exercises && currentTraining.exercises.map((exercise) => (
-              <li key={exercise.id}>
-                <strong>Nombre:</strong> {exercise.name}
-                <br />
-                <strong>Material:</strong> {exercise.material}
-                <br />
-                <strong>Comentarios:</strong> {exercise.comments}
-              </li>
-            ))}
-          </ul>
-        </Modal>
-      )}
-      {viewRoutineModal && (
-        <Modal
-          title="Ver Rutina"
-          visible={viewRoutineModal}
-          onCancel={() => setViewRoutineModal(false)}
-          footer={null}
-        >
-          <p><strong>Nombre:</strong> {currentRoutine.name}</p>
-          <p><strong>Descripción:</strong> {currentRoutine.description}</p>
-          <p><strong>Entrenamientos:</strong></p>
-          <ul>
-            {currentRoutine.trainings && currentRoutine.trainings.map((training) => (
-              <li key={training.id}>
-                <strong>Nombre:</strong> {training.name}
-                <br />
-                <strong>Descripción:</strong> {training.description}
-                <br />
-                <strong>Ejercicios:</strong>
-                <ul>
-                  {training.exercises && training.exercises.map((exercise) => (
-                    <li key={exercise.id}>
-                      <strong>Nombre:</strong> {exercise.name}
-                      <br />
-                      <strong>Material:</strong> {exercise.material}
-                      <br />
-                      <strong>Comentarios:</strong> {exercise.comments}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </Modal>
-      )}
+        {showExerciseModal && (
+          <ExerciseCreator visible={showExerciseModal} setVisible={setShowExerciseModal} currentExercise={currentExercise} />
+        )}
+        {showTrainingModal && (
+          <TrainingCreator visible={showTrainingModal} setVisible={setShowTrainingModal} currentTraining={currentTraining} />
+        )}
+        {showRoutineModal && (
+          <RoutineCreator visible={showRoutineModal} setVisible={setShowRoutineModal} currentRoutine={currentRoutine} />
+        )}
 
-      {showExercisesTable && <Table columns={columns("exercises")} dataSource={exercises} rowKey="id" />}
-      {showTrainingsTable && <Table columns={columns("trainings")} dataSource={trainings} rowKey="id" />}
-      {showRoutinesTable && <Table columns={columns("routines")} dataSource={routines} rowKey="id" />}
-    </div>
+        {viewExerciseModal && (
+          <Modal
+            title="Ver Ejercicio"
+            visible={viewExerciseModal}
+            onCancel={() => setViewExerciseModal(false)}
+            footer={null}
+          >
+            <p><strong>Nombre:</strong> {currentExercise.name}</p>
+            <p><strong>Material:</strong> {currentExercise.material}</p>
+            <p><strong>Comentarios:</strong> {currentExercise.comments}</p>
+          </Modal>
+        )}
+        {viewTrainingModal && (
+          <Modal
+            title="Ver Entrenamiento"
+            visible={viewTrainingModal}
+            onCancel={() => setViewTrainingModal(false)}
+            footer={null}
+          >
+            <p><strong>Nombre:</strong> {currentTraining.name}</p>
+            <p><strong>Descripción:</strong> {currentTraining.description}</p>
+            <p><strong>Ejercicios:</strong></p>
+            <ul>
+              {currentTraining.exercises && currentTraining.exercises.map((exercise) => (
+                <li key={exercise.id}>
+                  <strong>Nombre:</strong> {exercise.name}
+                  <br />
+                  <strong>Material:</strong> {exercise.material}
+                  <br />
+                  <strong>Comentarios:</strong> {exercise.comments}
+                </li>
+              ))}
+            </ul>
+          </Modal>
+        )}
+        {viewRoutineModal && (
+          <Modal
+            title="Ver Rutina"
+            visible={viewRoutineModal}
+            onCancel={() => setViewRoutineModal(false)}
+            footer={null}
+          >
+            <p><strong>Nombre:</strong> {currentRoutine.name}</p>
+            <p><strong>Descripción:</strong> {currentRoutine.description}</p>
+            <p><strong>Entrenamientos:</strong></p>
+            <ul>
+              {currentRoutine.trainings && currentRoutine.trainings.map((training) => (
+                <li key={training.id}>
+                  <strong>Nombre:</strong> {training.name}
+                  <br />
+                  <strong>Descripción:</strong> {training.description}
+                  <br />
+                  <strong>Ejercicios:</strong>
+                  <ul>
+                    {training.exercises && training.exercises.map((exercise) => (
+                      <li key={exercise.id}>
+                        <strong>Nombre:</strong> {exercise.name}
+                        <br />
+                        <strong>Material:</strong> {exercise.material}
+                        <br />
+                        <strong>Comentarios:</strong> {exercise.comments}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </Modal>
+        )}
+
+        {showExercisesTable && <Table columns={columns("exercises")} dataSource={exercises} rowKey="id" />}
+        {showTrainingsTable && <Table columns={columns("trainings")} dataSource={trainings} rowKey="id" />}
+        {showRoutinesTable && <Table columns={columns("routines")} dataSource={routines} rowKey="id" />}
+      </div>
+    </>
   );
 };
 

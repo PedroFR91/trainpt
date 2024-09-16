@@ -3,32 +3,18 @@ import styles from "../../styles/files.module.css";
 import TrainerHeader from "../../components/trainer/trainerHeader";
 import { db, storage } from "../../firebase.config";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, serverTimestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import ReactPlayer from "react-player";
-import { AiOutlineFile, AiOutlinePlayCircle } from "react-icons/ai";
-import {
-  FaEdit,
-  FaFileArchive,
-  FaFilePdf,
-  FaFileUpload,
-  FaPlayCircle,
-  FaTrashAlt,
-  FaUpload,
-} from "react-icons/fa";
-import Chat from "../../components/chat/chat";
-const files = () => {
-  const [file, setFile] = useState("");
+import { InboxOutlined } from '@ant-design/icons';
+import { Upload, message, Card, Image, Space, Skeleton, Button, Input, List } from 'antd';
+import { FaFilePdf, FaTrashAlt } from "react-icons/fa";
+
+const { Dragger } = Upload;
+const { Meta } = Card;
+
+const Files = () => {
+  const [file, setFile] = useState(null);
   const [data, setData] = useState({});
   const [per, setPer] = useState(null);
   const [myfiles, setMyFiles] = useState([]);
@@ -49,111 +35,64 @@ const files = () => {
   useEffect(() => {
     setData({ ...data, role: "trainer" });
   }, []);
-  useEffect(() => {
-    const uploadFile = () => {
-      const name = new Date().getTime() + file.name;
-      const storageRef = ref(storage, file.name);
-      const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log("Upload is " + progress + "% done");
-          setPer(progress);
-          switch (snapshot.state) {
-            case "paused":
-              console.log("Upload is paused");
-              break;
-            case "running":
-              console.log("Uoload is running");
-              break;
-            default:
-              break;
-          }
-        },
-        (error) => {
-          //Handle unsuccessful uplods
-          console.log(error);
-        },
-        () => {
-          //Handle succesful upload on complete
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setData((prev) => ({ ...prev, img: downloadURL }));
-          });
-        }
-      );
-    };
-    file && uploadFile();
-  }, [file]);
   useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, "videos"),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setVideoList(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
+    const unsub = onSnapshot(collection(db, "videos"), (snapShot) => {
+      let list = [];
+      snapShot.docs.forEach((doc) => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
+      setVideoList(list);
+    }, (error) => {
+      console.log(error);
+    });
     return () => {
       unsub();
     };
   }, []);
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, "files"),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setMyFiles(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
+    const unsub = onSnapshot(collection(db, "files"), (snapShot) => {
+      let list = [];
+      snapShot.docs.forEach((doc) => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
+      setMyFiles(list);
+    }, (error) => {
+      console.log(error);
+    });
     return () => {
       unsub();
     };
   }, []);
+
   useEffect(() => {
-    // Verifica si hay videos en la lista
     if (videoList.length > 0) {
-      // Establece la URL del primer video en el estado "url"
       setUrl(videoList[0].url);
     }
   }, [videoList]);
+
   useEffect(() => {
     if (data) {
-      // Realizar la consulta para obtener todos los usuarios
       const q = query(collection(db, "users"));
       const unsub = onSnapshot(q, (snapShot) => {
         let list = [];
         snapShot.docs.forEach((doc) => {
           list.push({ id: doc.id, ...doc.data() });
         });
-        // Actualizar el estado con todos los usuarios
         setClients(list);
       });
-
       return () => {
         unsub();
       };
     }
   }, [data]);
+
   const handleUpload = async (e) => {
     e.preventDefault();
     const name = new Date().getTime() + file.name;
     try {
-      await setDoc(doc(db, "files", name), {
+      await addDoc(collection(db, "files"), {
         ...data,
         fileType: file.type,
         title: fileTitle,
@@ -161,9 +100,10 @@ const files = () => {
         trainerId: user.uid,
         timeStamp: serverTimestamp(),
       });
-      console.log(myfiles);
+      message.success(`${file.name} file uploaded successfully.`);
     } catch (error) {
       console.log(error);
+      message.error(`${file.name} file upload failed.`);
     }
   };
 
@@ -177,49 +117,42 @@ const files = () => {
     };
     try {
       const videoDocRef = await addDoc(collection(db, "videos"), videoData);
-
-      // Solo agrega el video a videoList después de confirmar que se agregó a Firebase
       await getDoc(videoDocRef);
-
-      // Verifica si el video ya está en la lista antes de agregarlo
       if (!videoList.some((video) => video.url === videoData.url)) {
         setVideoList((prevState) => [
           ...prevState,
           { id: videoDocRef.id, title: videoTitle, url },
         ]);
       }
+      message.success(`${videoTitle} video added successfully.`);
     } catch (error) {
       console.log(error);
+      message.error(`${videoTitle} video upload failed.`);
     }
   };
 
   const deleteVideo = async (videoId) => {
     try {
-      // Elimina el video de la lista de videos en el estado
-      setVideoList((prevState) =>
-        prevState.filter((video) => video.id !== videoId)
-      );
-
-      // Elimina el video de la base de datos
+      setVideoList((prevState) => prevState.filter((video) => video.id !== videoId));
       await deleteDoc(doc(db, "videos", videoId));
-
-      // Si el video que se estaba reproduciendo se eliminó, detén la reproducción
+      message.success(`Video deleted successfully.`);
       if (url === videoList.find((video) => video.id === videoId).url) {
         setUrl("");
       }
     } catch (error) {
-      console.error("Error al eliminar el video:", error);
+      console.error("Error deleting video:", error);
+      message.error(`Failed to delete video.`);
     }
   };
+
   const deleteFile = async (fileId) => {
     try {
-      // Elimina el archivo de la lista de archivos en el estado
       setMyFiles((prevState) => prevState.filter((file) => file.id !== fileId));
-
-      // Elimina el archivo de la base de datos
       await deleteDoc(doc(db, "files", fileId));
+      message.success(`File deleted successfully.`);
     } catch (error) {
-      console.error("Error al eliminar el archivo:", error);
+      console.error("Error deleting file:", error);
+      message.error(`Failed to delete file.`);
     }
   };
 
@@ -227,165 +160,110 @@ const files = () => {
     setUrl(url);
   };
 
+  const uploadProps = {
+    name: 'file',
+    multiple: true,
+    customRequest: ({ file, onSuccess }) => {
+      setTimeout(() => {
+        setFile(file);
+        onSuccess("ok");
+      }, 0);
+    },
+    onChange(info) {
+      const { status } = info.file;
+      if (status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully.`);
+      } else if (status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+    onDrop(e) {
+      console.log('Dropped files', e.dataTransfer.files);
+    },
+  };
+
   return (
     <div className={styles.container}>
       <TrainerHeader />
 
-
-      <div className={styles.uploadFiles}>
-
-        <div className={styles.videoArea}>
-          <h1>Sube tu vídeo</h1>
-          <p>
-            Desde aquí puedes subir la URL del vídeo que quieras añadir a tu
-            reproductor.
-          </p>
-          <input
-            type="text"
-            placeholder="Título del video"
+      <div className={styles.uploadSection}>
+        <div className={styles.videoUpload}>
+          <h2>Upload Video</h2>
+          <Input
+            placeholder="Video Title"
             onChange={(e) => setVideoTitle(e.target.value)}
           />
-          <input
-            type="text"
-            placeholder="Pegue aquí su URL"
+          <Input
+            placeholder="Paste URL here"
             onChange={(e) => setUrl(e.target.value)}
           />
-          <button onClick={addVideo}>Subir</button>
-          <div
-            className={styles.closebutton}
-            onClick={() => setViewUpload(false)}
-          >
-            X
+          <Button onClick={addVideo}>Upload Video</Button>
+          <div className={styles.videoPlayer}>
+            <ReactPlayer url={url} width={"100%"} />
           </div>
         </div>
-        <h1 style={{ marginTop: "20vh" }}>Mis Videos</h1>
-        <div className={styles.myVideos}>
-
-          <div className={styles.video}>
-            <ReactPlayer url={url} width={"80%"} />
-          </div>
-          <div className={styles.videoList}>
-            <h2>¿Qué quieres ver?</h2>
-            {videoList.map((video) => (
-              <>
-                <div>
-                  <p
-                    key={video.id}
-                    onClick={() => selectVideo(video.url)}
-                  >
-                    {video.title ? video.title : "Sin título"}
-                  </p>
-                  <p>
-                    <FaTrashAlt
-                      size={20}
-                      onClick={() => deleteVideo(video.id)}
-                    />
-                  </p>
-                </div>
-              </>
-            ))}
-          </div>
-          <div
-            className={styles.closebutton}
-            onClick={() => setViewMyVideos(false)}
-          >
-            X
-          </div>
-        </div>
-
-        <div className={styles.uploadArea}>
-          <h1>Suba sus archivos</h1>
-          <input
-            type="text"
-            placeholder="Ingrese el título de su archivo aquí"
-            onChange={(e) => setFileTitle(e.target.value)}
+        <div className={styles.videoList}>
+          <h2>Available Videos</h2>
+          <List
+            dataSource={videoList}
+            renderItem={(video) => (
+              <List.Item
+                actions={[
+                  <Button
+                    type="link"
+                    icon={<FaTrashAlt />}
+                    onClick={() => deleteVideo(video.id)}
+                  />
+                ]}
+                onClick={() => selectVideo(video.url)}
+              >
+                {video.title ? video.title : "Untitled"}
+              </List.Item>
+            )}
           />
-          <div className={styles.filePickerContainer}>
-            <label htmlFor="filepicker" className={styles.customFilePicker}>
-              Seleccionar archivo
-            </label>
-            <input
-              type="file"
-              id="filepicker"
-              accept="image/*,.pdf,.doc,.docx,.xml"
-              onChange={(e) => setFile(e.target.files[0])}
-              className={styles.ocult}
-            />
-          </div>
-          <button onClick={handleUpload}>Subir Archivo</button>
-          <div
-            className={styles.closebutton}
-            onClick={() => setViewUploadFiles(false)}
-          >
-            X
-          </div>
-        </div>
-
-
-        <div className={styles.gallery}>
-          <h1 style={{ marginTop: "20vh" }}>Mi galería</h1>
-          {myfiles.length > 0 ? (
-            myfiles.map((item) => (
-              <div key={item.id}>
-                {item.fileType === ("image/jpeg" || "image/png") ? (
-                  <img src={item.img} alt={item.title} width="100%" />
-                ) : (
-                  <FaFilePdf size={100} />
-                )}
-
-                <p>{item.title ? item.title : "Sin título"}</p>
-                <a href={item.img} target="_blank">
-                  Ver/Descargar
-                </a>
-                <a onClick={() => {
-                  setShowClient(true);
-                }}>
-                  Asignar
-                </a>
-                <FaTrashAlt
-                  size={20}
-                  onClick={() => deleteFile(item.id)}
-                  className={styles.links}
-                />
-              </div>
-            ))
-          ) : (
-            <h1>Aún no has subido ningún archivo</h1>
-          )}
-        </div>
-        <div
-          className={styles.closebutton}
-          onClick={() => setViewMyFiles(false)}
-        >
-          X
         </div>
       </div>
 
+      <div className={styles.uploadFiles}>
+        <h2>Upload Files</h2>
+        <Dragger {...uploadProps}>
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">Click or drag file to this area to upload</p>
+          <p className="ant-upload-hint">
+            Support for a single or bulk upload. Strictly prohibited from uploading company data or other banned files.
+          </p>
+        </Dragger>
+      </div>
 
-      {/* <div className={styles.share}>
-        {clients
-          .filter((data) => data.role === "client")
-          .map((data) => (
-            <div
-              key={data.id}
-              onClick={() => selectTrainer(currentForm.id, data.id)}
-            >
-              <div>
-                {data.img ? (
-                  <img src={data.img} alt={"myprofileimg"} />
-                ) : (
-                  <img src="/face.jpg" alt={"myprofileimg"} />
-                )}
-              </div>
-              <p>{data.username}</p>
-            </div>
-          ))}
-        <button className={styles.closebutton} onClick={() => setShowClient(false)}>X</button>
-      </div> */}
-
-
+      <div className={styles.gallery}>
+        <h2>My Gallery</h2>
+        <Space wrap>
+          {myfiles.length > 0 ? (
+            myfiles.map((item) => (
+              <Card
+                key={item.id}
+                hoverable
+                cover={item.fileType.startsWith('image') ? <img src={item.img} alt={item.title} /> : <FaFilePdf size={100} />}
+                actions={[
+                  <a href={item.img} target="_blank" rel="noopener noreferrer">View/Download</a>,
+                  <FaTrashAlt size={20} onClick={() => deleteFile(item.id)} />
+                ]}
+              >
+                <Meta title={item.title ? item.title : "Untitled"} />
+              </Card>
+            ))
+          ) : (
+            <Skeleton active />
+          )}
+        </Space>
+      </div>
     </div>
   );
 };
 
-export default files;
+export default Files;

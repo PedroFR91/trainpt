@@ -1,129 +1,84 @@
-import React, { useContext, useEffect, useState } from "react";
-import styles from "../../styles/userList.module.css";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { db } from "../../firebase.config";
-import AuthContext from "../../context/AuthContext";
-import Link from "next/link";
-import { useRouter } from "next/router";
-const userList = () => {
-  const [show, setShow] = useState(false);
-  const [current, setCurrent] = useState("");
-  const { myData, myUid } = useContext(AuthContext);
-  const [routine, setRoutine] = useState([]);
-  const [myForm, setMyForm] = useState([]);
+import React, { useEffect, useState, useContext } from 'react';
+import { List, Avatar, Skeleton } from 'antd';
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '../../firebase.config';
+import AuthContext from '../../context/AuthContext';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import styles from '../../styles/trainerhome.module.css'; // Reutilizando el mismo archivo de estilos
+
+const UserList = () => {
+  const [initLoading, setInitLoading] = useState(true);
   const [clients, setClients] = useState([]);
+  const [myData, setMyData] = useState(null);
+  const { myUid } = useContext(AuthContext);
   const router = useRouter();
 
-  const showClient = (data) => {
-    if (myData.link && myData.link.includes(data.id)) {
-      setShow(true);
-      setCurrent(data);
+  useEffect(() => {
+    // Obtener la información del usuario actual
+    if (myUid) {
+      const userRef = doc(db, 'users', myUid);
+      const unsubUser = onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          setMyData(doc.data());
+        }
+      });
+
+      // Obtener la lista de clientes
+      const q = query(collection(db, 'subscriptions'), where('trainerId', '==', myUid));
+      const unsubClients = onSnapshot(q, (querySnapshot) => {
+        const clientIds = querySnapshot.docs.map((doc) => doc.data().clientId);
+        if (clientIds.length > 0) {
+          const clientsQuery = query(collection(db, 'users'), where('id', 'in', clientIds));
+          onSnapshot(clientsQuery, (clientsSnapshot) => {
+            const clientsData = clientsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            setClients(clientsData);
+            setInitLoading(false);
+          });
+        } else {
+          setClients([]);
+          setInitLoading(false);
+        }
+      });
+
+      return () => {
+        unsubUser();
+        unsubClients();
+      };
     }
-  };
-
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, "routines"),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setRoutine(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    return () => {
-      unsub();
-    };
-  }, []);
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, "forms"),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setMyForm(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
-    return () => {
-      unsub();
-    };
-  }, []);
-
-  useEffect(() => {
-    // Consultar la colección 'subscriptions' para obtener los clientes del entrenador
-    const q = query(collection(db, "subscriptions"), where("trainerId", "==", myUid));
-    const unsub = onSnapshot(q, (querySnapshot) => {
-      const clientIds = querySnapshot.docs.map((doc) => doc.data().clientId);
-
-      if (clientIds.length > 0) {
-        // Consultar la colección 'users' para obtener los datos de los clientes
-        const clientsQuery = query(collection(db, "users"), where("id", "in", clientIds));
-        onSnapshot(clientsQuery, (clientsSnapshot) => {
-          const clientsData = clientsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-          setClients(clientsData); // Actualizar el estado con los datos de los clientes
-        });
-      }
-    });
-
-    return () => unsub();
   }, [myUid]);
 
   const handleSubscriptionLinkClick = (userId) => {
-    // Guarda el rol del usuario en el almacenamiento local antes de navegar
-    localStorage.setItem('userRole', myData?.role);
-    // Navega a la página de suscripción
+    if (myData) {
+      localStorage.setItem('userRole', myData.role);
+    }
     router.push(`/shared/subcription/${userId}`);
   };
 
   return (
-
-
-    <div className={styles.list}>
-      {!show &&
-        clients &&
-        clients.map((data) => (
-          <div>
-            <div key={data.id} className={styles.userdata}>
-              <div>
-                {data.img ? (
-                  <>
-                    <img src={data.img} alt={"myprofileimg"} />
-                    <div>{data.username}</div></>
-                ) : (
-                  <>
-                    <img src="/face.jpg" alt={"myprofileimg"} />
-                    <div>{data.username}</div>
-                  </>
-                )}
-              </div>
-
-
-              <Link href={`/shared/clients/${data.id}`} >
-                <span className={styles.spanbutton} >Ver Info</span>
-              </Link>
-              <span
-                className={styles.spanbutton}
-                onClick={() => handleSubscriptionLinkClick(data.id)}
-              >
-                Ver Suscripción
-              </span>
-            </div>
-          </div>
-        ))}
-
-    </div>
-
-
+    <List
+      className={styles.containerList} // Aplicando el contenedor personalizado
+      loading={initLoading}
+      itemLayout="horizontal"
+      dataSource={clients}
+      renderItem={(client) => (
+        <List.Item
+          actions={[
+            <Link href={`/shared/clients/${client.id}`} key="view">Ver Info</Link>,
+            <span onClick={() => handleSubscriptionLinkClick(client.id)} key="subscription">Ver Suscripción</span>
+          ]}
+        >
+          <Skeleton avatar title={false} loading={initLoading} active>
+            <List.Item.Meta
+              avatar={<Avatar src={client.img || '/face.jpg'} />}
+              title={client.username}
+              description="Información del cliente"
+            />
+          </Skeleton>
+        </List.Item>
+      )}
+    />
   );
 };
 
-export default userList;
+export default UserList;

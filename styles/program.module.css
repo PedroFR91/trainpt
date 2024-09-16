@@ -37,6 +37,8 @@
   border-radius: 15px;
 
   padding: 0 1rem;
+
+  border: "1px solid red";
 }
 .myprofileimg {
   width: 50px;

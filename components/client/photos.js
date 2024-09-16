@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import styles from '../../styles/previousimg.module.css';
-import { collection, query, where, getDocs } from 'firebase/firestore'; // Import the necessary Firestore functions
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase.config';
+import { Card, Col, Row, Typography, Spin } from 'antd';
+import { format } from 'date-fns';
+import styles from '../../styles/previousimg.module.css';
+
+const { Title, Text } = Typography;
 
 const Photos = ({ clientId }) => {
-
     const [photos, setPhotos] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Define a query to retrieve documents with the matching 'clientId'
         const q = query(collection(db, 'forms'), where('clientId', '==', clientId));
 
         getDocs(q)
@@ -16,53 +19,53 @@ const Photos = ({ clientId }) => {
                 const photoList = [];
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    // Check if 'front', 'lateral', and 'back' exist in the document
                     if (data.front && data.lateral && data.back && data.timeStamp) {
-                        // Push the URLs into the photoList array
                         photoList.push({
                             front: data.front,
                             lateral: data.lateral,
                             back: data.back,
-                            date: data.timeStamp
+                            date: data.timeStamp.toDate(),
                         });
                     }
                 });
-                // Set the retrieved photoList to the 'photos' state
                 setPhotos(photoList);
+                setLoading(false);
             })
             .catch((error) => {
                 console.error('Error getting documents: ', error);
+                setLoading(false);
             });
     }, [clientId]);
 
+    if (loading) {
+        return <Spin size="large" className={styles.loadingSpinner} />;
+    }
+
     return (
         <div className={styles.myphotos}>
-            <h1>Fotos</h1>
-            {photos.map((photo, index) => (
-                <div key={index} className={styles.formphotos}>
-                    <div className={styles.formdate}>
-                        <p>{photo.date.toDate().toLocaleString('es-ES', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        })}</p>
-                    </div>
-                    <div className={styles.formphoto}>
-                        <div>
-                            <img src={photo.front} alt="Front" height={'90%'} />
-                            <p>Frente</p>
-                        </div>
-                        <div>
-                            <img src={photo.lateral} alt="Lateral" height={'90%'} />
-                            <p>Lateral</p>
-                        </div>
-                        <div>
-                            <img src={photo.back} alt="Back" height={'90%'} />
-                            <p>Espalda</p>
-                        </div>
-                    </div>
-                </div>
-            ))}
+            <Title level={2}>Fotos</Title>
+            <Row gutter={[16, 16]}>
+                {photos.map((photo, index) => (
+                    <Col key={index} xs={24} sm={12} md={8}>
+                        <Card title={format(photo.date, 'dd/MM/yyyy')} bordered={false}>
+                            <Row gutter={[16, 16]} justify="center">
+                                <Col>
+                                    <img src={photo.front} alt="Front" className={styles.photo} />
+                                    <Text>Frente</Text>
+                                </Col>
+                                <Col>
+                                    <img src={photo.lateral} alt="Lateral" className={styles.photo} />
+                                    <Text>Lateral</Text>
+                                </Col>
+                                <Col>
+                                    <img src={photo.back} alt="Back" className={styles.photo} />
+                                    <Text>Espalda</Text>
+                                </Col>
+                            </Row>
+                        </Card>
+                    </Col>
+                ))}
+            </Row>
         </div>
     );
 };

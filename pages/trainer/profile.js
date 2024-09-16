@@ -4,23 +4,22 @@ import TrainerHeader from '../../components/trainer/trainerHeader';
 import Profile from '../../components/trainer/myprofile';
 import Rates from '../../components/trainer/myrates';
 import PreviousImages from '../../components/trainer/previousClientsImg';
-const profile = () => {
+
+const ProfilePage = () => {
   return (
     <>
       <TrainerHeader />
       <div className={styles.containerProfile}>
 
-        <div className={styles.layout}>
-          <Profile />
-          <div className={styles.subdivision}>
-            <Rates />
-            <PreviousImages />
-          </div>
-        </div>
+        <Profile />
+
+        {/* <Rates /> */}
+        <PreviousImages />
+
+
       </div>
     </>
-
   );
 };
 
-export default profile;
+export default ProfilePage;

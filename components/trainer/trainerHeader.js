@@ -1,43 +1,63 @@
-import { useState, useContext } from 'react';
-import styles from '../../styles/trainerHeader.module.css';
-import Image from 'next/image';
+import React, { useState, useContext } from 'react';
+import { Menu } from 'antd';
+import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import Image from 'next/image';
 import AuthContext from '../../context/AuthContext';
 import { useAuthUser } from '../../hooks/useAuthUser';
-import { auth } from '../../firebase.config';
 import { signOut } from 'firebase/auth';
-import {
-  FaHome,
-  FaUser,
-  FaDumbbell,
-  FaClipboard,
-  FaFolder,
-} from 'react-icons/fa';
-import { FiLogOut, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { auth } from '../../firebase.config';
+import styles from '../../styles/trainerhome.module.css'; // Reutilizando el mismo archivo de estilos
 
 const TrainerHeader = () => {
   useAuthUser();
   const { isLogged } = useContext(AuthContext);
-  const [isOpen, setIsOpen] = useState(false);
+  const [current, setCurrent] = useState('mail');
 
   const exit = (e) => {
     e.preventDefault();
-    console.log('signout');
-    signOut(auth)
-      .then(() => {
-        // Sign-out successful.
-      })
-      .catch((error) => {
-        // An error happened.
-      });
+    signOut(auth).catch((error) => console.error(error));
   };
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
+  const onClick = (e) => {
+    setCurrent(e.key);
   };
+
+  const items = [
+    {
+      label: <Link href={'/trainer/home'}>Home</Link>,
+      key: 'home',
+      icon: <MailOutlined />,
+    },
+    {
+      label: <Link href={'/trainer/profile'}>Profile</Link>,
+      key: 'profile',
+      icon: <AppstoreOutlined />,
+    },
+    {
+      label: <Link href={'/trainer/routines'}>Routines</Link>,
+      key: 'routines',
+      icon: <SettingOutlined />,
+    },
+    {
+      label: <Link href={'/trainer/forms'}>Forms</Link>,
+      key: 'forms',
+      icon: <AppstoreOutlined />,
+    },
+    {
+      label: <Link href={'/trainer/files'}>Files</Link>,
+      key: 'files',
+      icon: <SettingOutlined />,
+    },
+    {
+      label: isLogged && <span onClick={exit}>Logout</span>,
+      key: 'logout',
+      icon: <SettingOutlined />,
+    },
+  ];
 
   return (
-    <div className={styles.container}>
+    <div className={styles.containerHeader}>
       <Link href={'/trainer/home'}>
         <Image
           src='/logo.png'
@@ -48,45 +68,7 @@ const TrainerHeader = () => {
           className={styles.logo}
         />
       </Link>
-      <div
-        className={styles.menu}
-      >
-        <Link passHref href={'/trainer/home'}>
-          <div className={styles.menuItem}>
-            <FaHome size={50} />
-          </div>
-        </Link>
-        <Link passHref href={'/trainer/profile'}>
-          <div className={styles.menuItem}>
-            <FaUser size={50} />
-          </div>
-        </Link>
-        <Link passHref href={'/trainer/routines'}>
-          <div className={styles.menuItem}>
-            <FaDumbbell size={50} />
-          </div>
-        </Link>
-        <Link passHref href={'/trainer/forms'}>
-          <div className={styles.menuItem}>
-            <FaClipboard size={50} />
-          </div>
-        </Link>
-        <Link passHref href={'/trainer/files'}>
-          <div className={styles.menuItem}>
-            <FaFolder size={50} />
-          </div>
-        </Link>
-        {isLogged && (
-          <div onClick={exit}>
-            <Link passHref href={'../'}>
-              <div className={styles.menuItem}>
-                <FiLogOut size={50} />
-
-              </div>
-            </Link>
-          </div>
-        )}
-      </div>
+      <Menu onClick={onClick} selectedKeys={[current]} mode="horizontal" items={items} />
     </div>
   );
 };

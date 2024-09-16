@@ -1,73 +1,73 @@
-// pages/client/form/[formId].js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from '../../../firebase.config';
 import { serverTimestamp } from 'firebase/firestore';
-import { initialForm } from "../../../forms/initialForm";
-import styles from './sharedform.module.css';
+import { Form, Input, Select, Button, Upload, message, Space, Spin } from 'antd';
 import { AiOutlineUpload } from 'react-icons/ai';
+import styles from './sharedform.module.css';
+import TrainerHeader from '../../../components/trainer/trainerHeader';
+
+const { TextArea } = Input;
 
 const FormPage = () => {
   const router = useRouter();
-  const { formId } = router.query; // Obtiene el ID del formulario desde la URL
-  const { clientId } = router.query;
+  const { formId } = router.query;
 
   const [formStructure, setFormStructure] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
+  const clientId = "ZxRxQ8YhZWXzPoVXaHgheM6R1Rf1"; // Establece el clientId directamente
+
   useEffect(() => {
-
-    if (router.isReady && clientId) {
-      const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
-      getDocs(subsQuery).then(querySnapshot => {
-        if (!querySnapshot.empty) {
-          const docData = querySnapshot.docs[0].data();
-          const docId = querySnapshot.docs[0].id; // Aquí capturas el ID del documento
-          setSubscription({ ...docData, id: docId }); // Guarda los datos de la suscripción y el ID del documento en el estado
-        } else {
-          console.error("No se encontró la suscripción para el cliente:", clientId);
+    if (router.isReady) {
+      const fetchSubscription = async () => {
+        try {
+          const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
+          const querySnapshot = await getDocs(subsQuery);
+          if (!querySnapshot.empty) {
+            const docData = querySnapshot.docs[0].data();
+            const docId = querySnapshot.docs[0].id;
+            setSubscription({ ...docData, id: docId });
+          } else {
+            console.error("No se encontró la suscripción para el cliente:", clientId);
+          }
+        } catch (error) {
+          console.error("Error al obtener la suscripción:", error);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
-      }).catch(error => {
-        console.error("Error al obtener la suscripción:", error);
-        setLoading(false);
-      });
+      };
+
+      fetchSubscription();
     }
-
-  }, [clientId]);
-
+  }, [clientId, router.isReady]);
 
   useEffect(() => {
     const fetchFormStructure = async () => {
       try {
-        // Consulta el formulario usando el ID obtenido desde la URL
         const formDoc = doc(db, 'forms', formId);
         const formSnapshot = await getDoc(formDoc);
         if (formSnapshot.exists()) {
-          // Si el formulario existe en la base de datos, establece los datos en el estado
           setFormStructure(formSnapshot.data());
         } else {
-          // Maneja el caso si el formulario no se encuentra en la base de datos
           console.log('Formulario no encontrado');
         }
       } catch (error) {
         console.error('Error al obtener el formulario:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     if (formId) {
-      fetchFormStructure(); // Llama a la función para obtener los datos del formulario
+      fetchFormStructure();
     }
   }, [formId]);
 
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-
+  const handleCreate = async () => {
     try {
-      // Agregar el formulario a Firestore y obtener su ID
       const formRef = await addDoc(collection(db, "forms"), {
         ...formStructure,
         type: "ClienteInicial",
@@ -77,7 +77,6 @@ const FormPage = () => {
 
       console.log("Formulario creado con éxito", formRef.id);
 
-      // Actualizar el estado de la suscripción a 'revision'
       if (subscription && subscription.id) {
         await updateDoc(doc(db, 'subscriptions', subscription.id), {
           status: 'revision',
@@ -85,34 +84,31 @@ const FormPage = () => {
         console.log(`Estado de suscripción actualizado a 'revision'.`);
       }
 
-      // Redirigir a la página anterior o donde corresponda
       router.back();
     } catch (error) {
       console.error("Error al crear el formulario o actualizar la suscripción:", error);
+      message.error("Error al crear el formulario o actualizar la suscripción.");
     }
   };
 
   const handleChange = (event) => {
-    const { name, type, value } = event.target;
-
-    if (type !== "file") {
-      // Manejar otros campos como lo estás haciendo actualmente
-      setFormStructure((prevFormStructure) => ({
-        ...prevFormStructure,
-        [name]: value,
-      }));
-    }
+    const { name, value } = event.target;
+    setFormStructure((prevFormStructure) => ({
+      ...prevFormStructure,
+      [name]: value,
+    }));
   };
 
   const handleMeasuresChange = (event) => {
-    setFormStructure({
-      ...formStructure,
+    setFormStructure((prevFormStructure) => ({
+      ...prevFormStructure,
       measures: {
-        ...formStructure.measures,
+        ...prevFormStructure.measures,
         [event.target.name]: event.target.value,
       },
-    });
+    }));
   };
+
   const uploadPhoto = async (fieldName, file) => {
     if (file) {
       const name = new Date().getTime() + file.name;
@@ -129,204 +125,166 @@ const FormPage = () => {
         }));
       } catch (error) {
         console.error(`Error al subir ${fieldName}:`, error);
+        message.error(`Error al subir ${fieldName}.`);
       }
     }
   };
 
-
-  if (!formStructure) {
-    return <div>Cargando...</div>; // Muestra un mensaje de carga mientras se obtienen los datos del formulario
+  if (loading || !formStructure) {
+    return <Spin size="large" className={styles.loadingSpinner} />;
   }
 
-  // Renderiza el formulario con los datos obtenidos
   return (
-    <div>
-      <form className={styles.initial} >
+    <div className={styles.container}>
+      <TrainerHeader />
+      <Form
+        layout="vertical"
+        className={styles.initial}
+        onFinish={handleCreate}
+      >
         <h3>Datos generales</h3>
-        <div>
-          <div>
-            <p>Nombre:</p>
-            <input
-              type='text'
-              name='name'
-              placeholder='Pedro'
-              value={formStructure.name}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <p>Sexo:</p>
-            <select
-              name='gender'
-              value={formStructure.gender}
-              onChange={handleChange}
-            >
-              <option value='man'>Hombre</option>
-              <option value='woman'>Mujer</option>
-            </select>
-          </div>
-          <div>
-            <p>Peso</p>
-            <input
-              type='text'
-              name='weight'
-              value={formStructure.weight}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <p>Altura</p>
-            <input
-              type='text'
-              name='height'
-              value={formStructure.height}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
+        <Form.Item label="Nombre">
+          <Input
+            name='name'
+            placeholder='Pedro'
+            value={formStructure.name || ''}
+            onChange={handleChange}
+          />
+        </Form.Item>
+        <Form.Item label="Sexo">
+          <Select
+            name='gender'
+            value={formStructure.gender || ''}
+            onChange={(value) => handleChange({ target: { name: 'gender', value } })}
+          >
+            <Select.Option value='man'>Hombre</Select.Option>
+            <Select.Option value='woman'>Mujer</Select.Option>
+          </Select>
+        </Form.Item>
+        <Form.Item label="Peso">
+          <Input
+            name='weight'
+            value={formStructure.weight || ''}
+            onChange={handleChange}
+          />
+        </Form.Item>
+        <Form.Item label="Altura">
+          <Input
+            name='height'
+            value={formStructure.height || ''}
+            onChange={handleChange}
+          />
+        </Form.Item>
+
         <h3>Fotos</h3>
-        <div>
-          <div>
-            <label htmlFor="front">
-              Frente<AiOutlineUpload />
-            </label>
-            <input
-              type="file"
-              id="front"
-              name="front"
-              accept="image/*"
-              required
-              onChange={(e) => uploadPhoto("front", e.target.files[0])}
-              hidden
-            />
-          </div>
-          <div>
-            <label htmlFor="back">
-              Espalda<AiOutlineUpload />
-            </label>
-            <input
-              type="file"
-              id="back"
-              name="back"
-              accept="image/*"
-              required
-              onChange={(e) => uploadPhoto("back", e.target.files[0])}
-              hidden
-            />
-          </div>
-          <div>
-            <label htmlFor="lateral">
-              Lateral <AiOutlineUpload />
-            </label>
-            <input
-              type="file"
-              id="lateral"
-              name="lateral"
-              accept="image/*"
-              required
-              onChange={(e) => uploadPhoto("lateral", e.target.files[0])}
-              hidden
-            />
-          </div>
-        </div>
+        <Form.Item label="Frente">
+          <Upload
+            customRequest={({ file, onSuccess }) => {
+              uploadPhoto('front', file);
+              onSuccess("ok");
+            }}
+            showUploadList={false}
+          >
+            <Button icon={<AiOutlineUpload />}>Subir Frente</Button>
+          </Upload>
+        </Form.Item>
+        <Form.Item label="Espalda">
+          <Upload
+            customRequest={({ file, onSuccess }) => {
+              uploadPhoto('back', file);
+              onSuccess("ok");
+            }}
+            showUploadList={false}
+          >
+            <Button icon={<AiOutlineUpload />}>Subir Espalda</Button>
+          </Upload>
+        </Form.Item>
+        <Form.Item label="Lateral">
+          <Upload
+            customRequest={({ file, onSuccess }) => {
+              uploadPhoto('lateral', file);
+              onSuccess("ok");
+            }}
+            showUploadList={false}
+          >
+            <Button icon={<AiOutlineUpload />}>Subir Lateral</Button>
+          </Upload>
+        </Form.Item>
+
         <h3>Dieta</h3>
-        <div>
-          <div>
-            <p>Intolerancias:</p>
-            <textarea
-              name='intolerances'
-              value={formStructure.intolerances}
-              onChange={handleChange}
-            />
-          </div>
+        <Form.Item label="Intolerancias">
+          <TextArea
+            name='intolerances'
+            value={formStructure.intolerances || ''}
+            onChange={handleChange}
+          />
+        </Form.Item>
+        <Form.Item label="Preferencias de comida">
+          <TextArea
+            name='preferredFoods'
+            value={formStructure.preferredFoods || ''}
+            onChange={handleChange}
+          />
+        </Form.Item>
 
-          <div>
-            <p>Preferencias de comida:</p>
-            <textarea
-              name='preferredFoods'
-              value={formStructure.preferredFoods}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
         <h3>Medidas</h3>
-        <div>
-          <div>
-            <p>Pecho:</p>
-            <input
-              type='text'
+        <Space direction="vertical">
+          <Form.Item label="Pecho">
+            <Input
               name='chest'
-              value={formStructure.measures?.chest}
+              value={formStructure.measures?.chest || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-
-          <div>
-            <p>Hombros:</p>
-            <input
-              type='text'
+          </Form.Item>
+          <Form.Item label="Hombros">
+            <Input
               name='shoulders'
-              value={formStructure.measures?.shoulders}
+              value={formStructure.measures?.shoulders || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-
-          <div>
-            <p>Biceps:</p>
-            <input
-              type='text'
+          </Form.Item>
+          <Form.Item label="Biceps">
+            <Input
               name='biceps'
-              value={formStructure.measures?.biceps}
+              value={formStructure.measures?.biceps || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-
-          <div>
-            <p>Cintura:</p>
-            <input
-              type='text'
+          </Form.Item>
+          <Form.Item label="Cintura">
+            <Input
               name='hips'
-              value={formStructure.measures?.hips}
+              value={formStructure.measures?.hips || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-
-          <div>
-            <p>Abdomen:</p>
-            <input
-              type='text'
+          </Form.Item>
+          <Form.Item label="Abdomen">
+            <Input
               name='abdomen'
-              value={formStructure.measures?.abdomen}
+              value={formStructure.measures?.abdomen || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-
-          <div>
-            <p>Cuadriceps:</p>
-            <input
-              type='text'
+          </Form.Item>
+          <Form.Item label="Cuadriceps">
+            <Input
               name='cuadriceps'
-              value={formStructure.measures?.cuadriceps}
+              value={formStructure.measures?.cuadriceps || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-
-          <div>
-            <p>Gemelos:</p>
-            <input
-              type='text'
+          </Form.Item>
+          <Form.Item label="Gemelos">
+            <Input
               name='gemelos'
-              value={formStructure.measures?.gemelos}
+              value={formStructure.measures?.gemelos || ''}
               onChange={handleMeasuresChange}
             />
-          </div>
-        </div>
-        <div onClick={handleCreate}>Enviar</div>
+          </Form.Item>
+        </Space>
 
-      </form>
-      <div className={styles.closebutton} onClick={() => router.back()}>
-        X
-      </div>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">Enviar</Button>
+        </Form.Item>
+      </Form>
+      <Button className={styles.closebutton} onClick={() => router.back()}>X</Button>
     </div>
   );
 };

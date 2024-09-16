@@ -32,26 +32,6 @@ select {
   color: #000000;
 }
 
-/* Esto aplica a toda la barra de desplazamiento */
-::-webkit-scrollbar {
-  width: 12px;
-}
-
-/* Esto aplica al track o riel de la barra de desplazamiento */
-::-webkit-scrollbar-track {
-  background: #212121;
-}
-
-/* Esto aplica al thumb o barra desplazable en sí */
-::-webkit-scrollbar-thumb {
-  background: #f69d21dd;
-  border-radius: 6px;
-}
-
-/* Cambia el color de la barra desplazable en hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #f69d21;
-}
 @media screen and (max-width: 767px) {
   ::-webkit-scrollbar {
     width: 0;

@@ -1,233 +1,169 @@
 import React, { useContext, useState } from "react";
-import styles from "../../styles/forms.module.css";
+import { Form, Input, Button, Select, Upload } from "antd";
+import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import { follow } from "../../forms/initialForm";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
-import { AiOutlineSend, AiOutlineUpload } from "react-icons/ai";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import AuthContext from '../../context/AuthContext';
+import styles from "../../styles/forms.module.css";
 
-const Follow = (props) => {
+const { Option } = Select;
+
+const Follow = ({ setShowFollow }) => {
   const { myUid } = useContext(AuthContext);
   const [formStructure, setFormStructure] = useState({
-    follow
+    ...follow,
+    measures: follow.measures || {},
   });
+  const [additionalFields, setAdditionalFields] = useState([]);
+  const [form] = Form.useForm();
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
+  const addField = (type) => {
+    const newField = {
+      type: type,
+      label: "",
+      value: "",
+      newOption: "",
+      options: type === "select" ? [] : undefined,
+    };
+    setAdditionalFields([...additionalFields, newField]);
+  };
 
+  const handleLabelChange = (e, index) => {
+    const updatedFields = [...additionalFields];
+    updatedFields[index].label = e.target.value;
+    setAdditionalFields(updatedFields);
+  };
+
+  const handleNewOptionChange = (e, index) => {
+    const updatedFields = [...additionalFields];
+    updatedFields[index].newOption = e.target.value;
+    setAdditionalFields(updatedFields);
+  };
+
+  const addSelectOption = (index) => {
+    const updatedFields = [...additionalFields];
+    if (updatedFields[index].newOption.trim() !== "") {
+      updatedFields[index].options.push(updatedFields[index].newOption);
+      updatedFields[index].newOption = "";
+    }
+    setAdditionalFields(updatedFields);
+  };
+
+  const handleCreate = async (values) => {
     try {
-      // Agregar el formulario a Firestore y obtener su ID
       const formRef = await addDoc(collection(db, "forms"), {
-        ...formStructure,
+        ...values,
+        additionalFields,
         type: "Seguimiento",
         trainerId: myUid,
         timeStamp: serverTimestamp(),
       });
 
-      // Limpiar el estado del formulario
-      setFormStructure({
-        ...follow,
-        front: null,
-        back: null,
-        lateral: null,
-      });
-
-      console.log("Formulario creado con éxito", formRef.id);
+      setAdditionalFields([]);
+      setShowFollow(false);
     } catch (error) {
       console.error("Error al crear el formulario:", error);
     }
   };
 
+  const uploadPhoto = async (file) => {
+    const name = new Date().getTime() + file.name;
+    const storageRef = ref(storage, name);
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
-  const handleMeasuresChange = (event) => {
-    setFormStructure({
-      ...formStructure,
-      measures: {
-        ...formStructure.measures,
-        [event.target.name]: event.target.value,
-      },
-    });
-  };
-  const uploadPhoto = async (fieldName, file) => {
-    if (file) {
-      const name = new Date().getTime() + file.name;
-      const storageRef = ref(storage, name);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      try {
-        await uploadTask;
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-        setFormStructure((prevFormStructure) => ({
-          ...prevFormStructure,
-          [fieldName]: downloadURL,
-        }));
-      } catch (error) {
-        console.error(`Error al subir ${fieldName}:`, error);
-      }
+    try {
+      await uploadTask;
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error(`Error al subir ${file.name}:`, error);
     }
   };
 
   return (
-    <div>
-      <form className={styles.initial}>
-        <h3>Fotos</h3>
-        <div>
-          <div>
-            <label htmlFor="front">
-              Frente<AiOutlineUpload />
-            </label>
-            <input
-              type="file"
-              id="front"
-              name="front"
-              accept="image/*"
-              required
-              onChange={(e) => uploadPhoto("front", e.target.files[0])}
-              hidden
+    <Form form={form} onFinish={handleCreate} className={styles.initial} layout="vertical">
+      <h3>Fotos</h3>
+      <Form.Item name="front" label="Frente" valuePropName="file">
+        <Upload customRequest={({ file, onSuccess }) => {
+          uploadPhoto(file).then(url => onSuccess(url));
+        }} listType="picture">
+          <Button icon={<UploadOutlined />}>Subir imagen</Button>
+        </Upload>
+      </Form.Item>
+      <Form.Item name="back" label="Espalda" valuePropName="file">
+        <Upload customRequest={({ file, onSuccess }) => {
+          uploadPhoto(file).then(url => onSuccess(url));
+        }} listType="picture">
+          <Button icon={<UploadOutlined />}>Subir imagen</Button>
+        </Upload>
+      </Form.Item>
+      <Form.Item name="lateral" label="Lateral" valuePropName="file">
+        <Upload customRequest={({ file, onSuccess }) => {
+          uploadPhoto(file).then(url => onSuccess(url));
+        }} listType="picture">
+          <Button icon={<UploadOutlined />}>Subir imagen</Button>
+        </Upload>
+      </Form.Item>
+
+      <h3>Medidas</h3>
+      {Object.keys(formStructure.measures).map((key) => (
+        <Form.Item key={key} name={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
+          <Input />
+        </Form.Item>
+      ))}
+
+      <h3>Preguntas extra:</h3>
+      <Button type="dashed" onClick={() => addField("text")}>Añadir Campo de Texto</Button>
+      <Button type="dashed" onClick={() => addField("select")}>Añadir Campo de Selección</Button>
+
+      {additionalFields.map((field, index) => (
+        <div key={index} className={styles.additionalField}>
+          <Input
+            placeholder="Etiqueta"
+            value={field.label}
+            onChange={(e) => handleLabelChange(e, index)}
+          />
+          {field.type === "text" ? (
+            <Input
+              value={field.value}
+              onChange={(e) => handleNewOptionChange(e, index)}
             />
-          </div>
-          <div>
-            <label htmlFor="back">
-              Espalda<AiOutlineUpload />
-            </label>
-            <input
-              type="file"
-              id="back"
-              name="back"
-              accept="image/*"
-              required
-              onChange={(e) => uploadPhoto("back", e.target.files[0])}
-              hidden
-            />
-          </div>
-          <div>
-            <label htmlFor="lateral">
-              Lateral <AiOutlineUpload />
-            </label>
-            <input
-              type="file"
-              id="lateral"
-              name="lateral"
-              accept="image/*"
-              required
-              onChange={(e) => uploadPhoto("lateral", e.target.files[0])}
-              hidden
-            />
-          </div>
+          ) : (
+            <>
+              <Select onChange={(value) => handleLabelChange({ target: { value } }, index)}>
+                {field.options.map((option, optionIndex) => (
+                  <Option key={optionIndex} value={option}>
+                    {option}
+                  </Option>
+                ))}
+              </Select>
+              <div className={styles.newOption}>
+                <Input
+                  placeholder="Nueva Opción"
+                  value={field.newOption}
+                  onChange={(e) => handleNewOptionChange(e, index)}
+                />
+                <Button type="dashed" onClick={() => addSelectOption(index)}>Añadir Opción</Button>
+              </div>
+            </>
+          )}
         </div>
+      ))}
 
-        <h3>Medidas</h3>
-        <div>
-          <div>
-            <p>Pecho:</p>
-            <input
-              type="text"
-              name="chest"
-              value={
-                formStructure.measures ? formStructure.measures.chest || "" : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-
-          <div>
-            <p>Hombros:</p>
-            <input
-              type="text"
-              name="shoulders"
-              value={
-                formStructure.measures
-                  ? formStructure.measures.shoulders || ""
-                  : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-
-          <div>
-            <p>Biceps:</p>
-            <input
-              type="text"
-              name="biceps"
-              value={
-                formStructure.measures
-                  ? formStructure.measures.biceps || ""
-                  : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-
-          <div>
-            <p>Cintura:</p>
-            <input
-              type="text"
-              name="hips"
-              value={
-                formStructure.measures ? formStructure.measures.hips || "" : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-
-          <div>
-            <p>Abdomen:</p>
-            <input
-              type="text"
-              name="abdomen"
-              value={
-                formStructure.measures
-                  ? formStructure.measures.abdomen || ""
-                  : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-
-          <div>
-            <p>Cuadriceps:</p>
-            <input
-              type="text"
-              name="cuadriceps"
-              value={
-                formStructure.measures
-                  ? formStructure.measures.cuadriceps || ""
-                  : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-
-          <div>
-            <p>Gemelos:</p>
-            <input
-              type="text"
-              name="gemelos"
-              value={
-                formStructure.measures
-                  ? formStructure.measures.gemelos || ""
-                  : ""
-              }
-              onChange={handleMeasuresChange}
-            />
-          </div>
-        </div>
-        <div onClick={handleCreate}>
-          <div>
-            <p>Guardar Formulario</p>
-          </div>
-
-        </div>
-      </form>
-      <div
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          Guardar Formulario
+        </Button>
+      </Form.Item>
+      <Button
         className={styles.closebutton}
-        onClick={() => props.setShowFollow(false)}
+        onClick={() => setShowFollow(false)}
       >
         X
-      </div>
-    </div>
+      </Button>
+    </Form>
   );
 };
 

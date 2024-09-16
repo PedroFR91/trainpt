@@ -5,13 +5,11 @@ import TrainersList from '../../components/client/trainersList';
 import AuthContext from '../../context/AuthContext';
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import MyRoutines from '../../components/client/myroutines';
-
 import Link from 'next/link';
 import MyDiet from '../../components/client/MyDiet';
 import MyReviews from '../../components/client/myReviews';
 import MyMeasurements from '../../components/client/MyMeasurements';
 import MyPhotos from '../../components/client/MyPhotos';
-
 import { EditOutlined, EllipsisOutlined, SettingOutlined } from '@ant-design/icons';
 import { PlusOutlined } from '@ant-design/icons';
 import {
@@ -29,7 +27,8 @@ import {
   TreeSelect,
   Upload,
 } from 'antd';
-
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase.config';
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -42,9 +41,11 @@ const normFile = (e) => {
 };
 
 const { Meta } = Card;
+
 const program = () => {
   const { myUid } = useContext(AuthContext);
   const [componentDisabled, setComponentDisabled] = useState(true);
+  const [form, setForm] = useState([]);
   const data = [
     {
       title: 'Ant Design Title 1',
@@ -62,6 +63,25 @@ const program = () => {
 
   const [isTrainersModalOpen, setIsTrainersModalOpen] = useState(false);
   const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'forms'),
+      (snapShot) => {
+        let list = [];
+        snapShot.docs.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        setForm(list);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+    return () => {
+      unsub();
+    };
+  }, []);
 
   const showTrainersModal = () => {
     setIsTrainersModalOpen(true);
@@ -97,23 +117,15 @@ const program = () => {
       <Button type="primary" onClick={showTrainersModal}>
         Busca tu entrenador
       </Button>
-      <Modal title="Busca tu entrenador" open={isTrainersModalOpen} onOk={handleTrainersModalOk} onCancel={handleTrainersModalCancel}>
-        <List
-          itemLayout="horizontal"
-          dataSource={data}
-          renderItem={(item, index) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<Avatar src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${index}`} />}
-                title={<a href="https://ant.design">{item.title}</a>}
-                description="Ant Design, a design language for background applications, is refined by Ant UED Team"
-              />
-            </List.Item>
-          )}
-        />
+      <Modal
+        title="Busca tu entrenador"
+        open={isTrainersModalOpen}
+        onOk={handleTrainersModalOk}
+        onCancel={handleTrainersModalCancel}
+      >
+        <TrainersList />
       </Modal>
 
-      <TrainersList />
       <h3>Mi Dieta</h3>
       <Card
         style={{ width: 300 }}
@@ -130,6 +142,7 @@ const program = () => {
           description="This is the description"
         />
       </Card>
+
       <h3>Mis Revisiones</h3>
       <List
         itemLayout="horizontal"
@@ -234,9 +247,36 @@ const program = () => {
           </Form>
         </>
       </Modal>
+
       <h3>Mis Medidas</h3>
       <h3>Mis Fotos</h3>
       <MyPhotos myUid={myUid} />
+
+      <h3>Mis Formularios</h3>
+      <table className={styles.myformsTable}>
+        <thead>
+          <tr>
+            <th>Tipo de formulario</th>
+            <th>Fecha de envío</th>
+            <th>Estado</th>
+            <th>Opciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {form.map((formData) => (
+            <tr key={formData.id} className={styles.table}>
+              <td>{formData.type}</td>
+              <td>{formData.timeStamp.toDate().toLocaleString()}</td>
+              <td>Pendiente</td>
+              <td>
+                <Link href={`/shared/forms/${formData.id}?clientId=${myUid}`}>
+                  Rellenar
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

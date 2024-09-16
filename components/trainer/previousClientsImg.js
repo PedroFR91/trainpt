@@ -1,205 +1,152 @@
-import React, { useContext, useEffect, useState } from "react";
-import styles from "../../styles/previousimg.module.css";
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
-  onSnapshot,
-  collection,
-  deleteDoc,
-} from "firebase/firestore";
-import { db, storage } from "../../firebase.config";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import AuthContext from "../../context/AuthContext";
-import { FaPhotoVideo } from "react-icons/fa";
-import { AiFillDelete, AiOutlineCloudUpload } from "react-icons/ai";
+import React, { useContext, useEffect, useState } from 'react';
+import { Upload, Button, Card, List, Modal, Input, message } from 'antd';
+import { UploadOutlined, DeleteOutlined, EditOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { doc, setDoc, serverTimestamp, onSnapshot, collection, deleteDoc } from 'firebase/firestore';
+import { db, storage } from '../../firebase.config';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import AuthContext from '../../context/AuthContext';
+import styles from '../../styles/myprofile.module.css';
 
 const PreviousClientsImg = () => {
   const { myUid } = useContext(AuthContext);
   const [fileBefore, setFileBefore] = useState(null);
   const [fileAfter, setFileAfter] = useState(null);
-  const [clientName, setClientName] = useState("");
+  const [clientName, setClientName] = useState('');
   const [photos, setPhotos] = useState([]);
-
-  const handleInputChange = (e) => {
-    setClientName(e.target.value);
-  };
-
-  const handleFileBeforeChange = (e) => {
-    setFileBefore(e.target.files[0]);
-  };
-
-  const handleFileAfterChange = (e) => {
-    setFileAfter(e.target.files[0]);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!clientName || !fileBefore || !fileAfter) {
-      alert("Por favor, complete todos los campos.");
-      return;
-    }
-
-    const uploadFile = async (fileToUpload, period) => {
-      const name = new Date().getTime() + fileToUpload.name;
-      const storageRef = ref(storage, name);
-      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
-
-      try {
-        await uploadTask;
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        console.log(downloadURL);
-
-        // Save the downloadURL to Firestore
-        const photoData = {
-          trainerId: myUid,
-          clientName: clientName,
-          period: period,
-          img: downloadURL,
-          title: fileToUpload.name,
-          createdAt: serverTimestamp(),
-        };
-        try {
-          await setDoc(doc(collection(db, "clientPhotos")), photoData);
-        } catch (error) {
-          console.log(error);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    // Upload both files
-    uploadFile(fileBefore, "before");
-    uploadFile(fileAfter, "after");
-
-    // Clear form fields
-    setClientName("");
-    setFileBefore(null);
-    setFileAfter(null);
-  };
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, "clientPhotos"),
+      collection(db, 'clientPhotos'),
       (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setPhotos(list);
+        const list = snapShot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setPhotos(list.filter(photo => photo.trainerId === myUid));
       },
-      (error) => {
-        console.log(error);
-      }
+      (error) => console.error(error)
     );
-    return () => {
-      unsub();
+    return () => unsub();
+  }, [myUid]);
+
+  const handleUpload = async (file, period) => {
+    const fileName = new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    await uploadTask;
+    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+    const photoData = {
+      trainerId: myUid,
+      clientName,
+      period,
+      img: downloadURL,
+      title: file.name,
+      createdAt: serverTimestamp(),
     };
-  }, []);
+
+    await setDoc(doc(collection(db, 'clientPhotos')), photoData);
+  };
+
+  const handleSubmit = async () => {
+    if (!clientName || !fileBefore || !fileAfter) {
+      message.error('Por favor, complete todos los campos.');
+      return;
+    }
+
+    await handleUpload(fileBefore, 'before');
+    await handleUpload(fileAfter, 'after');
+
+    setClientName('');
+    setFileBefore(null);
+    setFileAfter(null);
+    setModalVisible(false);
+  };
 
   const handleDeleteGroup = async (client) => {
-    const photosToDelete = photos.filter(
-      (photo) => photo.trainerId === myUid && photo.clientName === client
-    );
+    const photosToDelete = photos.filter(photo => photo.clientName === client);
 
     await Promise.all(
       photosToDelete.map(async (photo) => {
-        try {
-          await deleteDoc(doc(db, "clientPhotos", photo.id));
-        } catch (error) {}
+        await deleteDoc(doc(db, 'clientPhotos', photo.id));
       })
     );
   };
 
+  const handleShare = (photo) => {
+    navigator.clipboard.writeText(photo.img);
+    message.success('URL de la imagen copiada al portapapeles');
+  };
+
   return (
     <div className={styles.container}>
-      <h2>Sube imágenes de tus clientes</h2>
-      <form onSubmit={handleSubmit}>
-        <div className={styles.inputContainer}>
-          <input
-            type="text"
-            placeholder="Nombre del cliente"
-            value={clientName}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div>
-          <div className={styles.inputContainer}>
-            <label htmlFor="fileBefore">Antes</label>
-            <input
-              type="file"
-              id="fileBefore"
-              onChange={handleFileBeforeChange}
-              accept="image/*"
-              required
-              hidden
-            />
-          </div>
-          <div className={styles.inputContainer}>
-            <label htmlFor="fileAfter">Después</label>
-            <input
-              type="file"
-              id="fileAfter"
-              onChange={handleFileAfterChange}
-              accept="image/*"
-              required
-              hidden
-            />
-          </div>
-        </div>
-        <button type="submit">
-          <AiOutlineCloudUpload size={30} />
-        </button>
-      </form>
-      <div className={styles.clientPhotos}>
-    
-        {Array.from(new Set(photos.map((photo) => photo.clientName)))
-          .filter((clientName) =>
-            photos.some(
-              (photo) =>
-                photo.clientName === clientName && photo.trainerId === myUid
-            )
-          )
-          .map((client) => (
-            <div key={client} className={styles.client}>
-              <h1>{client}</h1>
+      <Button
+        type="primary"
+        icon={<UploadOutlined />}
+        onClick={() => setModalVisible(true)}
+        style={{ marginBottom: 16 }}
+      >
+        Subir imágenes de clientes
+      </Button>
+      <List
+        itemLayout="vertical"
+        dataSource={Array.from(new Set(photos.map(photo => photo.clientName)))}
+        renderItem={client => (
+          <List.Item
+            key={client}
+            actions={[
+              <Button icon={<DeleteOutlined />} onClick={() => handleDeleteGroup(client)} />
+            ]}
+          >
+            <Card title={client} className={styles.clientCard}>
               <div className={styles.clientImgGroup}>
                 {photos
-                  .filter(
-                    (data) =>
-                      data.trainerId === myUid &&
-                      data.clientName === client &&
-                      data.period === "before"
-                  )
-                  .map((photo) => (
-                    <div key={photo.id} className={styles.clientImg}>
-                      <img src={photo.img} alt={photo.title} />
-                      <p>Antes</p>
-                    </div>
-                  ))}
-                {photos
-                  .filter(
-                    (data) =>
-                      data.trainerId === myUid &&
-                      data.clientName === client &&
-                      data.period === "after"
-                  )
-                  .map((photo) => (
-                    <div key={photo.id} className={styles.clientImg}>
-                      <img src={photo.img} alt={photo.title} />
-                      <p>Después</p>
+                  .filter(photo => photo.clientName === client)
+                  .map(photo => (
+                    <div key={photo.id} className={styles.clientImgWrapper}>
+                      <img src={photo.img} alt={photo.title} className={styles.clientImg} />
+                      <div className={styles.imgTitle}>{photo.title}</div>
+                      <div className={styles.imgActions}>
+                        <Button icon={<ShareAltOutlined />} onClick={() => handleShare(photo)} />
+                        <Button icon={<EditOutlined />} />
+                        <Button icon={<DeleteOutlined />} onClick={() => handleDeleteGroup(photo.clientName)} />
+                      </div>
                     </div>
                   ))}
               </div>
-              <button onClick={() => handleDeleteGroup(client)}>
-                <AiFillDelete />
-              </button>
-            </div>
-          ))}
-      </div>
+            </Card>
+          </List.Item>
+        )}
+      />
+      <Modal
+        title="Subir imágenes de clientes"
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onOk={handleSubmit}
+      >
+        <Upload
+          beforeUpload={(file) => {
+            setFileBefore(file);
+            return false;
+          }}
+          fileList={fileBefore ? [fileBefore] : []}
+        >
+          <Button icon={<UploadOutlined />}>Subir imagen antes</Button>
+        </Upload>
+        <Upload
+          beforeUpload={(file) => {
+            setFileAfter(file);
+            return false;
+          }}
+          fileList={fileAfter ? [fileAfter] : []}
+        >
+          <Button icon={<UploadOutlined />}>Subir imagen después</Button>
+        </Upload>
+        <Input
+          placeholder="Nombre del cliente"
+          value={clientName}
+          onChange={(e) => setClientName(e.target.value)}
+        />
+      </Modal>
     </div>
   );
 };

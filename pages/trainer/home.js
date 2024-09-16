@@ -11,9 +11,9 @@ const home = () => {
     <>
       <TrainerHeader />
       <div className={styles.container}>
-        <h1> Mis Clientes</h1>
+
         <UserList />
-        <h1>Próximos Eventos</h1>
+
         <Calendar />
       </div>
     </>

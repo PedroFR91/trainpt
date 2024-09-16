@@ -1,30 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ClientHeader from "../../components/client/clientHeader";
 import styles from "../../styles/Measures.module.css";
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-} from "chart.js";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { db } from "../../firebase.config";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import { DatePicker, Checkbox, Button, Card, Row, Col, Space, Typography } from 'antd';
+import { format } from 'date-fns';
 
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
-);
+const { Title: AntTitle } = Typography;
+const { RangePicker } = DatePicker;
 
 const initialData = [
     {
@@ -86,9 +73,8 @@ export const options = {
 };
 
 const Measures = ({ clientId }) => {
-
     const [measures, setMeasures] = useState({});
-    const [labels, setLabels] = useState({});
+    const [labels, setLabels] = useState([]);
     const [selectedMagnitudes, setSelectedMagnitudes] = useState([]);
     const colorPalette = [
         "rgb(0, 128, 255)",
@@ -98,31 +84,24 @@ const Measures = ({ clientId }) => {
         "rgb(255, 255, 0)",
         "rgb(128, 0, 128)",
         "rgb(0, 0, 128)",
-        // Puedes agregar más colores según sea necesario
     ];
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
 
-    const handleStartDateChange = (event) => {
-        setStartDate(event.target.value);
-    };
-
-    const handleEndDateChange = (event) => {
-        setEndDate(event.target.value);
+    const handleDateChange = (dates) => {
+        const [start, end] = dates;
+        setStartDate(start);
+        setEndDate(end);
     };
 
     const applyDateFilter = () => {
-        // Realiza el filtrado por fechas aquí
-        console.log("startDate:", startDate);
-        console.log("endDate:", endDate);
         const filteredMeasures = selectedMagnitudes.map((magnitude, index) => {
             const colorIndex = index % colorPalette.length;
             const filteredData = measures[magnitude] ? measures[magnitude].reduce((result, value, i) => {
                 const timestamp = new Date(labels[i]);
-                console.log("timestamp:", timestamp);
                 if (
-                    (!startDate || timestamp >= parseDate(startDate)) &&
-                    (!endDate || timestamp <= parseDate(endDate))
+                    (!startDate || timestamp >= startDate) &&
+                    (!endDate || timestamp <= endDate)
                 ) {
                     result.push(value);
                 }
@@ -136,19 +115,8 @@ const Measures = ({ clientId }) => {
             };
         });
 
-        // Actualiza el estado con las medidas filtradas
         setSelectedMagnitudes(filteredMeasures);
     };
-
-    // Función para parsear fechas en formato dd/mm/yyyy a Date
-    function parseDate(dateString) {
-        const parts = dateString.split("/");
-        if (parts.length === 3) {
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-        }
-        return null;
-    }
-
 
     useEffect(() => {
         const q = query(collection(db, "forms"), where("clientId", "==", clientId));
@@ -170,9 +138,8 @@ const Measures = ({ clientId }) => {
                             }
                             measuresData[label].push(Number(data[label]));
                         }
-                        // Formatea el timeStamp como etiquetas legibles
                         timeStamps.push(
-                            new Date(doc.data().timeStamp.toDate()).toLocaleDateString()
+                            format(new Date(doc.data().timeStamp.toDate()), 'dd/MM/yyyy')
                         );
                     }
                 });
@@ -186,7 +153,6 @@ const Measures = ({ clientId }) => {
             });
     }, [clientId]);
 
-
     const handleMagnitudeChange = (magnitude) => {
         if (selectedMagnitudes.includes(magnitude)) {
             setSelectedMagnitudes(selectedMagnitudes.filter((item) => item !== magnitude));
@@ -194,54 +160,61 @@ const Measures = ({ clientId }) => {
             setSelectedMagnitudes([...selectedMagnitudes, magnitude]);
         }
     };
+
     return (
-        <div>
-            <ClientHeader />
-            <div className={styles.mycontainer}>
-                <h1>Mis medidas</h1>
-
-                <div className={styles.mygraph}>
-                    <Line
-                        options={options}
-                        data={{
-                            labels: labels,
-                            datasets: selectedMagnitudes.map((magnitude, index) => {
-                                const colorIndex = index % colorPalette.length;
-                                const filteredData = measures[magnitude] ? measures[magnitude].reduce((result, value, i) => {
-                                    const timestamp = new Date(labels[i]);
-                                    if (
-                                        (!startDate || timestamp >= new Date(startDate)) &&
-                                        (!endDate || timestamp <= new Date(endDate))
-                                    ) {
-                                        result.push(value);
-                                    }
-                                    return result;
-                                }, []) : [];
-                                return {
-                                    label: magnitude,
-                                    data: filteredData,
-                                    borderColor: colorPalette[colorIndex],
-                                    backgroundColor: colorPalette[colorIndex],
-                                };
-                            }),
-                        }}
-                    />
-                </div>
-
-                <div>
-                    <input
-                        type="date"
-                        onChange={handleStartDateChange}
-                        value={startDate}
-                    />
-                    <input
-                        type="date"
-                        onChange={handleEndDateChange}
-                        value={endDate}
-                    />
-                    <button onClick={applyDateFilter}>Aplicar Filtro</button>
-                </div>
-            </div>
+        <div className={styles.mycontainer}>
+            <AntTitle level={2}>Mis medidas</AntTitle>
+            <Row gutter={16} className={styles.mygraph}>
+                <Col span={24}>
+                    <Card>
+                        <Line
+                            options={options}
+                            data={{
+                                labels: labels,
+                                datasets: selectedMagnitudes.map((magnitude, index) => {
+                                    const colorIndex = index % colorPalette.length;
+                                    const filteredData = measures[magnitude] ? measures[magnitude].reduce((result, value, i) => {
+                                        const timestamp = new Date(labels[i]);
+                                        if (
+                                            (!startDate || timestamp >= startDate) &&
+                                            (!endDate || timestamp <= endDate)
+                                        ) {
+                                            result.push(value);
+                                        }
+                                        return result;
+                                    }, []) : [];
+                                    return {
+                                        label: magnitude,
+                                        data: filteredData,
+                                        borderColor: colorPalette[colorIndex],
+                                        backgroundColor: colorPalette[colorIndex],
+                                    };
+                                }),
+                            }}
+                        />
+                    </Card>
+                </Col>
+            </Row>
+            <Row gutter={16} style={{ marginTop: '16px' }}>
+                <Col span={12}>
+                    <RangePicker onChange={handleDateChange} />
+                </Col>
+                <Col span={12}>
+                    <Button type="primary" onClick={applyDateFilter}>Aplicar Filtro</Button>
+                </Col>
+            </Row>
+            <Row gutter={16} style={{ marginTop: '16px' }}>
+                {Object.keys(measures).map((magnitude, index) => (
+                    <Col span={8} key={index}>
+                        <Checkbox
+                            onChange={() => handleMagnitudeChange(magnitude)}
+                            checked={selectedMagnitudes.includes(magnitude)}
+                        >
+                            {magnitude.charAt(0).toUpperCase() + magnitude.slice(1)}
+                        </Checkbox>
+                    </Col>
+                ))}
+            </Row>
         </div>
     );
 };

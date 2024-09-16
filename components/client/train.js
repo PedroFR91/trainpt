@@ -65,7 +65,7 @@ const Train = ({ clientId }) => {
     };
     return (
         <div className={styles.container}>
-            <ClientHeader />
+
             <div className={styles.myRoutine}>
 
                 {routines

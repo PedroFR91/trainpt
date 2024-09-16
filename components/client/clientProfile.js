@@ -69,7 +69,6 @@ const clientProfile = () => {
           const docId = querySnapshot.docs[0].id;
           setSubscription({ ...docData, id: docId });
 
-          // Obtener el formulario inicial si existe
           if (docData.initialForm) {
             const formRef = doc(db, 'forms', docData.initialForm);
             getDoc(formRef).then(formSnap => {
@@ -113,9 +112,8 @@ const clientProfile = () => {
             onChange={(e) => setFile(e.target.files[0])}
             hidden
           />
-          <Link href={`/shared/subcription/${myUid}`} className={styles.myLink}>
-            {(subscription?.status)?.toUpperCase()}
-          </Link>
+          <p style={{ cursor: 'pointer' }}> <p></p> </p>
+          <Link href={`/shared/subcription/${myUid}`}  >Status:{(subscription?.status)?.toUpperCase()}</Link>
 
         </div>
       )}
