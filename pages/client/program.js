@@ -7,7 +7,7 @@ import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import MyRoutines from '../../components/client/myroutines';
 import Link from 'next/link';
 import MyDiet from '../../components/client/MyDiet';
-import MyReviews from '../../components/client/myReviews';
+
 import MyMeasurements from '../../components/client/MyMeasurements';
 import MyPhotos from '../../components/client/MyPhotos';
 import { EditOutlined, EllipsisOutlined, SettingOutlined } from '@ant-design/icons';
