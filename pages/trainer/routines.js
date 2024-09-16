@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Space, Table, notification } from 'antd';
-import { db } from "../../firebase.config";
+import { auth, db } from "../../firebase.config";
 import { collection, deleteDoc, doc, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import ExerciseCreator from '../../components/general/ExerciseCreator';
 import TrainingCreator from '../../components/general/TrainingCreator';
 import RoutineCreator from '../../components/general/RoutineCreator';
 import { FaRegEdit, FaRegTrashAlt, FaCopy, FaEye } from 'react-icons/fa';
 import TrainerHeader from '../../components/trainer/trainerHeader';
+import AuthContext from '../../context/AuthContext'
 
 const App = () => {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -25,10 +26,17 @@ const App = () => {
   const [showTrainingsTable, setShowTrainingsTable] = useState(false);
   const [showRoutinesTable, setShowRoutinesTable] = useState(false);
 
+  const { myUid } = useContext(AuthContext);
   useEffect(() => {
-    const unsubExercises = onSnapshot(collection(db, "exercises"), (snapshot) => {
-      setExercises(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
+    const unsubExercises = onSnapshot(
+      collection(db, "exercises"),
+      (snapshot) => {
+        const filteredExercises = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((exercise) => exercise.trainerId === myUid);
+        setExercises(filteredExercises);
+      }
+    );
     const unsubTrainings = onSnapshot(collection(db, "trainings"), (snapshot) => {
       setTrainings(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });

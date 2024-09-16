@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Modal, Form, Input, Button, notification } from 'antd';
 import { db } from "../../firebase.config";
 import { addDoc, updateDoc, collection, doc, serverTimestamp } from "firebase/firestore";
-
+import AuthContext from '../../context/AuthContext'
 const ExerciseCreator = ({ visible, setVisible, currentExercise }) => {
     const [form] = Form.useForm();
-
+    const { myUid } = useContext(AuthContext);
+    console.log(myUid)
     useEffect(() => {
         if (currentExercise) {
             form.setFieldsValue(currentExercise);
@@ -26,6 +27,7 @@ const ExerciseCreator = ({ visible, setVisible, currentExercise }) => {
             } else {
                 await addDoc(collection(db, 'exercises'), {
                     ...values,
+                    trainerId: myUid,
                     timeStamp: serverTimestamp(),
                 });
                 notification.success({
