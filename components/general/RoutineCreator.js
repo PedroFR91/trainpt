@@ -6,7 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { FaRegEdit, FaRegTrashAlt, FaCopy, FaEye } from 'react-icons/fa';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import TrainingCreator from './TrainingCreator';
-import styles from './routinePage.module.css';
+
 
 const { TextArea } = Input;
 const { Step } = Steps;
