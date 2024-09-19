@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Modal, Space, Table, notification } from 'antd';
+import { Button, Modal, Space, Table, notification, Form } from 'antd';
+
 import { auth, db } from "../../firebase.config";
 import { collection, deleteDoc, doc, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import ExerciseCreator from '../../components/general/ExerciseCreator';
@@ -10,6 +11,7 @@ import TrainerHeader from '../../components/trainer/trainerHeader';
 import AuthContext from '../../context/AuthContext'
 
 const App = () => {
+  const [form] = Form.useForm();
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showRoutineModal, setShowRoutineModal] = useState(false);
@@ -25,6 +27,7 @@ const App = () => {
   const [showExercisesTable, setShowExercisesTable] = useState(false);
   const [showTrainingsTable, setShowTrainingsTable] = useState(false);
   const [showRoutinesTable, setShowRoutinesTable] = useState(false);
+  const [selectedTrainings, setSelectedTrainings] = useState([]);
 
   const { myUid } = useContext(AuthContext);
   useEffect(() => {
@@ -33,7 +36,7 @@ const App = () => {
       (snapshot) => {
         const filteredExercises = snapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((exercise) => exercise.trainerId === myUid);
+
         setExercises(filteredExercises);
       }
     );
@@ -146,7 +149,15 @@ const App = () => {
 
         <Button type="primary" onClick={() => setShowExerciseModal(true)}>Crear Ejercicio</Button>
         <Button type="primary" onClick={() => setShowTrainingModal(true)}>Crear Entrenamiento</Button>
-        <Button type="primary" onClick={() => setShowRoutineModal(true)}>Crear Rutina</Button>
+        <Button type="primary" onClick={() => {
+          setCurrentRoutine(null);
+          form.resetFields();
+          setSelectedTrainings([]);
+          setShowRoutineModal(true);
+        }}>
+          Crear Rutina
+        </Button>
+
         <Button type="default" onClick={() => setShowExercisesTable(!showExercisesTable)}>Ver Ejercicios</Button>
         <Button type="default" onClick={() => setShowTrainingsTable(!showTrainingsTable)}>Ver Entrenamientos</Button>
         <Button type="default" onClick={() => setShowRoutinesTable(!showRoutinesTable)}>Ver Rutinas</Button>
@@ -164,7 +175,7 @@ const App = () => {
         {viewExerciseModal && (
           <Modal
             title="Ver Ejercicio"
-            visible={viewExerciseModal}
+            open={viewExerciseModal}
             onCancel={() => setViewExerciseModal(false)}
             footer={null}
           >
@@ -176,15 +187,15 @@ const App = () => {
         {viewTrainingModal && (
           <Modal
             title="Ver Entrenamiento"
-            visible={viewTrainingModal}
+            open={viewTrainingModal}
             onCancel={() => setViewTrainingModal(false)}
             footer={null}
           >
-            <p><strong>Nombre:</strong> {currentTraining.name}</p>
-            <p><strong>Descripción:</strong> {currentTraining.description}</p>
+            <p><strong>Nombre:</strong> {currentTraining?.name}</p>
+            <p><strong>Descripción:</strong> {currentTraining?.description}</p>
             <p><strong>Ejercicios:</strong></p>
             <ul>
-              {currentTraining.exercises && currentTraining.exercises.map((exercise) => (
+              {currentTraining?.exercises?.map((exercise) => (
                 <li key={exercise.id}>
                   <strong>Nombre:</strong> {exercise.name}
                   <br />
@@ -196,40 +207,47 @@ const App = () => {
             </ul>
           </Modal>
         )}
+
         {viewRoutineModal && (
           <Modal
             title="Ver Rutina"
-            visible={viewRoutineModal}
+            open={viewRoutineModal}
             onCancel={() => setViewRoutineModal(false)}
             footer={null}
           >
-            <p><strong>Nombre:</strong> {currentRoutine.name}</p>
-            <p><strong>Descripción:</strong> {currentRoutine.description}</p>
+            <p><strong>Nombre:</strong> {currentRoutine?.name}</p>
+            <p><strong>Descripción:</strong> {currentRoutine?.description}</p>
             <p><strong>Entrenamientos:</strong></p>
             <ul>
-              {currentRoutine.trainings && currentRoutine.trainings.map((training) => (
-                <li key={training.id}>
-                  <strong>Nombre:</strong> {training.name}
-                  <br />
-                  <strong>Descripción:</strong> {training.description}
-                  <br />
-                  <strong>Ejercicios:</strong>
-                  <ul>
-                    {training.exercises && training.exercises.map((exercise) => (
-                      <li key={exercise.id}>
-                        <strong>Nombre:</strong> {exercise.name}
-                        <br />
-                        <strong>Material:</strong> {exercise.material}
-                        <br />
-                        <strong>Comentarios:</strong> {exercise.comments}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
+              {currentRoutine?.trainings?.map((trainingRef) => {
+                const training = trainings.find(t => t.id === trainingRef.id);
+                return training ? (
+                  <li key={training.id}>
+                    <strong>Nombre:</strong> {training?.name}
+                    <br />
+                    <strong>Descripción:</strong> {training?.description}
+                    <br />
+                    <strong>Ejercicios:</strong>
+                    <ul>
+                      {training?.exercises?.map((exercise) => (
+                        <li key={exercise.id}>
+                          <strong>Nombre:</strong> {exercise.name}
+                          <br />
+                          <strong>Material:</strong> {exercise.material}
+                          <br />
+                          <strong>Comentarios:</strong> {exercise.comments}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ) : (
+                  <li key={trainingRef.id}>Entrenamiento no encontrado</li>
+                );
+              })}
             </ul>
           </Modal>
         )}
+
 
         {showExercisesTable && <Table columns={columns("exercises")} dataSource={exercises} rowKey="id" />}
         {showTrainingsTable && <Table columns={columns("trainings")} dataSource={trainings} rowKey="id" />}

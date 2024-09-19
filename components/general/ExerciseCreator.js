@@ -13,7 +13,8 @@ const ExerciseCreator = ({ visible, setVisible, currentExercise }) => {
         } else {
             form.resetFields();
         }
-    }, [currentExercise, form]);
+    }, [currentExercise, form, visible]);
+
 
     const handleFinish = async (values) => {
         try {
