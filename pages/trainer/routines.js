@@ -9,8 +9,10 @@ import RoutineCreator from '../../components/general/RoutineCreator';
 import { FaRegEdit, FaRegTrashAlt, FaCopy, FaEye } from 'react-icons/fa';
 import TrainerHeader from '../../components/trainer/trainerHeader';
 import AuthContext from '../../context/AuthContext'
+import withAuth from '../../components/withAuth';
 
-const App = () => {
+
+const Routines = () => {
   const [form] = Form.useForm();
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
@@ -257,4 +259,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default withAuth(Routines);

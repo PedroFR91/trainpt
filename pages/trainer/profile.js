@@ -4,6 +4,8 @@ import TrainerHeader from '../../components/trainer/trainerHeader';
 import Profile from '../../components/trainer/myprofile';
 import Rates from '../../components/trainer/myrates';
 import PreviousImages from '../../components/trainer/previousClientsImg';
+import withAuth from '../../components/withAuth';
+
 
 const ProfilePage = () => {
   return (
@@ -22,4 +24,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default withAuth(ProfilePage);

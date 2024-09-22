@@ -8,6 +8,7 @@ import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import styles from "../../styles/forms.module.css";
+import withAuth from '../../components/withAuth';
 
 const Forms = () => {
   const { myUid } = useContext(AuthContext);
@@ -96,4 +97,4 @@ const Forms = () => {
   );
 };
 
-export default Forms;
+export default withAuth(Forms);

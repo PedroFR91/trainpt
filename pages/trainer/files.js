@@ -9,6 +9,7 @@ import ReactPlayer from "react-player";
 import { InboxOutlined } from '@ant-design/icons';
 import { Upload, message, Card, Image, Space, Skeleton, Button, Input, List } from 'antd';
 import { FaFilePdf, FaTrashAlt } from "react-icons/fa";
+import withAuth from '../../components/withAuth';
 
 const { Dragger } = Upload;
 const { Meta } = Card;
@@ -266,4 +267,4 @@ const Files = () => {
   );
 };
 
-export default Files;
+export default withAuth(Files);
