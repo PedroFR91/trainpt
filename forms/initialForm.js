@@ -28,6 +28,17 @@ export const initialForm = {
   },
 };
 export const follow = {
+  trainingDays: {
+    options: [
+      { label: 'Lunes', value: 'monday' },
+      { label: 'Martes', value: 'tuesday' },
+      { label: 'Miércoles', value: 'wednesday' },
+      { label: 'Jueves', value: 'thursday' },
+      { label: 'Viernes', value: 'friday' },
+      { label: 'Sábado', value: 'saturday' },
+      { label: 'Domingo', value: 'sunday' }
+    ]
+  },
   measures: {
     chest: '',
     shoulders: '',
@@ -35,7 +46,7 @@ export const follow = {
     hips: '',
     abdomen: '',
     cuadriceps: '',
-    gemelos: '',
+    gemelos: ''
   },
   lateral: '',
   front: '',

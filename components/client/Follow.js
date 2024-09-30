@@ -12,62 +12,32 @@ const { Option } = Select;
 
 const Follow = ({ setShowFollow }) => {
   const { myUid } = useContext(AuthContext);
+
+  // Inicializar estructura del formulario de seguimiento
   const [formStructure, setFormStructure] = useState({
-    ...follow,
-    measures: follow.measures || {},
+    name: '',
+    weight: '',
+    front: null,
+    back: null,
+    lateral: null,
+    intolerances: '',
+    preferredFoods: '',
+    trainingDays: '',
+    measures: {
+      chest: '',
+      shoulders: '',
+      biceps: '',
+      hips: '',
+      abdomen: '',
+      cuadriceps: '',
+      gemelos: ''
+    },
+    additionalFields: [] // Campos adicionales que el entrenador pueda añadir
   });
-  const [additionalFields, setAdditionalFields] = useState([]);
+
   const [form] = Form.useForm();
 
-  const addField = (type) => {
-    const newField = {
-      type: type,
-      label: "",
-      value: "",
-      newOption: "",
-      options: type === "select" ? [] : undefined,
-    };
-    setAdditionalFields([...additionalFields, newField]);
-  };
-
-  const handleLabelChange = (e, index) => {
-    const updatedFields = [...additionalFields];
-    updatedFields[index].label = e.target.value;
-    setAdditionalFields(updatedFields);
-  };
-
-  const handleNewOptionChange = (e, index) => {
-    const updatedFields = [...additionalFields];
-    updatedFields[index].newOption = e.target.value;
-    setAdditionalFields(updatedFields);
-  };
-
-  const addSelectOption = (index) => {
-    const updatedFields = [...additionalFields];
-    if (updatedFields[index].newOption.trim() !== "") {
-      updatedFields[index].options.push(updatedFields[index].newOption);
-      updatedFields[index].newOption = "";
-    }
-    setAdditionalFields(updatedFields);
-  };
-
-  const handleCreate = async (values) => {
-    try {
-      const formRef = await addDoc(collection(db, "forms"), {
-        ...values,
-        additionalFields,
-        type: "Seguimiento",
-        trainerId: myUid,
-        timeStamp: serverTimestamp(),
-      });
-
-      setAdditionalFields([]);
-      setShowFollow(false);
-    } catch (error) {
-      console.error("Error al crear el formulario:", error);
-    }
-  };
-
+  // Función para subir las fotos a Firebase Storage
   const uploadPhoto = async (file) => {
     const name = new Date().getTime() + file.name;
     const storageRef = ref(storage, name);
@@ -82,87 +52,108 @@ const Follow = ({ setShowFollow }) => {
     }
   };
 
+  const handleCreate = async (values) => {
+    try {
+      // Subir fotos y obtener URLs
+      const frontUrl = values.front?.file ? await uploadPhoto(values.front.file.originFileObj) : null;
+      const backUrl = values.back?.file ? await uploadPhoto(values.back.file.originFileObj) : null;
+      const lateralUrl = values.lateral?.file ? await uploadPhoto(values.lateral.file.originFileObj) : null;
+
+      // Crear objeto limpio con los datos del formulario
+      const cleanValues = {
+        ...formStructure,  // Usar los campos actuales del formulario
+        front: frontUrl,
+        back: backUrl,
+        lateral: lateralUrl,
+        type: "Seguimiento", // Tipo de formulario de seguimiento
+        trainerId: myUid,    // Asignar el id del entrenador
+        timeStamp: serverTimestamp(),
+      };
+
+      // Guardar el formulario en Firestore
+      const formRef = await addDoc(collection(db, "forms"), cleanValues);
+
+      // Reiniciar campos adicionales y cerrar modal
+      setFormStructure({ ...formStructure, additionalFields: [] });
+      setShowFollow(false);
+    } catch (error) {
+      console.error("Error al crear el formulario de seguimiento:", error);
+    }
+  };
+
   return (
     <Form form={form} onFinish={handleCreate} className={styles.initial} layout="vertical">
+      <h3>Datos generales</h3>
+      <Form.Item name="name" label="Nombre">
+        <Input placeholder="Nombre del cliente" onChange={(e) => setFormStructure({ ...formStructure, name: e.target.value })} />
+      </Form.Item>
+      <Form.Item name="weight" label="Peso">
+        <Input onChange={(e) => setFormStructure({ ...formStructure, weight: e.target.value })} />
+      </Form.Item>
+
       <h3>Fotos</h3>
-      <Form.Item name="front" label="Frente" valuePropName="file">
+      <Form.Item name="front" label="Frente">
         <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => onSuccess(url));
+          uploadPhoto(file).then(url => {
+            setFormStructure({ ...formStructure, front: url });
+            onSuccess(url);
+          });
         }} listType="picture">
-          <Button icon={<UploadOutlined />}>Subir imagen</Button>
+          <Button icon={<UploadOutlined />}>Subir imagen frontal</Button>
         </Upload>
       </Form.Item>
-      <Form.Item name="back" label="Espalda" valuePropName="file">
+      <Form.Item name="back" label="Espalda">
         <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => onSuccess(url));
+          uploadPhoto(file).then(url => {
+            setFormStructure({ ...formStructure, back: url });
+            onSuccess(url);
+          });
         }} listType="picture">
-          <Button icon={<UploadOutlined />}>Subir imagen</Button>
+          <Button icon={<UploadOutlined />}>Subir imagen trasera</Button>
         </Upload>
       </Form.Item>
-      <Form.Item name="lateral" label="Lateral" valuePropName="file">
+      <Form.Item name="lateral" label="Lateral">
         <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => onSuccess(url));
+          uploadPhoto(file).then(url => {
+            setFormStructure({ ...formStructure, lateral: url });
+            onSuccess(url);
+          });
         }} listType="picture">
-          <Button icon={<UploadOutlined />}>Subir imagen</Button>
+          <Button icon={<UploadOutlined />}>Subir imagen lateral</Button>
         </Upload>
+      </Form.Item>
+
+      <h3>Dieta</h3>
+      <Form.Item name="intolerances" label="Intolerancias">
+        <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, intolerances: e.target.value })} />
+      </Form.Item>
+      <Form.Item name="preferredFoods" label="Preferencias de comida">
+        <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, preferredFoods: e.target.value })} />
+      </Form.Item>
+      <Form.Item name="trainingDays" label="Días de entrenamiento">
+        <Select onChange={(value) => setFormStructure({ ...formStructure, trainingDays: value })}>
+          {follow.trainingDays.options.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
+        </Select>
       </Form.Item>
 
       <h3>Medidas</h3>
       {Object.keys(formStructure.measures).map((key) => (
         <Form.Item key={key} name={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
-          <Input />
+          <Input onChange={(e) => setFormStructure({
+            ...formStructure,
+            measures: { ...formStructure.measures, [key]: e.target.value }
+          })} />
         </Form.Item>
       ))}
 
-      <h3>Preguntas extra:</h3>
-      <Button type="dashed" onClick={() => addField("text")}>Añadir Campo de Texto</Button>
-      <Button type="dashed" onClick={() => addField("select")}>Añadir Campo de Selección</Button>
-
-      {additionalFields.map((field, index) => (
-        <div key={index} className={styles.additionalField}>
-          <Input
-            placeholder="Etiqueta"
-            value={field.label}
-            onChange={(e) => handleLabelChange(e, index)}
-          />
-          {field.type === "text" ? (
-            <Input
-              value={field.value}
-              onChange={(e) => handleNewOptionChange(e, index)}
-            />
-          ) : (
-            <>
-              <Select onChange={(value) => handleLabelChange({ target: { value } }, index)}>
-                {field.options.map((option, optionIndex) => (
-                  <Option key={optionIndex} value={option}>
-                    {option}
-                  </Option>
-                ))}
-              </Select>
-              <div className={styles.newOption}>
-                <Input
-                  placeholder="Nueva Opción"
-                  value={field.newOption}
-                  onChange={(e) => handleNewOptionChange(e, index)}
-                />
-                <Button type="dashed" onClick={() => addSelectOption(index)}>Añadir Opción</Button>
-              </div>
-            </>
-          )}
-        </div>
-      ))}
-
       <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Guardar Formulario
-        </Button>
+        <Button type="primary" htmlType="submit">Guardar Formulario</Button>
       </Form.Item>
-      <Button
-        className={styles.closebutton}
-        onClick={() => setShowFollow(false)}
-      >
-        X
-      </Button>
+      <Button className={styles.closebutton} onClick={() => setShowFollow(false)}>X</Button>
     </Form>
   );
 };

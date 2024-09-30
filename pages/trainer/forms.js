@@ -59,15 +59,30 @@ const Forms = () => {
     if (!selectedSubscriptionId || !selectedFormId) return;
     try {
       const subscriptionDocRef = doc(db, "subscriptions", selectedSubscriptionId);
-      await updateDoc(subscriptionDocRef, {
-        formId: selectedFormId, // Agregar el formId a la suscripción
-        status: "form"
-      });
-      setShareModalVisible(false);
+      const subscriptionSnapshot = await getDoc(subscriptionDocRef);
+
+      if (subscriptionSnapshot.exists()) {
+        const subscriptionData = subscriptionSnapshot.data();
+        const formType = myForm.find(f => f.id === selectedFormId).type;
+        const updatedFormIds = subscriptionData.formIds || [];
+
+        updatedFormIds.push({
+          formId: selectedFormId,
+          type: formType,
+        });
+
+        await updateDoc(subscriptionDocRef, {
+          formIds: updatedFormIds,
+          status: "form"
+        });
+
+        setShareModalVisible(false);
+      }
     } catch (error) {
       console.error("Error compartiendo el formulario:", error);
     }
   };
+
 
   // Columnas de la tabla con acciones
   const columns = [
