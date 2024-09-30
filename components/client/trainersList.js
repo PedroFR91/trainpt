@@ -73,15 +73,9 @@ const TrainersList = () => {
             <div key={trainer.id} className={styles.userdata}>
               <Link href={`/shared/trainers/${trainer.id}`} legacyBehavior>
                 {trainer.img ? (
-                  <div>
-                    <img src={trainer.img} alt={'Imagen de perfil'} />
-                    <div>{trainer.username}</div>
-                  </div>
+                  <img src={trainer.img} alt={'Imagen de perfil'} />
                 ) : (
-                  <div>
-                    <img src='/face.jpg' alt={'Imagen de perfil'} />
-                    <div>{trainer.username}</div>
-                  </div>
+                  <img src='/face.jpg' alt={'Imagen de perfil'} />
                 )}
               </Link>
               <button className={styles.button} onClick={() => deselectTrainer(trainer.id)}>
@@ -89,22 +83,23 @@ const TrainersList = () => {
               </button>
             </div>
           ))
-        : data
-          .map((trainer) => (
-            <div key={trainer.id} className={styles.userdata}>
-              <div>
-                {trainer.img ? (
-                  <img src={trainer.img} alt={'Imagen de perfil'} />
-                ) : (
-                  <img src='/face.jpg' alt={'Imagen de perfil'} />
-                )}
-              </div>
-              <div>{trainer.username}</div>
-              <div className={styles.button} onClick={() => selectTrainer(trainer.id)}>
-                Seleccionar
-              </div>
-            </div>
-          ))}
+        : data.map((trainer) => (
+          <div key={trainer.id} className={styles.userdata}>
+            {trainer.img ? (
+              <img src={trainer.img} alt={'Imagen de perfil'} />
+            ) : (
+              <img src='/face.jpg' alt={'Imagen de perfil'} />
+            )}
+            <div>{trainer.username}</div>
+            <button
+              style={{ backgroundColor: 'blue', color: 'white', padding: '10px', margin: '10px' }}
+              onClick={() => selectTrainer(trainer.id)}
+            >
+              Seleccionar
+            </button>
+          </div>
+        ))}
+
     </div>
   );
 };

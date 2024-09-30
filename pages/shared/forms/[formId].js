@@ -1,48 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { addDoc, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getDoc, doc, updateDoc } from 'firebase/firestore';
+import { Form, Input, Select, Button, Upload, Spin, Space } from 'antd';
 import { db, storage } from '../../../firebase.config';
-import { serverTimestamp } from 'firebase/firestore';
-import { Form, Input, Select, Button, Upload, message, Space, Spin } from 'antd';
-import { AiOutlineUpload } from 'react-icons/ai';
-import styles from './sharedform.module.css';
 import TrainerHeader from '../../../components/trainer/trainerHeader';
+import styles from './sharedform.module.css';
+import withAuth from '../../../components/withAuth';
+import { AiOutlineUpload } from 'react-icons/ai';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 
 const { TextArea } = Input;
 
 const FormPage = () => {
   const router = useRouter();
-  const { formId } = router.query;
+  const { formId, clientId } = router.query;
 
   const [formStructure, setFormStructure] = useState(null);
-  const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
-  const clientId = "ZxRxQ8YhZWXzPoVXaHgheM6R1Rf1"; // Establece el clientId directamente
-
-  useEffect(() => {
-    if (router.isReady) {
-      const fetchSubscription = async () => {
-        try {
-          const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
-          const querySnapshot = await getDocs(subsQuery);
-          if (!querySnapshot.empty) {
-            const docData = querySnapshot.docs[0].data();
-            const docId = querySnapshot.docs[0].id;
-            setSubscription({ ...docData, id: docId });
-          } else {
-            console.error("No se encontró la suscripción para el cliente:", clientId);
-          }
-        } catch (error) {
-          console.error("Error al obtener la suscripción:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchSubscription();
-    }
-  }, [clientId, router.isReady]);
 
   useEffect(() => {
     const fetchFormStructure = async () => {
@@ -66,67 +40,51 @@ const FormPage = () => {
     }
   }, [formId]);
 
-  const handleCreate = async () => {
+  const handleUpdate = async () => {
     try {
-      const formRef = await addDoc(collection(db, "forms"), {
-        ...formStructure,
-        type: "ClienteInicial",
-        clientId: clientId,
-        timeStamp: serverTimestamp(),
-      });
-
-      console.log("Formulario creado con éxito", formRef.id);
-
-      if (subscription && subscription.id) {
-        await updateDoc(doc(db, 'subscriptions', subscription.id), {
-          status: 'revision',
-        });
-        console.log(`Estado de suscripción actualizado a 'revision'.`);
-      }
-
+      const formRef = doc(db, "forms", formId);
+      await updateDoc(formRef, { ...formStructure });
+      console.log("Formulario actualizado");
       router.back();
     } catch (error) {
-      console.error("Error al crear el formulario o actualizar la suscripción:", error);
-      message.error("Error al crear el formulario o actualizar la suscripción.");
+      console.error("Error al actualizar el formulario:", error);
     }
   };
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormStructure((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
-  const handleMeasuresChange = (event) => {
-    setFormStructure((prevFormStructure) => ({
-      ...prevFormStructure,
+  const handleMeasuresChange = (e) => {
+    const { name, value } = e.target;
+    setFormStructure((prev) => ({
+      ...prev,
       measures: {
-        ...prevFormStructure.measures,
-        [event.target.name]: event.target.value,
+        ...prev.measures,
+        [name]: value,
       },
     }));
   };
 
   const uploadPhoto = async (fieldName, file) => {
-    if (file) {
-      const name = new Date().getTime() + file.name;
-      const storageRef = ref(storage, name);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+    const name = new Date().getTime() + file.name;
+    const storageRef = ref(storage, name);
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
-      try {
-        await uploadTask;
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+    try {
+      await uploadTask;
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-        setFormStructure((prevFormStructure) => ({
-          ...prevFormStructure,
-          [fieldName]: downloadURL,
-        }));
-      } catch (error) {
-        console.error(`Error al subir ${fieldName}:`, error);
-        message.error(`Error al subir ${fieldName}.`);
-      }
+      setFormStructure((prev) => ({
+        ...prev,
+        [fieldName]: downloadURL,
+      }));
+    } catch (error) {
+      console.error(`Error al subir ${fieldName}:`, error);
     }
   };
 
@@ -137,16 +95,11 @@ const FormPage = () => {
   return (
     <div className={styles.container}>
       <TrainerHeader />
-      <Form
-        layout="vertical"
-        className={styles.initial}
-        onFinish={handleCreate}
-      >
+      <Form layout="vertical" className={styles.initial} onFinish={handleUpdate}>
         <h3>Datos generales</h3>
         <Form.Item label="Nombre">
           <Input
             name='name'
-            placeholder='Pedro'
             value={formStructure.name || ''}
             onChange={handleChange}
           />
@@ -155,7 +108,7 @@ const FormPage = () => {
           <Select
             name='gender'
             value={formStructure.gender || ''}
-            onChange={(value) => handleChange({ target: { name: 'gender', value } })}
+            onChange={(value) => setFormStructure({ ...formStructure, gender: value })}
           >
             <Select.Option value='man'>Hombre</Select.Option>
             <Select.Option value='woman'>Mujer</Select.Option>
@@ -226,6 +179,13 @@ const FormPage = () => {
             onChange={handleChange}
           />
         </Form.Item>
+        <Form.Item label="Días de entrenamiento">
+          <Input
+            name='trainingDays'
+            value={formStructure.trainingDays || ''}
+            onChange={handleChange}
+          />
+        </Form.Item>
 
         <h3>Medidas</h3>
         <Space direction="vertical">
@@ -281,7 +241,7 @@ const FormPage = () => {
         </Space>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit">Enviar</Button>
+          <Button type="primary" htmlType="submit">Guardar</Button>
         </Form.Item>
       </Form>
       <Button className={styles.closebutton} onClick={() => router.back()}>X</Button>
@@ -289,4 +249,4 @@ const FormPage = () => {
   );
 };
 
-export default FormPage;
+export default withAuth(FormPage);

@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Form, Input, Button, Select, Upload } from "antd";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
-import { initialForm } from "../../forms/initialForm";
+import { initialForm } from "../../forms/initialForm";  // Asegúrate de que este archivo tiene la estructura correcta
 import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
@@ -12,60 +12,62 @@ const { Option } = Select;
 
 const Initial = ({ setShowInitial }) => {
   const { myUid } = useContext(AuthContext);
+
+  // Inicializar la estructura del formulario, asegurándonos de que tiene todos los campos
   const [formStructure, setFormStructure] = useState({
-    ...initialForm,
-    gender: "man",
+    name: '',
+    gender: 'man',
+    weight: '',
+    height: '',
+    front: null,
+    back: null,
+    lateral: null,
+    intolerances: '',
+    preferredFoods: '',
+    trainingDays: '',
+    measures: {
+      chest: '',
+      shoulders: '',
+      biceps: '',
+      hips: '',
+      abdomen: '',
+      cuadriceps: '',
+      gemelos: ''
+    }
   });
+
   const [additionalFields, setAdditionalFields] = useState([]);
   const [form] = Form.useForm();
 
-  const addField = (type) => {
-    const newField = {
-      type: type,
-      label: "",
-      value: "",
-      newOption: "",
-      options: type === "select" ? [] : undefined,
-    };
-    setAdditionalFields([...additionalFields, newField]);
-  };
-
-  const handleLabelChange = (e, index) => {
-    const updatedFields = [...additionalFields];
-    updatedFields[index].label = e.target.value;
-    setAdditionalFields(updatedFields);
-  };
-
-  const handleNewOptionChange = (e, index) => {
-    const updatedFields = [...additionalFields];
-    updatedFields[index].newOption = e.target.value;
-    setAdditionalFields(updatedFields);
-  };
-
-  const addSelectOption = (index) => {
-    const updatedFields = [...additionalFields];
-    if (updatedFields[index].newOption.trim() !== "") {
-      updatedFields[index].options.push(updatedFields[index].newOption);
-      updatedFields[index].newOption = "";
-    }
-    setAdditionalFields(updatedFields);
-  };
-
   const handleCreate = async (values) => {
     try {
-      const formRef = await addDoc(collection(db, "forms"), {
-        ...values,
+      // Subir las fotos y obtener sus URLs
+      const frontUrl = values.front?.file ? await uploadPhoto(values.front.file.originFileObj) : null;
+      const backUrl = values.back?.file ? await uploadPhoto(values.back.file.originFileObj) : null;
+      const lateralUrl = values.lateral?.file ? await uploadPhoto(values.lateral.file.originFileObj) : null;
+
+      // Crear un objeto limpio que excluya los campos con valor undefined
+      const cleanValues = {
+        ...formStructure,  // Asegurarse de incluir todos los campos
+        front: frontUrl,
+        back: backUrl,
+        lateral: lateralUrl,
         additionalFields,
         type: "Inicial",
         trainerId: myUid,
         timeStamp: serverTimestamp(),
-      });
+      };
 
+      // Crear el formulario en Firestore
+      const formRef = await addDoc(collection(db, "forms"), cleanValues);
+
+      // Actualizar el documento del usuario con el ID del formulario creado
       const userDocRef = doc(db, "users", myUid);
       await updateDoc(userDocRef, {
-        initialForm: formRef.id
+        initialForm: formRef.id,
       });
 
+      // Resetear los campos adicionales y cerrar el modal
       setAdditionalFields([]);
       setShowInitial(false);
     } catch (error) {
@@ -90,52 +92,63 @@ const Initial = ({ setShowInitial }) => {
   return (
     <Form form={form} onFinish={handleCreate} className={styles.initial}>
       <h3>Datos generales</h3>
-      <Form.Item name="name" label="Nombre" rules={[{ required: true, message: 'Por favor ingrese su nombre' }]}>
-        <Input placeholder="Pedro" />
+      <Form.Item name="name" label="Nombre">
+        <Input placeholder="Pedro" onChange={(e) => setFormStructure({ ...formStructure, name: e.target.value })} />
       </Form.Item>
-      <Form.Item name="gender" label="Sexo" rules={[{ required: true, message: 'Por favor seleccione su género' }]}>
-        <Select>
+      <Form.Item name="gender" label="Sexo">
+        <Select onChange={(value) => setFormStructure({ ...formStructure, gender: value })}>
           <Option value="man">Hombre</Option>
           <Option value="woman">Mujer</Option>
         </Select>
       </Form.Item>
-      <Form.Item name="weight" label="Peso" rules={[{ required: true, message: 'Por favor ingrese su peso' }]}>
-        <Input />
+      <Form.Item name="weight" label="Peso">
+        <Input onChange={(e) => setFormStructure({ ...formStructure, weight: e.target.value })} />
       </Form.Item>
-      <Form.Item name="height" label="Altura" rules={[{ required: true, message: 'Por favor ingrese su altura' }]}>
-        <Input />
+      <Form.Item name="height" label="Altura">
+        <Input onChange={(e) => setFormStructure({ ...formStructure, height: e.target.value })} />
       </Form.Item>
+
       <h3>Fotos</h3>
-      <Form.Item name="front" label="Frente" valuePropName="file">
+      <Form.Item name="front" label="Frente">
         <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => onSuccess(url));
+          uploadPhoto(file).then(url => {
+            setFormStructure({ ...formStructure, front: url });
+            onSuccess(url);
+          });
         }} listType="picture">
           <Button icon={<UploadOutlined />}>Subir imagen</Button>
         </Upload>
       </Form.Item>
-      <Form.Item name="back" label="Espalda" valuePropName="file">
+      <Form.Item name="back" label="Espalda">
         <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => onSuccess(url));
+          uploadPhoto(file).then(url => {
+            setFormStructure({ ...formStructure, back: url });
+            onSuccess(url);
+          });
         }} listType="picture">
           <Button icon={<UploadOutlined />}>Subir imagen</Button>
         </Upload>
       </Form.Item>
-      <Form.Item name="lateral" label="Lateral" valuePropName="file">
+      <Form.Item name="lateral" label="Lateral">
         <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => onSuccess(url));
+          uploadPhoto(file).then(url => {
+            setFormStructure({ ...formStructure, lateral: url });
+            onSuccess(url);
+          });
         }} listType="picture">
           <Button icon={<UploadOutlined />}>Subir imagen</Button>
         </Upload>
       </Form.Item>
+
       <h3>Dieta</h3>
       <Form.Item name="intolerances" label="Intolerancias">
-        <Input.TextArea />
+        <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, intolerances: e.target.value })} />
       </Form.Item>
       <Form.Item name="preferredFoods" label="Preferencias de comida">
-        <Input.TextArea />
+        <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, preferredFoods: e.target.value })} />
       </Form.Item>
       <Form.Item name="trainingDays" label="Días de entrenamiento">
-        <Select>
+        <Select onChange={(value) => setFormStructure({ ...formStructure, trainingDays: value })}>
           {initialForm.trainingDays.options.map((option) => (
             <Option key={option.value} value={option.value}>
               {option.label}
@@ -143,57 +156,23 @@ const Initial = ({ setShowInitial }) => {
           ))}
         </Select>
       </Form.Item>
+
       <h3>Medidas</h3>
       {Object.keys(formStructure.measures).map((key) => (
         <Form.Item key={key} name={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
-          <Input />
+          <Input onChange={(e) => setFormStructure({
+            ...formStructure,
+            measures: { ...formStructure.measures, [key]: e.target.value }
+          })} />
         </Form.Item>
       ))}
-      <h3>Preguntas extra:</h3>
-      <Button type="dashed" onClick={() => addField("text")}>Añadir Campo de Texto</Button>
-      <Button type="dashed" onClick={() => addField("select")}>Añadir Campo de Selección</Button>
-      {additionalFields.map((field, index) => (
-        <div key={index}>
-          <Input
-            placeholder="Etiqueta"
-            value={field.label}
-            onChange={(e) => handleLabelChange(e, index)}
-          />
-          {field.type === "text" ? (
-            <Input
-              value={field.value}
-              onChange={(e) => handleNewOptionChange(e, index)}
-            />
-          ) : (
-            <>
-              <Select onChange={(value) => handleLabelChange({ target: { value } }, index)}>
-                {field.options.map((option, optionIndex) => (
-                  <Option key={optionIndex} value={option}>
-                    {option}
-                  </Option>
-                ))}
-              </Select>
-              <div>
-                <Input
-                  placeholder="Nueva Opción"
-                  value={field.newOption}
-                  onChange={(e) => handleNewOptionChange(e, index)}
-                />
-                <Button type="dashed" onClick={() => addSelectOption(index)}>Añadir Opción</Button>
-              </div>
-            </>
-          )}
-        </div>
-      ))}
+
       <Form.Item>
         <Button type="primary" htmlType="submit">
           Guardar Formulario
         </Button>
       </Form.Item>
-      <Button
-        className={styles.closebutton}
-        onClick={() => setShowInitial(false)}
-      >
+      <Button className={styles.closebutton} onClick={() => setShowInitial(false)}>
         X
       </Button>
     </Form>

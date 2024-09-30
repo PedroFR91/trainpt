@@ -1,21 +1,28 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Button, Modal, Table } from "antd";
+import { Button, Modal, Table, Select } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import TrainerHeader from "../../components/trainer/trainerHeader";
 import Initial from "../../components/client/Initial";
 import Follow from "../../components/client/Follow";
-import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, updateDoc, doc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import styles from "../../styles/forms.module.css";
 import withAuth from '../../components/withAuth';
+
+const { Option } = Select;
 
 const Forms = () => {
   const { myUid } = useContext(AuthContext);
   const [myForm, setMyForm] = useState([]);
   const [initialModalVisible, setInitialModalVisible] = useState(false);
   const [followModalVisible, setFollowModalVisible] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedFormId, setSelectedFormId] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState(null);
 
+  // Obtener formularios del entrenador
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, "forms"),
@@ -28,6 +35,17 @@ const Forms = () => {
     return () => unsub();
   }, [myUid]);
 
+  // Obtener lista de suscripciones del entrenador
+  useEffect(() => {
+    const q = query(collection(db, "subscriptions"), where("trainerId", "==", myUid));
+    const unsubClients = onSnapshot(q, (snapshot) => {
+      const subscriptionData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSubscriptions(subscriptionData);
+    });
+    return () => unsubClients();
+  }, [myUid]);
+
+  // Manejar la eliminación de un formulario
   const handleDeleteForm = async (id) => {
     try {
       await deleteDoc(doc(db, "forms", id));
@@ -36,6 +54,22 @@ const Forms = () => {
     }
   };
 
+  // Manejar la acción de compartir formulario
+  const handleShareForm = async () => {
+    if (!selectedSubscriptionId || !selectedFormId) return;
+    try {
+      const subscriptionDocRef = doc(db, "subscriptions", selectedSubscriptionId);
+      await updateDoc(subscriptionDocRef, {
+        formId: selectedFormId, // Agregar el formId a la suscripción
+        status: "form"
+      });
+      setShareModalVisible(false);
+    } catch (error) {
+      console.error("Error compartiendo el formulario:", error);
+    }
+  };
+
+  // Columnas de la tabla con acciones
   const columns = [
     {
       title: 'Tipo',
@@ -49,6 +83,7 @@ const Forms = () => {
         <span>
           <Button type="link" onClick={() => handleDeleteForm(record.id)}>Eliminar</Button>
           <Button type="link" href={`/shared/forms/${record.id}`}>Ver</Button>
+          <Button type="link" onClick={() => { setSelectedFormId(record.id); setShareModalVisible(true); }}>Compartir</Button>
         </span>
       ),
     },
@@ -76,21 +111,44 @@ const Forms = () => {
         </Button>
         <Table columns={columns} dataSource={myForm} rowKey="id" />
 
+        {/* Modal para crear Formulario Inicial */}
         <Modal
           title="Crear Formulario Inicial"
-          visible={initialModalVisible}
+          open={initialModalVisible}  // Cambiado 'visible' por 'open'
           onCancel={() => setInitialModalVisible(false)}
           footer={null}
         >
           <Initial setShowInitial={setInitialModalVisible} />
         </Modal>
+
+        {/* Modal para crear Formulario de Seguimiento */}
         <Modal
           title="Crear Formulario de Seguimiento"
-          visible={followModalVisible}
+          open={followModalVisible}  // Cambiado 'visible' por 'open'
           onCancel={() => setFollowModalVisible(false)}
           footer={null}
         >
           <Follow setShowFollow={setFollowModalVisible} />
+        </Modal>
+
+        {/* Modal para compartir formulario */}
+        <Modal
+          title="Compartir Formulario"
+          open={shareModalVisible}  // Cambiado 'visible' por 'open'
+          onCancel={() => setShareModalVisible(false)}
+          onOk={handleShareForm}
+        >
+          <Select
+            placeholder="Selecciona una suscripción"
+            onChange={(value) => setSelectedSubscriptionId(value)}
+            style={{ width: '100%' }}
+          >
+            {subscriptions.map(subscription => (
+              <Option key={subscription.id} value={subscription.id} label={`Cliente: ${subscription.clientId}, Estado: ${subscription.status}`}>
+                {`Cliente: ${subscription.clientId}, Estado: ${subscription.status}`}
+              </Option>
+            ))}
+          </Select>
         </Modal>
       </div>
     </div>

@@ -7,7 +7,7 @@ import AuthContext from '../../context/AuthContext';
 import { useAuthUser } from '../../hooks/useAuthUser';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase.config';
-import styles from '../../styles/trainerhome.module.css'; // Reutilizando el mismo archivo de estilos
+import styles from '../../styles/trainerhome.module.css';
 
 const TrainerHeader = () => {
   useAuthUser();
@@ -17,6 +17,7 @@ const TrainerHeader = () => {
   const exit = (e) => {
     e.preventDefault();
     signOut(auth).catch((error) => console.error(error));
+    sessionStorage.clear();
   };
 
   const onClick = (e) => {
