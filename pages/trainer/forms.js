@@ -2,13 +2,13 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button, Modal, Table, Select } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import TrainerHeader from "../../components/trainer/trainerHeader";
-import Initial from "../../components/client/Initial";
 import Follow from "../../components/client/Follow";
 import { collection, onSnapshot, query, where, updateDoc, doc, deleteDoc } from "firebase/firestore";
 import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import styles from "../../styles/forms.module.css";
 import withAuth from '../../components/withAuth';
+import MultiStepForm from "../../components/client/MultiStepForm"; // Asegúrate de importar el nuevo formulario
 
 const { Option } = Select;
 
@@ -83,7 +83,6 @@ const Forms = () => {
     }
   };
 
-
   // Columnas de la tabla con acciones
   const columns = [
     {
@@ -133,7 +132,8 @@ const Forms = () => {
           onCancel={() => setInitialModalVisible(false)}
           footer={null}
         >
-          <Initial setShowInitial={setInitialModalVisible} />
+          {/* Aquí importamos el nuevo formulario MultiStepForm */}
+          <MultiStepForm setShowInitial={setInitialModalVisible} />
         </Modal>
 
         {/* Modal para crear Formulario de Seguimiento */}

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Form, Input, Button, Select, Upload } from "antd";
+import { Form, Input, Button, Select, Upload, Steps } from "antd";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import { follow } from "../../forms/initialForm";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -10,10 +10,27 @@ import styles from "../../styles/forms.module.css";
 
 const { Option } = Select;
 
+const steps = [
+  {
+    title: 'Datos Generales',
+  },
+  {
+    title: 'Fotos',
+  },
+  {
+    title: 'Dieta',
+  },
+  {
+    title: 'Entrenamiento',
+  },
+  {
+    title: 'Medidas',
+  },
+];
+
 const Follow = ({ setShowFollow }) => {
   const { myUid } = useContext(AuthContext);
-
-  // Inicializar estructura del formulario de seguimiento
+  const [currentStep, setCurrentStep] = useState(0); // Controlar el paso actual del multi-step
   const [formStructure, setFormStructure] = useState({
     name: '',
     weight: '',
@@ -32,7 +49,8 @@ const Follow = ({ setShowFollow }) => {
       cuadriceps: '',
       gemelos: ''
     },
-    additionalFields: [] // Campos adicionales que el entrenador pueda añadir
+    dietQuestions: [],  // Preguntas adicionales en dieta
+    trainingQuestions: [],  // Preguntas adicionales en entrenamiento
   });
 
   const [form] = Form.useForm();
@@ -71,26 +89,58 @@ const Follow = ({ setShowFollow }) => {
       };
 
       // Guardar el formulario en Firestore
-      const formRef = await addDoc(collection(db, "forms"), cleanValues);
+      await addDoc(collection(db, "forms"), cleanValues);
 
       // Reiniciar campos adicionales y cerrar modal
-      setFormStructure({ ...formStructure, additionalFields: [] });
       setShowFollow(false);
     } catch (error) {
       console.error("Error al crear el formulario de seguimiento:", error);
     }
   };
 
-  return (
-    <Form form={form} onFinish={handleCreate} className={styles.initial} layout="vertical">
-      <h3>Datos generales</h3>
+  // Añadir nuevas preguntas a la dieta
+  const addDietQuestion = () => {
+    const newQuestion = { title: '', answer: '' };
+    setFormStructure((prev) => ({
+      ...prev,
+      dietQuestions: [...prev.dietQuestions, newQuestion],
+    }));
+  };
+
+  // Añadir nuevas preguntas al entrenamiento
+  const addTrainingQuestion = () => {
+    const newQuestion = { title: '', answer: '' };
+    setFormStructure((prev) => ({
+      ...prev,
+      trainingQuestions: [...prev.trainingQuestions, newQuestion],
+    }));
+  };
+
+  const handleQuestionChange = (index, value, block) => {
+    const updatedQuestions = formStructure[block].map((question, i) =>
+      i === index ? { ...question, title: value } : question
+    );
+    setFormStructure({ ...formStructure, [block]: updatedQuestions });
+  };
+
+  const next = () => setCurrentStep(currentStep + 1);
+  const prev = () => setCurrentStep(currentStep - 1);
+
+  // Contenido de cada paso
+  const stepsContent = [
+    // Step 1: Datos Generales
+    <div key="1">
+      <h3>Datos Generales</h3>
       <Form.Item name="name" label="Nombre">
         <Input placeholder="Nombre del cliente" onChange={(e) => setFormStructure({ ...formStructure, name: e.target.value })} />
       </Form.Item>
       <Form.Item name="weight" label="Peso">
         <Input onChange={(e) => setFormStructure({ ...formStructure, weight: e.target.value })} />
       </Form.Item>
+    </div>,
 
+    // Step 2: Fotos
+    <div key="2">
       <h3>Fotos</h3>
       <Form.Item name="front" label="Frente">
         <Upload customRequest={({ file, onSuccess }) => {
@@ -122,7 +172,10 @@ const Follow = ({ setShowFollow }) => {
           <Button icon={<UploadOutlined />}>Subir imagen lateral</Button>
         </Upload>
       </Form.Item>
+    </div>,
 
+    // Step 3: Dieta
+    <div key="3">
       <h3>Dieta</h3>
       <Form.Item name="intolerances" label="Intolerancias">
         <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, intolerances: e.target.value })} />
@@ -130,6 +183,25 @@ const Follow = ({ setShowFollow }) => {
       <Form.Item name="preferredFoods" label="Preferencias de comida">
         <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, preferredFoods: e.target.value })} />
       </Form.Item>
+
+      {/* Preguntas adicionales en la sección de dieta */}
+      <h4>Preguntas adicionales en Dieta</h4>
+      {formStructure.dietQuestions.map((question, index) => (
+        <Form.Item key={index} label={`Pregunta ${index + 1}`}>
+          <Input
+            placeholder="Título de la pregunta"
+            onChange={(e) => handleQuestionChange(index, e.target.value, 'dietQuestions')}
+          />
+        </Form.Item>
+      ))}
+      <Button icon={<PlusOutlined />} onClick={addDietQuestion}>
+        Añadir pregunta
+      </Button>
+    </div>,
+
+    // Step 4: Entrenamiento
+    <div key="4">
+      <h3>Entrenamiento</h3>
       <Form.Item name="trainingDays" label="Días de entrenamiento">
         <Select onChange={(value) => setFormStructure({ ...formStructure, trainingDays: value })}>
           {follow.trainingDays.options.map((option) => (
@@ -140,6 +212,23 @@ const Follow = ({ setShowFollow }) => {
         </Select>
       </Form.Item>
 
+      {/* Preguntas adicionales en la sección de entrenamiento */}
+      <h4>Preguntas adicionales en Entrenamiento</h4>
+      {formStructure.trainingQuestions.map((question, index) => (
+        <Form.Item key={index} label={`Pregunta ${index + 1}`}>
+          <Input
+            placeholder="Título de la pregunta"
+            onChange={(e) => handleQuestionChange(index, e.target.value, 'trainingQuestions')}
+          />
+        </Form.Item>
+      ))}
+      <Button icon={<PlusOutlined />} onClick={addTrainingQuestion}>
+        Añadir pregunta
+      </Button>
+    </div>,
+
+    // Step 5: Medidas
+    <div key="5">
       <h3>Medidas</h3>
       {Object.keys(formStructure.measures).map((key) => (
         <Form.Item key={key} name={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
@@ -149,12 +238,40 @@ const Follow = ({ setShowFollow }) => {
           })} />
         </Form.Item>
       ))}
+    </div>,
+  ];
 
-      <Form.Item>
-        <Button type="primary" htmlType="submit">Guardar Formulario</Button>
-      </Form.Item>
-      <Button className={styles.closebutton} onClick={() => setShowFollow(false)}>X</Button>
-    </Form>
+  return (
+    <div>
+      <Steps current={currentStep}>
+        {steps.map((item) => (
+          <Steps.Step key={item.title} title={item.title} />
+        ))}
+      </Steps>
+
+      <div className="steps-content">{stepsContent[currentStep]}</div>
+
+      <div className="steps-action" style={{ marginTop: 24 }}>
+        {currentStep < steps.length - 1 && (
+          <Button type="primary" onClick={() => next()}>
+            Siguiente
+          </Button>
+        )}
+        {currentStep === steps.length - 1 && (
+          <Button
+            type="primary"
+            onClick={() => console.log('Formulario enviado:', formStructure)}
+          >
+            Finalizar
+          </Button>
+        )}
+        {currentStep > 0 && (
+          <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
+            Anterior
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 
