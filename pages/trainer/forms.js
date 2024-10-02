@@ -8,7 +8,8 @@ import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import styles from "../../styles/forms.module.css";
 import withAuth from '../../components/withAuth';
-import MultiStepForm from "../../components/client/MultiStepForm"; // Asegúrate de importar el nuevo formulario
+import MultiStepForm from "../../components/client/Initial"; // Asegúrate de importar el nuevo formulario
+import Initial from "../../components/client/Initial";
 
 const { Option } = Select;
 
@@ -133,7 +134,7 @@ const Forms = () => {
           footer={null}
         >
           {/* Aquí importamos el nuevo formulario MultiStepForm */}
-          <MultiStepForm setShowInitial={setInitialModalVisible} />
+          <Initial setShowInitial={setInitialModalVisible} />
         </Modal>
 
         {/* Modal para crear Formulario de Seguimiento */}

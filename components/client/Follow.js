@@ -1,7 +1,8 @@
+// components/client/Follow.js
+
 import React, { useContext, useState } from "react";
-import { Form, Input, Button, Select, Upload, Steps } from "antd";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
-import { follow } from "../../forms/initialForm";
+import { Form, Input, Button, Select, Upload, Steps, Modal } from "antd";
+import { PlusOutlined, UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
@@ -9,37 +10,21 @@ import AuthContext from '../../context/AuthContext';
 import styles from "../../styles/forms.module.css";
 
 const { Option } = Select;
-
-const steps = [
-  {
-    title: 'Datos Generales',
-  },
-  {
-    title: 'Fotos',
-  },
-  {
-    title: 'Dieta',
-  },
-  {
-    title: 'Entrenamiento',
-  },
-  {
-    title: 'Medidas',
-  },
-];
+const { Step } = Steps;
 
 const Follow = ({ setShowFollow }) => {
   const { myUid } = useContext(AuthContext);
-  const [currentStep, setCurrentStep] = useState(0); // Controlar el paso actual del multi-step
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Estructura inicial del formulario
   const [formStructure, setFormStructure] = useState({
     name: '',
     weight: '',
     front: null,
     back: null,
     lateral: null,
-    intolerances: '',
-    preferredFoods: '',
-    trainingDays: '',
+    dietFields: [],
+    trainingFields: [],
     measures: {
       chest: '',
       shoulders: '',
@@ -49,13 +34,12 @@ const Follow = ({ setShowFollow }) => {
       cuadriceps: '',
       gemelos: ''
     },
-    dietQuestions: [],  // Preguntas adicionales en dieta
-    trainingQuestions: [],  // Preguntas adicionales en entrenamiento
+    trainingFeedback: '',
   });
 
   const [form] = Form.useForm();
 
-  // Función para subir las fotos a Firebase Storage
+  // Función para subir fotos a Firebase Storage
   const uploadPhoto = async (file) => {
     const name = new Date().getTime() + file.name;
     const storageRef = ref(storage, name);
@@ -70,208 +54,271 @@ const Follow = ({ setShowFollow }) => {
     }
   };
 
-  const handleCreate = async (values) => {
+  const handleCreate = async () => {
     try {
       // Subir fotos y obtener URLs
-      const frontUrl = values.front?.file ? await uploadPhoto(values.front.file.originFileObj) : null;
-      const backUrl = values.back?.file ? await uploadPhoto(values.back.file.originFileObj) : null;
-      const lateralUrl = values.lateral?.file ? await uploadPhoto(values.lateral.file.originFileObj) : null;
+      const frontUrl = formStructure.front?.file ? await uploadPhoto(formStructure.front.file.originFileObj) : null;
+      const backUrl = formStructure.back?.file ? await uploadPhoto(formStructure.back.file.originFileObj) : null;
+      const lateralUrl = formStructure.lateral?.file ? await uploadPhoto(formStructure.lateral.file.originFileObj) : null;
 
       // Crear objeto limpio con los datos del formulario
       const cleanValues = {
-        ...formStructure,  // Usar los campos actuales del formulario
+        ...formStructure,
         front: frontUrl,
         back: backUrl,
         lateral: lateralUrl,
-        type: "Seguimiento", // Tipo de formulario de seguimiento
-        trainerId: myUid,    // Asignar el id del entrenador
+        type: "Seguimiento",
+        trainerId: myUid,
         timeStamp: serverTimestamp(),
       };
 
       // Guardar el formulario en Firestore
       await addDoc(collection(db, "forms"), cleanValues);
 
-      // Reiniciar campos adicionales y cerrar modal
+      // Cerrar el modal
       setShowFollow(false);
     } catch (error) {
       console.error("Error al crear el formulario de seguimiento:", error);
     }
   };
 
-  // Añadir nuevas preguntas a la dieta
-  const addDietQuestion = () => {
-    const newQuestion = { title: '', answer: '' };
-    setFormStructure((prev) => ({
+  // Función para agregar nuevos campos
+  const addField = (section) => {
+    const newField = { type: 'input', label: '', options: [] };
+    setFormStructure(prev => ({
       ...prev,
-      dietQuestions: [...prev.dietQuestions, newQuestion],
+      [section]: [...prev[section], newField]
     }));
   };
 
-  // Añadir nuevas preguntas al entrenamiento
-  const addTrainingQuestion = () => {
-    const newQuestion = { title: '', answer: '' };
-    setFormStructure((prev) => ({
+  // Función para actualizar los campos
+  const updateField = (section, index, key, value) => {
+    const updatedFields = formStructure[section].map((field, idx) => {
+      if (idx === index) {
+        return { ...field, [key]: value };
+      }
+      return field;
+    });
+    setFormStructure(prev => ({
       ...prev,
-      trainingQuestions: [...prev.trainingQuestions, newQuestion],
+      [section]: updatedFields
     }));
   };
 
-  const handleQuestionChange = (index, value, block) => {
-    const updatedQuestions = formStructure[block].map((question, i) =>
-      i === index ? { ...question, title: value } : question
-    );
-    setFormStructure({ ...formStructure, [block]: updatedQuestions });
-  };
-
-  const next = () => setCurrentStep(currentStep + 1);
-  const prev = () => setCurrentStep(currentStep - 1);
-
-  // Contenido de cada paso
-  const stepsContent = [
-    // Step 1: Datos Generales
-    <div key="1">
-      <h3>Datos Generales</h3>
-      <Form.Item name="name" label="Nombre">
-        <Input placeholder="Nombre del cliente" onChange={(e) => setFormStructure({ ...formStructure, name: e.target.value })} />
-      </Form.Item>
-      <Form.Item name="weight" label="Peso">
-        <Input onChange={(e) => setFormStructure({ ...formStructure, weight: e.target.value })} />
-      </Form.Item>
-    </div>,
-
-    // Step 2: Fotos
-    <div key="2">
-      <h3>Fotos</h3>
-      <Form.Item name="front" label="Frente">
-        <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => {
-            setFormStructure({ ...formStructure, front: url });
-            onSuccess(url);
-          });
-        }} listType="picture">
-          <Button icon={<UploadOutlined />}>Subir imagen frontal</Button>
-        </Upload>
-      </Form.Item>
-      <Form.Item name="back" label="Espalda">
-        <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => {
-            setFormStructure({ ...formStructure, back: url });
-            onSuccess(url);
-          });
-        }} listType="picture">
-          <Button icon={<UploadOutlined />}>Subir imagen trasera</Button>
-        </Upload>
-      </Form.Item>
-      <Form.Item name="lateral" label="Lateral">
-        <Upload customRequest={({ file, onSuccess }) => {
-          uploadPhoto(file).then(url => {
-            setFormStructure({ ...formStructure, lateral: url });
-            onSuccess(url);
-          });
-        }} listType="picture">
-          <Button icon={<UploadOutlined />}>Subir imagen lateral</Button>
-        </Upload>
-      </Form.Item>
-    </div>,
-
-    // Step 3: Dieta
-    <div key="3">
-      <h3>Dieta</h3>
-      <Form.Item name="intolerances" label="Intolerancias">
-        <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, intolerances: e.target.value })} />
-      </Form.Item>
-      <Form.Item name="preferredFoods" label="Preferencias de comida">
-        <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, preferredFoods: e.target.value })} />
-      </Form.Item>
-
-      {/* Preguntas adicionales en la sección de dieta */}
-      <h4>Preguntas adicionales en Dieta</h4>
-      {formStructure.dietQuestions.map((question, index) => (
-        <Form.Item key={index} label={`Pregunta ${index + 1}`}>
-          <Input
-            placeholder="Título de la pregunta"
-            onChange={(e) => handleQuestionChange(index, e.target.value, 'dietQuestions')}
-          />
-        </Form.Item>
-      ))}
-      <Button icon={<PlusOutlined />} onClick={addDietQuestion}>
-        Añadir pregunta
-      </Button>
-    </div>,
-
-    // Step 4: Entrenamiento
-    <div key="4">
-      <h3>Entrenamiento</h3>
-      <Form.Item name="trainingDays" label="Días de entrenamiento">
-        <Select onChange={(value) => setFormStructure({ ...formStructure, trainingDays: value })}>
-          {follow.trainingDays.options.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
+  // Contenido de los pasos
+  const steps = [
+    {
+      title: 'Datos Generales',
+      content: (
+        <>
+          <Form.Item name="name" label="Nombre">
+            <Input onChange={(e) => setFormStructure({ ...formStructure, name: e.target.value })} />
+          </Form.Item>
+          <Form.Item name="weight" label="Peso">
+            <Input onChange={(e) => setFormStructure({ ...formStructure, weight: e.target.value })} />
+          </Form.Item>
+        </>
+      ),
+    },
+    {
+      title: 'Fotos',
+      content: (
+        <>
+          <Form.Item name="front" label="Frente">
+            <Upload customRequest={({ file, onSuccess }) => {
+              setFormStructure(prev => ({ ...prev, front: { file } }));
+              onSuccess("ok");
+            }} listType="picture">
+              <Button icon={<UploadOutlined />}>Subir imagen frontal</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item name="back" label="Espalda">
+            <Upload customRequest={({ file, onSuccess }) => {
+              setFormStructure(prev => ({ ...prev, back: { file } }));
+              onSuccess("ok");
+            }} listType="picture">
+              <Button icon={<UploadOutlined />}>Subir imagen trasera</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item name="lateral" label="Lateral">
+            <Upload customRequest={({ file, onSuccess }) => {
+              setFormStructure(prev => ({ ...prev, lateral: { file } }));
+              onSuccess("ok");
+            }} listType="picture">
+              <Button icon={<UploadOutlined />}>Subir imagen lateral</Button>
+            </Upload>
+          </Form.Item>
+        </>
+      ),
+    },
+    {
+      title: 'Dieta',
+      content: (
+        <>
+          {formStructure.dietFields.map((field, index) => (
+            <div key={index} style={{ marginBottom: 16 }}>
+              <Input
+                placeholder="Nombre del campo"
+                value={field.label}
+                onChange={(e) => updateField('dietFields', index, 'label', e.target.value)}
+                style={{ marginBottom: 8 }}
+              />
+              <Select
+                value={field.type}
+                onChange={(value) => updateField('dietFields', index, 'type', value)}
+                style={{ width: 120, marginBottom: 8 }}
+              >
+                <Option value="input">Input</Option>
+                <Option value="textarea">Textarea</Option>
+                <Option value="select">Select</Option>
+              </Select>
+              {field.type === 'select' && (
+                <div style={{ marginBottom: 8 }}>
+                  {field.options.map((option, idx) => (
+                    <div key={idx} style={{ display: 'flex', marginBottom: 4 }}>
+                      <Input
+                        placeholder={`Opción ${idx + 1}`}
+                        value={option}
+                        onChange={(e) => {
+                          const newOptions = [...field.options];
+                          newOptions[idx] = e.target.value;
+                          updateField('dietFields', index, 'options', newOptions);
+                        }}
+                        style={{ marginRight: 8 }}
+                      />
+                      <Button icon={<DeleteOutlined />} onClick={() => {
+                        const newOptions = field.options.filter((_, i) => i !== idx);
+                        updateField('dietFields', index, 'options', newOptions);
+                      }} />
+                    </div>
+                  ))}
+                  <Button icon={<PlusOutlined />} onClick={() => {
+                    const newOptions = [...field.options, ''];
+                    updateField('dietFields', index, 'options', newOptions);
+                  }}>Añadir Opción</Button>
+                </div>
+              )}
+              <Button icon={<DeleteOutlined />} onClick={() => {
+                const updatedFields = formStructure.dietFields.filter((_, i) => i !== index);
+                setFormStructure(prev => ({ ...prev, dietFields: updatedFields }));
+              }}>Eliminar Campo</Button>
+            </div>
           ))}
-        </Select>
-      </Form.Item>
-
-      {/* Preguntas adicionales en la sección de entrenamiento */}
-      <h4>Preguntas adicionales en Entrenamiento</h4>
-      {formStructure.trainingQuestions.map((question, index) => (
-        <Form.Item key={index} label={`Pregunta ${index + 1}`}>
-          <Input
-            placeholder="Título de la pregunta"
-            onChange={(e) => handleQuestionChange(index, e.target.value, 'trainingQuestions')}
-          />
-        </Form.Item>
-      ))}
-      <Button icon={<PlusOutlined />} onClick={addTrainingQuestion}>
-        Añadir pregunta
-      </Button>
-    </div>,
-
-    // Step 5: Medidas
-    <div key="5">
-      <h3>Medidas</h3>
-      {Object.keys(formStructure.measures).map((key) => (
-        <Form.Item key={key} name={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
-          <Input onChange={(e) => setFormStructure({
-            ...formStructure,
-            measures: { ...formStructure.measures, [key]: e.target.value }
-          })} />
-        </Form.Item>
-      ))}
-    </div>,
+          <Button icon={<PlusOutlined />} onClick={() => addField('dietFields')}>Añadir Campo</Button>
+        </>
+      ),
+    },
+    {
+      title: 'Entrenamiento',
+      content: (
+        <>
+          <Form.Item name="trainingFeedback" label="¿Cómo te ha ido el entrenamiento?">
+            <Input.TextArea onChange={(e) => setFormStructure({ ...formStructure, trainingFeedback: e.target.value })} />
+          </Form.Item>
+          {formStructure.trainingFields.map((field, index) => (
+            <div key={index} style={{ marginBottom: 16 }}>
+              <Input
+                placeholder="Nombre del campo"
+                value={field.label}
+                onChange={(e) => updateField('trainingFields', index, 'label', e.target.value)}
+                style={{ marginBottom: 8 }}
+              />
+              <Select
+                value={field.type}
+                onChange={(value) => updateField('trainingFields', index, 'type', value)}
+                style={{ width: 120, marginBottom: 8 }}
+              >
+                <Option value="input">Input</Option>
+                <Option value="textarea">Textarea</Option>
+                <Option value="select">Select</Option>
+              </Select>
+              {field.type === 'select' && (
+                <div style={{ marginBottom: 8 }}>
+                  {field.options.map((option, idx) => (
+                    <div key={idx} style={{ display: 'flex', marginBottom: 4 }}>
+                      <Input
+                        placeholder={`Opción ${idx + 1}`}
+                        value={option}
+                        onChange={(e) => {
+                          const newOptions = [...field.options];
+                          newOptions[idx] = e.target.value;
+                          updateField('trainingFields', index, 'options', newOptions);
+                        }}
+                        style={{ marginRight: 8 }}
+                      />
+                      <Button icon={<DeleteOutlined />} onClick={() => {
+                        const newOptions = field.options.filter((_, i) => i !== idx);
+                        updateField('trainingFields', index, 'options', newOptions);
+                      }} />
+                    </div>
+                  ))}
+                  <Button icon={<PlusOutlined />} onClick={() => {
+                    const newOptions = [...field.options, ''];
+                    updateField('trainingFields', index, 'options', newOptions);
+                  }}>Añadir Opción</Button>
+                </div>
+              )}
+              <Button icon={<DeleteOutlined />} onClick={() => {
+                const updatedFields = formStructure.trainingFields.filter((_, i) => i !== index);
+                setFormStructure(prev => ({ ...prev, trainingFields: updatedFields }));
+              }}>Eliminar Campo</Button>
+            </div>
+          ))}
+          <Button icon={<PlusOutlined />} onClick={() => addField('trainingFields')}>Añadir Campo</Button>
+        </>
+      ),
+    },
+    {
+      title: 'Medidas',
+      content: (
+        <>
+          {Object.keys(formStructure.measures).map((key) => (
+            <Form.Item key={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
+              <Input onChange={(e) => setFormStructure({
+                ...formStructure,
+                measures: { ...formStructure.measures, [key]: e.target.value }
+              })} />
+            </Form.Item>
+          ))}
+        </>
+      ),
+    },
   ];
 
+  const next = () => setCurrentStep(prev => prev + 1);
+  const prev = () => setCurrentStep(prev => prev - 1);
+
   return (
-    <div>
+    <Form form={form} onFinish={handleCreate} className={styles.initial} layout="vertical">
       <Steps current={currentStep}>
-        {steps.map((item) => (
-          <Steps.Step key={item.title} title={item.title} />
+        {steps.map(item => (
+          <Step key={item.title} title={item.title} />
         ))}
       </Steps>
-
-      <div className="steps-content">{stepsContent[currentStep]}</div>
-
+      <div className="steps-content" style={{ marginTop: 24 }}>
+        {steps[currentStep].content}
+      </div>
       <div className="steps-action" style={{ marginTop: 24 }}>
+        {currentStep > 0 && (
+          <Button style={{ marginRight: 8 }} onClick={() => prev()}>
+            Anterior
+          </Button>
+        )}
         {currentStep < steps.length - 1 && (
           <Button type="primary" onClick={() => next()}>
             Siguiente
           </Button>
         )}
         {currentStep === steps.length - 1 && (
-          <Button
-            type="primary"
-            onClick={() => console.log('Formulario enviado:', formStructure)}
-          >
+          <Button type="primary" htmlType="submit">
             Finalizar
           </Button>
         )}
-        {currentStep > 0 && (
-          <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
-            Anterior
-          </Button>
-        )}
+        <Button style={{ marginLeft: 8 }} onClick={() => setShowFollow(false)}>
+          Cancelar
+        </Button>
       </div>
-    </div>
+    </Form>
   );
 };
 
