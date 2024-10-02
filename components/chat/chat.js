@@ -1,145 +1,202 @@
-import React, { useEffect, useState, useRef, useContext } from 'react';
-import styles from '../../styles/chat.module.css';
-import { FaArrowAltCircleRight, FaCommentAlt } from 'react-icons/fa';
-import {
-  addDoc,
-  collection,
-  serverTimestamp,
-  onSnapshot,
-  query,
-  orderBy,
-  limit, // Agregamos el import para la limitación
-} from 'firebase/firestore';
-import { db } from '../../firebase.config';
-import { getAuth } from 'firebase/auth';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { Card, Input, Button, Upload, message } from 'antd';
+import { FaArrowAltCircleRight, FaFileAlt, FaTrashAlt } from 'react-icons/fa';
+import { UploadOutlined } from '@ant-design/icons';
+import { doc, updateDoc, arrayUnion, serverTimestamp, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { db, storage } from '../../firebase.config';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import AuthContext from '../../context/AuthContext';
+import styles from '../../styles/chat.module.css';
+
+const { TextArea } = Input;
+const { Meta } = Card;
 
 const Chat = () => {
   const { myData, myUid } = useContext(AuthContext);
-  const [viewChat, setViewChat] = useState(false);
-  const [message, setMessage] = useState('');
+  const [messageText, setMessageText] = useState('');
   const [myChat, setMyChat] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [data, setData] = useState([]);
+  const [fileList, setFileList] = useState([]);
+  const [trainerId, setTrainerId] = useState('');
+  const [clientId, setClientId] = useState('');
   const messagesContainerRef = useRef(null);
-  const prevMyChatRef = useRef([]);
-  const fetchCurrentUser = () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (user) {
-      setCurrentUser(user.displayName || 'Usuario Anónimo');
-    }
-  };
-  useEffect(() => {
-    setData(myData);
-  }, [myData]);
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'chats'),
-      orderBy('timeStamp'), // Ordenamos los mensajes por timeStamp
-      limit(20) // Limitamos a los últimos 20 mensajes
-    );
+    const fetchChatId = async () => {
+      // Suponiendo que obtienes el clientId y trainerId desde la suscripción
+      const subscription = { trainerId: 'TjFuz1IyD9OcNvPaKBFvsGO2GGv2', clientId: 'K3AmWAuaUQM4jH52J2lkqF2ztfo1' };
+      setTrainerId(subscription.trainerId);
+      setClientId(subscription.clientId);
 
-    const unsubscribe = onSnapshot(q, (snapShot) => {
-      let list = [];
-      snapShot.forEach((doc) => {
-        list.push({ id: doc.id, ...doc.data() });
+      // Generar el mismo chatId para ambos (cliente y entrenador) asegurando un orden consistente
+      const chatId = subscription.trainerId > subscription.clientId
+        ? `${subscription.clientId}_${subscription.trainerId}`
+        : `${subscription.trainerId}_${subscription.clientId}`;
+
+      const chatDocRef = doc(db, 'chats', chatId);
+      const unsubscribe = onSnapshot(chatDocRef, (doc) => {
+        if (doc.exists()) {
+          setMyChat(doc.data().messages || []);
+        } else {
+          setMyChat([]);
+        }
       });
-      setMyChat(list);
-    });
 
-    return () => {
-      unsubscribe();
+      return () => unsubscribe();
     };
-  }, []);
 
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      const { scrollHeight, clientHeight } = messagesContainerRef.current;
-      messagesContainerRef.current.scrollTo({
-        top: scrollHeight - clientHeight,
-        behavior: 'smooth',
-      });
-    }
-  };
+    fetchChatId();
+  }, [myUid]);
 
   useEffect(() => {
-    scrollToBottom();
-    prevMyChatRef.current = myChat;
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [myChat]);
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    try {
-      await addDoc(collection(db, 'chats'), {
-        text: message,
-        username: currentUser,
-        timeStamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.log(error);
+  const handleSendMessage = async () => {
+    if (!messageText && fileList.length === 0) {
+      return message.warning('Escribe un mensaje o adjunta un archivo.');
     }
+
+    const newMessage = {
+      text: messageText,
+      files: fileList,
+      username: myData?.username || 'Anónimo',
+      timestamp: new Date(),
+    };
+
+    const chatId = trainerId > clientId
+      ? `${clientId}_${trainerId}`
+      : `${trainerId}_${clientId}`;
+
+    const chatDocRef = doc(db, 'chats', chatId);
+
+    try {
+      // Verificar si el documento ya existe
+      const docSnap = await getDoc(chatDocRef);
+      if (docSnap.exists()) {
+        // Si existe, actualizarlo
+        await updateDoc(chatDocRef, {
+          messages: arrayUnion(newMessage),
+          lastUpdated: serverTimestamp(),
+        });
+      } else {
+        // Si no existe, crearlo
+        await setDoc(chatDocRef, {
+          messages: [newMessage],
+          lastUpdated: serverTimestamp(),
+        });
+      }
+
+      setMessageText('');
+      setFileList([]);
+    } catch (error) {
+      console.error('Error al enviar el mensaje:', error);
+      message.error('Error al enviar el mensaje.');
+    }
+  };
+
+  const handleFileUpload = async ({ file, onSuccess, onError }) => {
+    const storageRef = ref(storage, `files/${myUid}/${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => { },
+      (error) => {
+        onError(error);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        const newFile = {
+          name: file.name,
+          url: downloadURL,
+          type: file.type,
+        };
+        setFileList((prevList) => [...prevList, newFile]);
+        onSuccess("ok");
+      }
+    );
+  };
+
+  const formatMessage = (text) => {
+    const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
+    return text.split(' ').map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a key={index} href={part} target="_blank" rel="noopener noreferrer">
+            {part}
+          </a>
+        );
+      }
+      return part + ' ';
+    });
+  };
+
+  const renderFileCard = (file) => {
+    return (
+      <Card
+        key={file.url}
+        hoverable
+        cover={
+          file.type.startsWith('image/') ? (
+            <img alt={file.name} src={file.url} style={{ height: 120, objectFit: 'cover' }} />
+          ) : file.type === 'video/mp4' ? (
+            <video src={file.url} controls style={{ height: 120 }} />
+          ) : (
+            <FaFileAlt size={64} />
+          )
+        }
+        actions={[
+          <a href={file.url} target="_blank" rel="noopener noreferrer" key="download">
+            Descargar
+          </a>,
+          <FaTrashAlt onClick={() => setFileList(fileList.filter(f => f.url !== file.url))} />
+        ]}
+      >
+        <Meta title={file.name} />
+      </Card>
+    );
   };
 
   return (
-    <>
-      <div className={styles.buttonchat} onClick={() => setViewChat(true)}>
-        <FaCommentAlt size={30} />
-        <div>Chat</div>
+    <div className={styles.chatContainer}>
+      <div className={styles.messagesContainer} ref={messagesContainerRef}>
+        {myChat.map((msg, index) => (
+          <div key={index} className={msg.username === myData?.username ? styles.myMessage : styles.theirMessage}>
+            <div>
+              <strong>{msg.username}: </strong>
+              <p>{formatMessage(msg.text)}</p>
+              {msg.files && (
+                <div className={styles.filesGallery}>
+                  {msg.files.map(renderFileCard)}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-      {viewChat && (
-        <div className={styles.chat}>
-          <h1>Chat</h1>
-          <div className={styles.chatcontainer}>
-            <div className={styles.left}>
-              <div className={styles.clients}>
-                <div>Mis clientes</div>
-              </div>
-              <div className={styles.files}>
-                <div>Archivos</div>
-              </div>
-            </div>
-            <div className={styles.right}>
-              <div className={styles.messages} ref={messagesContainerRef}>
-                {myChat.map((chat) => (
-                  <p key={chat.id}>
-                    <img
-                      src={data.img ? data.img : '/face.jpg'}
-                      alt={'img'}
-                      className={styles.mychatimg}
-                    />
-                    <span>{chat.username}: </span>
-                    {chat.text}
-                  </p>
-                ))}
-              </div>
-              <form className={styles.mymessage}>
-                <input
-                  type='text'
-                  value={message}
-                  placeholder='Escribe tu mensaje...'
-                  onChange={(e) => setMessage(e.target.value)}
-                />
-                <button onClick={sendMessage}>
-                  <FaArrowAltCircleRight size={30} />
-                </button>
-              </form>
-            </div>
-          </div>
-          <div
-            className={styles.closebutton}
-            onClick={() => setViewChat(false)}
-          >
-            X
-          </div>
-        </div>
-      )}
-    </>
+
+      <div className={styles.inputContainer}>
+        <TextArea
+          value={messageText}
+          onChange={(e) => setMessageText(e.target.value)}
+          placeholder="Escribe tu mensaje..."
+          rows={2}
+        />
+        <Upload customRequest={handleFileUpload} showUploadList={false}>
+          <Button icon={<UploadOutlined />}>Adjuntar Archivo</Button>
+        </Upload>
+        <Button type="primary" icon={<FaArrowAltCircleRight />} onClick={handleSendMessage}>
+          Enviar
+        </Button>
+      </div>
+
+      {/* Mostrar archivos subidos antes de enviar */}
+      <div className={styles.filePreview}>
+        {fileList.map(renderFileCard)}
+      </div>
+    </div>
   );
 };
 
