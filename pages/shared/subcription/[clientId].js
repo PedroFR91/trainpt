@@ -1,13 +1,24 @@
 import React, { useContext, useEffect, useState } from "react";
-import { query, collection, where, getDocs, doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
+import {
+    query,
+    collection,
+    where,
+    getDocs,
+    doc,
+    updateDoc,
+    getDoc,
+    onSnapshot,
+} from "firebase/firestore";
 import { db } from "../../../firebase.config";
-import { useRouter } from 'next/router';
-import AuthContext from '../../../context/AuthContext';
-
+import { useRouter } from "next/router";
+import AuthContext from "../../../context/AuthContext";
 import Link from "next/link";
+import { Timeline, Card, Button } from "antd";
+import { SmileOutlined } from "@ant-design/icons";
+import Chat from "../../../components/chat/chat"; // Importamos el componente del chat
+import styles from "../../../styles/Subscription.module.css";
 
-import MyRoutines from "../../../components/general/myroutines";
-import { Steps } from 'antd';
+const { Meta } = Card;
 
 const Subscription = () => {
     const [subscription, setSubscription] = useState(null);
@@ -16,11 +27,9 @@ const Subscription = () => {
     const router = useRouter();
     const { clientId } = router.query;
     const { myData } = useContext(AuthContext);
-    const [currentUser, setCurrentUser] = useState(null);
     const [myForm, setMyForm] = useState([]);
     const [routines, setRoutines] = useState([]);
-    const [selectedRoutineId, setSelectedRoutineId] = useState(null);
-    const [initialFormDetails, setInitialFormDetails] = useState(null);
+    const [currentStep, setCurrentStep] = useState("previous");
     const startDate = new Date().toLocaleDateString();
 
     useEffect(() => {
@@ -36,13 +45,9 @@ const Subscription = () => {
                 });
                 setMyForm(list);
             },
-            (error) => {
-                console.log(error);
-            }
+            (error) => console.log(error)
         );
-        return () => {
-            unsub();
-        };
+        return () => unsub();
     }, [subscription]);
 
     useEffect(() => {
@@ -55,178 +60,132 @@ const Subscription = () => {
                 });
                 setRoutines(list);
             },
-            (error) => {
-                console.log(error);
-            }
+            (error) => console.log(error)
         );
-        return () => {
-            unsub();
-
-        };
+        return () => unsub();
     }, []);
-
-    const trainerSubscriptionStatus = [
-        {
-            step: 'previous',
-            description: 'Un cliente ha solicitado tus servicios',
-            button: <button onClick={() => handleUpdateStatus('form')}>Aceptar Petición</button>,
-            section: <div>Se le enviará el formulario inicial</div>
-        },
-        {
-            step: 'form',
-            description: 'Pendiente respuesta formulario',
-            section: '',
-        },
-        {
-            step: 'revision',
-            description: <div>Revisa el formulario inicial y envía la rutina a tu cliente</div>,
-            section: <MyRoutines />
-
-        },
-        {
-            step: 'complete',
-            description: <div>¡Listos para comenzar!, puedes editar la fecha de comienzo o de las revisiones desde tu calendario</div>,
-            button: <span>Revisión Completa</span>,
-            section: <div> <Link href={`/trainer/home?startDate=${startDate}`}>Ir al Calendario</Link></div>
-        },
-    ];
-
-    const clientSubscriptionStatus = [
-        {
-            step: 'previous',
-            description: 'Esperando la respuesta de  tu entrenador',
-
-        },
-        {
-            step: 'form',
-            description: <div>Tu entrenador te ha enviado el formulario<br /> inicial para conocer algunos datos sobre ti</div>,
-            section: <Link href={{ pathname: `/shared/forms/${myForm[0]?.id}`, query: { clientId: clientId } }}>Ir al formulario inicial</Link>,
-            button: <button onClick={() => handleUpdateStatus('revision')}>Enviar Formulario Inicial</button>,
-        },
-        {
-            step: 'revision',
-            description: <div>El entrenador te enviará tu rutina personalizada tras revisar tu formulario inicial</div>,
-
-        },
-        {
-            step: 'complete',
-            description: 'Completo',
-            button: <a href={`/chat/chat`}>Ir al chat con el entrenador</a>,
-        },
-    ];
 
     useEffect(() => {
         if (router.isReady && clientId) {
-            const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", clientId));
-            getDocs(subsQuery).then(querySnapshot => {
+            const subsQuery = query(collection(db, "subscriptions"), where("clientId", "==", clientId));
+            getDocs(subsQuery).then((querySnapshot) => {
                 if (!querySnapshot.empty) {
                     const docData = querySnapshot.docs[0].data();
                     const docId = querySnapshot.docs[0].id;
                     setSubscription({ ...docData, id: docId });
-
-                    // Obtener el formulario inicial si existe
-                    if (docData.initialForm) {
-                        const formRef = doc(db, 'forms', docData.initialForm);
-                        getDoc(formRef).then(formSnap => {
-                            if (formSnap.exists()) {
-                                setInitialFormDetails(formSnap.data());
-                            } else {
-                                console.error("No se encontró el formulario inicial:", docData.initialForm);
-                            }
-                        }).catch(error => {
-                            console.error("Error al obtener el formulario inicial:", error);
-                        });
-                    }
-                } else {
-                    console.error("No se encontró la suscripción para el cliente:", clientId);
                 }
                 setLoading(false);
-            }).catch(error => {
-                console.error("Error al obtener la suscripción:", error);
+            }).catch((error) => {
+                console.error("Error obteniendo la suscripción:", error);
                 setLoading(false);
             });
         }
     }, [router, clientId]);
 
-    const handleUpdateStatus = async (nextStatus) => {
-        if (!subscription || !subscription.id) return;
+    const stepsToShow = [
+        {
+            step: "previous",
+            description: "Chat abierto entre cliente y entrenador.",
+        },
+        {
+            step: "form",
+            description: "Formulario inicial enviado por el entrenador.",
+        },
+        {
+            step: "routine",
+            description: "Rutina propuesta por el entrenador.",
+        },
+        {
+            step: "complete",
+            description: "Estado de la suscripción: servicios contratados, precios, fechas de revisiones, etc.",
+        },
+    ];
 
-        const subscriptionRef = doc(db, 'subscriptions', subscription.id);
-
-        try {
-            await updateDoc(subscriptionRef, {
-                status: nextStatus, // Actualiza al siguiente estado
-                Initialform: 'Gkpw4Rpsce5lcA70W825'
-            });
-            console.log(`Estado de suscripción actualizado a '${nextStatus}'.`);
-
-            // Actualizar el estado local para reflejar el cambio inmediatamente
-            setSubscription({ ...subscription, status: nextStatus });
-
-        } catch (error) {
-            console.error("Error al actualizar el estado de la suscripción:", error);
-        }
-
-    };
-
-    const handleSelectRoutine = async (routineId) => {
-        setSelectedRoutineId(routineId);
-
-        if (!subscription || !subscription.id) {
-            console.error("No se ha definido la suscripción o el ID de la suscripción.");
-            return;
-        }
-
-        // Actualizar la suscripción con el ID de la rutina
-        const subscriptionRef = doc(db, 'subscriptions', subscription.id);
-        try {
-            await updateDoc(subscriptionRef, {
-                routineId: routineId, // Actualiza con el ID de la rutina seleccionada
-            });
-            console.log(`Suscripción actualizada con la rutina ${routineId}.`);
-        } catch (error) {
-            console.error("Error al actualizar la suscripción con la rutina:", error);
-        }
-        handleUpdateStatus('complete')
-    };
+    const currentStepIndex = stepsToShow.findIndex((step) => step.step === currentStep) || 0;
 
     if (loading) {
         return <div>Cargando estado de la suscripción...</div>;
-
     }
 
-    const stepsToShow = myData?.role === 'client' ? clientSubscriptionStatus : trainerSubscriptionStatus;
-
-    const currentStepIndex = stepsToShow.findIndex(step => step.step === subscription?.status) || 0;
+    // Función para mostrar el contenido según el paso actual
+    const renderContentForStep = () => {
+        switch (currentStep) {
+            case "previous":
+                return (
+                    <div className={styles.chatContainer}>
+                        <Chat /> {/* Aquí integramos el componente del chat */}
+                    </div>
+                );
+            case "form":
+                return (
+                    <div>
+                        <h2>Formulario Inicial</h2>
+                        <p>Por favor, completa el formulario enviado por tu entrenador.</p>
+                        <Button type="primary">
+                            <Link href={`/shared/forms/${myForm[0]?.id}`}>Ver Formulario</Link>
+                        </Button>
+                    </div>
+                );
+            case "routine":
+                return (
+                    <div>
+                        <h2>Rutina Propuesta</h2>
+                        <p>Revisa la rutina personalizada enviada por tu entrenador.</p>
+                        <Card
+                            hoverable
+                            style={{ width: 300 }}
+                            cover={<img alt="Rutina" src="/routine.jpg" />}
+                        >
+                            <Meta
+                                title="Rutina Propuesta"
+                                description={<Link href={`/trainer/routines/${routines[0]?.id}`}>Ver Rutina</Link>}
+                            />
+                        </Card>
+                    </div>
+                );
+            case "complete":
+                return (
+                    <div>
+                        <h2>Estado de la Suscripción</h2>
+                        <p>Servicios contratados, precios, fechas de revisiones, etc.</p>
+                        <ul>
+                            <li>Precio: 50€ al mes</li>
+                            <li>Servicios: Rutinas personalizadas, 3 revisiones al mes</li>
+                            <li>Fecha de inicio: {startDate}</li>
+                            <li>Próxima revisión: 15 de octubre</li>
+                        </ul>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
-        <>
+        <div className={styles.subscriptionContainer}>
+            <video className={styles.backgroundVideo} autoPlay loop muted>
+                <source src="/subscription.mp4" type="video/mp4" />
+            </video>
 
-            <div >
-                {subscription ? (
-                    <div>
-                        <h1>Hola, {myData?.username}. Desde aquí puedes comprobar el estado de tu suscripción.</h1>
-                        {myData?.role === 'client' && <h1>Has seleccionado como entrenador a  {trainer?.username} </h1>}
-                        <div>
-                            <button>
-                                <Link href={`/shared/trainers/${trainer?.id}`}>Ver perfil</Link>
-                            </button>
-                            <button><Link href={'/chat/chat'}>Ir al chat</Link></button>
-                        </div>
-
-                        <Steps current={currentStepIndex}>
-                            {stepsToShow.map(({ step, description }) => (
-                                <Steps.Step key={step} title={step} description={description} />
-                            ))}
-                        </Steps>
-
-
-                    </div>
-                ) : (
-                    <div>No se encontró la suscripción para el cliente: {clientId}</div>
-                )}
+            <div className={styles.timelineSection}>
+                <Timeline mode="left" style={{ padding: "2rem" }}>
+                    {stepsToShow.map(({ step, description }, index) => (
+                        <Timeline.Item
+                            key={step}
+                            color={index === currentStepIndex ? "green" : "gray"}
+                            dot={index === currentStepIndex ? <SmileOutlined /> : null}
+                            style={{ fontSize: "clamp(1rem, 2vw, 1.5rem)" }}
+                        >
+                            {description}
+                        </Timeline.Item>
+                    ))}
+                </Timeline>
             </div>
-        </>
+
+            <div className={styles.contentSection}>
+                {renderContentForStep()}
+            </div>
+        </div>
     );
 };
 
