@@ -3,12 +3,11 @@ import { Button, Modal, Table, Select } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import TrainerHeader from "../../components/trainer/trainerHeader";
 import Follow from "../../components/client/Follow";
-import { collection, onSnapshot, query, where, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, updateDoc, doc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
 import styles from "../../styles/forms.module.css";
 import withAuth from '../../components/withAuth';
-import MultiStepForm from "../../components/client/Initial"; // Asegúrate de importar el nuevo formulario
 import Initial from "../../components/client/Initial";
 
 const { Option } = Select;

@@ -26,7 +26,7 @@
 
 .contentSection {
   width: 50%;
-  padding: 2rem;
+
   background-color: rgba(33, 33, 33, 0.3);
   display: flex;
   flex-direction: column;
@@ -41,4 +41,25 @@
   height: 100%;
   padding: 1rem;
   background-color: rgba(0, 0, 0, 0.6);
+}
+.blurCard {
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.fixedChatButton {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10;
+}
+.formContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 3rem;
 }

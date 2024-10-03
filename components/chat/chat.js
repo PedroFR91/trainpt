@@ -185,7 +185,7 @@ const Chat = () => {
           rows={2}
         />
         <Upload customRequest={handleFileUpload} showUploadList={false}>
-          <Button icon={<UploadOutlined />}>Adjuntar Archivo</Button>
+          <Button icon={<UploadOutlined />}></Button>
         </Upload>
         <Button type="primary" icon={<FaArrowAltCircleRight />} onClick={handleSendMessage}>
           Enviar

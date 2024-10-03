@@ -3,7 +3,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Form, Input, Button, Select, Upload, Steps, Divider, Space, message } from "antd";
 import { PlusOutlined, UploadOutlined, DeleteOutlined } from "@ant-design/icons";
-import { addDoc, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db, storage } from "../../firebase.config";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import AuthContext from '../../context/AuthContext';
@@ -39,7 +39,7 @@ const DynamicField = ({ field, index, section, updateField, removeField }) => {
   };
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: 16, marginBottom: 16 }}>
+    <div style={{ border: '1px solid #ccc', padding: 16, marginBottom: 16, backgroundColor: '#ffffff' }}>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Form.Item label="Tipo de Campo">
           <Select value={field.type} onChange={handleTypeChange} style={{ width: 200 }}>
@@ -80,7 +80,7 @@ const DynamicField = ({ field, index, section, updateField, removeField }) => {
   );
 };
 
-const Initial = ({ setShowInitial }) => {
+const Initial = ({ setShowInitial, subscriptionId }) => {
   const { myUid } = useContext(AuthContext);
   const [currentStep, setCurrentStep] = useState(0);
   const [tariffs, setTariffs] = useState([]);
@@ -123,6 +123,11 @@ const Initial = ({ setShowInitial }) => {
 
   // Función para subir fotos a Firebase Storage
   const uploadPhoto = async (file) => {
+    if (!file) {
+      console.error("No hay archivo seleccionado");
+      return null;
+    }
+
     const name = new Date().getTime() + file.name;
     const storageRef = ref(storage, name);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -136,6 +141,7 @@ const Initial = ({ setShowInitial }) => {
       return null;
     }
   };
+
 
   // Manejar la creación del formulario
   const handleCreate = async () => {
@@ -159,8 +165,14 @@ const Initial = ({ setShowInitial }) => {
       // Guardar el formulario en Firestore
       await addDoc(collection(db, "forms"), cleanValues);
 
+      // Actualizar la suscripción para avanzar al paso de la rutina
+      const subscriptionRef = doc(db, "subscriptions", subscriptionId);
+      await updateDoc(subscriptionRef, {
+        status: "routine",
+      });
+
       // Mostrar mensaje de éxito y cerrar modal
-      message.success("Formulario inicial creado correctamente");
+      message.success("Formulario inicial creado correctamente. Avanzando al siguiente paso.");
       setShowInitial(false);
     } catch (error) {
       console.error("Error al crear el formulario:", error);
@@ -300,6 +312,7 @@ const Initial = ({ setShowInitial }) => {
             rules={[{ required: true, message: 'Por favor sube una imagen frontal' }]}
           >
             <Upload
+              fileList={formStructure.front ? [formStructure.front.file] : []}
               customRequest={({ file, onSuccess }) => {
                 setFormStructure(prev => ({ ...prev, front: { file } }));
                 onSuccess("ok");
@@ -319,6 +332,7 @@ const Initial = ({ setShowInitial }) => {
             rules={[{ required: true, message: 'Por favor sube una imagen trasera' }]}
           >
             <Upload
+              fileList={formStructure.back ? [formStructure.back.file] : []}
               customRequest={({ file, onSuccess }) => {
                 setFormStructure(prev => ({ ...prev, back: { file } }));
                 onSuccess("ok");
@@ -338,6 +352,7 @@ const Initial = ({ setShowInitial }) => {
             rules={[{ required: true, message: 'Por favor sube una imagen lateral' }]}
           >
             <Upload
+              fileList={formStructure.lateral ? [formStructure.lateral.file] : []}
               customRequest={({ file, onSuccess }) => {
                 setFormStructure(prev => ({ ...prev, lateral: { file } }));
                 onSuccess("ok");

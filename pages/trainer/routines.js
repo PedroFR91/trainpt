@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Modal, Space, Table, notification, Form } from 'antd';
+import { Button, Modal, Space, Table, notification, Form, Select } from 'antd';
 
 import { auth, db } from "../../firebase.config";
-import { collection, deleteDoc, doc, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { collection, deleteDoc, doc, addDoc, serverTimestamp, onSnapshot, query, where, getDoc, updateDoc, getDocs } from "firebase/firestore";
 import ExerciseCreator from '../../components/general/ExerciseCreator';
 import TrainingCreator from '../../components/general/TrainingCreator';
 import RoutineCreator from '../../components/general/RoutineCreator';
@@ -30,6 +30,9 @@ const Routines = () => {
   const [showTrainingsTable, setShowTrainingsTable] = useState(false);
   const [showRoutinesTable, setShowRoutinesTable] = useState(false);
   const [selectedTrainings, setSelectedTrainings] = useState([]);
+  const [showShareRoutineModal, setShowShareRoutineModal] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
 
   const { myUid } = useContext(AuthContext);
   useEffect(() => {
@@ -55,7 +58,20 @@ const Routines = () => {
       unsubRoutines();
     };
   }, []);
+  useEffect(() => {
+    const unsubClients = onSnapshot(
+      query(collection(db, "users"), where("role", "==", "client")),
+      (snapshot) => {
+        const clientList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setClients(clientList);
+      }
+    );
 
+
+    return () => {
+      unsubClients();
+    };
+  }, []);
   const handleDelete = async (collectionName, id) => {
     try {
       await deleteDoc(doc(db, collectionName, id));
@@ -113,9 +129,18 @@ const Routines = () => {
           <FaRegEdit onClick={() => handleEdit(collectionName, record)} />
           <FaCopy onClick={() => handleCopy(collectionName, record)} />
           <FaRegTrashAlt onClick={() => handleDelete(collectionName, record.id)} />
+          {collectionName === "routines" && (
+            <Button onClick={() => {
+              setCurrentRoutine(record);
+              setShowShareRoutineModal(true);
+            }}>
+              Compartir
+            </Button>
+          )}
         </Space>
       ),
-    },
+    }
+
   ];
 
   const handleView = (collectionName, item) => {
@@ -141,6 +166,57 @@ const Routines = () => {
     } else if (collectionName === "routines") {
       setCurrentRoutine(item);
       setShowRoutineModal(true);
+    }
+  };
+  const handleShareRoutine = async () => {
+    if (!selectedClient || !currentRoutine) {
+      notification.error({
+        message: 'Error',
+        description: 'Cliente o rutina no seleccionados.',
+      });
+      return;
+    }
+
+    try {
+      // Verifica si el documento del cliente existe
+      const clientDocRef = doc(db, "users", selectedClient);
+      const clientDocSnap = await getDoc(clientDocRef);
+
+      if (!clientDocSnap.exists()) {
+        notification.error({
+          message: 'Error',
+          description: 'El cliente seleccionado no existe.',
+        });
+        return;
+      }
+
+      // Actualiza el campo 'assignedRoutine' del cliente
+      await updateDoc(clientDocRef, {
+        assignedRoutine: currentRoutine.id,
+      });
+
+      // Identifica y actualiza el documento de la suscripción del cliente
+      const subsQuery = query(collection(db, "subscriptions"), where("clientId", "==", selectedClient));
+      const subsSnapshot = await getDocs(subsQuery);
+      if (!subsSnapshot.empty) {
+        const subscriptionId = subsSnapshot.docs[0].id;
+        const subscriptionRef = doc(db, "subscriptions", subscriptionId);
+        await updateDoc(subscriptionRef, {
+          status: "complete", // Actualiza el estado a 'complete'
+        });
+      }
+
+      notification.success({
+        message: 'Rutina compartida',
+        description: 'La rutina ha sido compartida exitosamente, y la suscripción ha sido actualizada.',
+      });
+      setShowShareRoutineModal(false);
+    } catch (error) {
+      console.error("Error al compartir la rutina:", error);
+      notification.error({
+        message: 'Error',
+        description: 'Error al compartir la rutina o actualizar la suscripción.',
+      });
     }
   };
 
@@ -209,7 +285,6 @@ const Routines = () => {
             </ul>
           </Modal>
         )}
-
         {viewRoutineModal && (
           <Modal
             title="Ver Rutina"
@@ -249,8 +324,26 @@ const Routines = () => {
             </ul>
           </Modal>
         )}
-
-
+        {showShareRoutineModal && (
+          <Modal
+            title="Compartir Rutina"
+            open={showShareRoutineModal}
+            onCancel={() => setShowShareRoutineModal(false)}
+            onOk={handleShareRoutine}
+          >
+            <Select
+              placeholder="Seleccionar Cliente"
+              style={{ width: '100%' }}
+              onChange={(value) => setSelectedClient(value)}
+            >
+              {clients.map(client => (
+                <Select.Option key={client.id} value={client.id}>
+                  {client.username}
+                </Select.Option>
+              ))}
+            </Select>
+          </Modal>
+        )}
         {showExercisesTable && <Table columns={columns("exercises")} dataSource={exercises} rowKey="id" />}
         {showTrainingsTable && <Table columns={columns("trainings")} dataSource={trainings} rowKey="id" />}
         {showRoutinesTable && <Table columns={columns("routines")} dataSource={routines} rowKey="id" />}
