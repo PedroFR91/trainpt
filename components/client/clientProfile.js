@@ -1,44 +1,48 @@
+// components/client/clientProfile.js
 import React, { useContext, useEffect, useState } from 'react';
-import styles from '../../styles/program.module.css';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { db, storage } from '../../firebase.config';
-import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
-import AuthContext from '../../context/AuthContext';
+import { Avatar, Card, Button, FloatButton, Upload, message, Modal, Input, Form } from 'antd';
+import { EditOutlined, UploadOutlined, TeamOutlined } from '@ant-design/icons';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { FaEdit, FaRegEdit } from 'react-icons/fa';
-import Link from 'next/link';
-const clientProfile = () => {
+import { db, storage } from '../../firebase.config';
+import { doc, updateDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import TrainersList from './trainersList';
+import AuthContext from '../../context/AuthContext';
+import styles from '../../styles/program.module.css';
+
+const ClientProfile = () => {
   const { myData, myUid } = useContext(AuthContext);
-  const auth = getAuth();
   const [file, setFile] = useState(null);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState(null);
+  const [isTrainersModalOpen, setIsTrainersModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [trainerData, setTrainerData] = useState(null);
+  const [newName, setNewName] = useState(myData?.name || '');
+
   useEffect(() => {
     file && handleImageUpload();
   }, [file]);
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'users'),
-      (snapShot) => {
-        let list = [];
-        snapShot.docs.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setData(list);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
 
-    return () => {
-      unsub();
+  useEffect(() => {
+    const fetchTrainerData = async () => {
+      const subscriptionsRef = collection(db, 'subscriptions');
+      const q = query(subscriptionsRef, where('clientId', '==', myUid), where('status', '==', 'active'));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const subscription = querySnapshot.docs[0].data();
+        const trainerRef = doc(db, 'users', subscription.trainerId);
+        const trainerDoc = await getDoc(trainerRef);
+
+        if (trainerDoc.exists()) {
+          setTrainerData(trainerDoc.data());
+        }
+      }
     };
-  }, []);
+
+    fetchTrainerData();
+  }, [myUid]);
+
   const handleImageUpload = async () => {
     if (!file) return;
-
     const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -46,79 +50,145 @@ const clientProfile = () => {
     uploadTask.on(
       'state_changed',
       (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log('Upload is ' + progress + '% done');
       },
       (error) => {
-        console.log(error);
+        console.error(error);
+        message.error('Error al subir la imagen');
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
           await updateDoc(doc(db, 'users', myUid), { img: downloadURL });
+          message.success('Imagen actualizada correctamente');
         });
       }
     );
   };
-  useEffect(() => {
-    if (myUid) {
-      const subsQuery = query(collection(db, 'subscriptions'), where("clientId", "==", myUid));
-      getDocs(subsQuery).then(querySnapshot => {
-        if (!querySnapshot.empty) {
-          const docData = querySnapshot.docs[0].data();
-          const docId = querySnapshot.docs[0].id;
-          setSubscription({ ...docData, id: docId });
 
-          if (docData.initialForm) {
-            const formRef = doc(db, 'forms', docData.initialForm);
-            getDoc(formRef).then(formSnap => {
-              if (formSnap.exists()) {
-                setInitialFormDetails(formSnap.data());
-              } else {
-                console.error("No se encontró el formulario inicial:", docData.initialForm);
-              }
-            }).catch(error => {
-              console.error("Error al obtener el formulario inicial:", error);
-            });
-          }
-        } else {
-          console.error("No se encontró la suscripción para el cliente:", myUid);
-        }
-        setLoading(false);
-      }).catch(error => {
-        console.error("Error al obtener la suscripción:", error);
-        setLoading(false);
-      });
+  const handleEditProfile = async () => {
+    try {
+      await updateDoc(doc(db, 'users', myUid), { name: newName });
+      message.success('Perfil actualizado correctamente');
+      setIsEditProfileModalOpen(false);
+    } catch (error) {
+      console.error('Error actualizando el perfil:', error);
+      message.error('Error al actualizar el perfil');
     }
-  }, [myUid]);
+  };
+
+  const showTrainersModal = () => setIsTrainersModalOpen(true);
+  const handleTrainersModalCancel = () => setIsTrainersModalOpen(false);
+
+  const showEditProfileModal = () => setIsEditProfileModalOpen(true);
+  const handleEditProfileModalCancel = () => setIsEditProfileModalOpen(false);
 
   return (
-    <>
-      {myData && (
-        <div className={styles.myprofile}>
-          <img
-            src={myData.img ? myData.img : '/face.jpg'}
-            alt={'img'}
-            className={styles.myprofileimg}
-            htmlFor='file'
-            onClick={(e) => {
-              e.preventDefault();
-              document.getElementById('file').click();
-            }}
-          />
-          <input
-            type='file'
-            id='file'
-            onChange={(e) => setFile(e.target.files[0])}
-            hidden
-          />
-          <p style={{ cursor: 'pointer' }}> <p></p> </p>
-          <Link href={`/shared/subcription/${myUid}`}  >Status:{(subscription?.status)?.toUpperCase()}</Link>
-
+    <Card
+      className={styles.profileCard}
+      cover={
+        <Avatar
+          size={120}
+          src={myData?.img ? myData.img : '/face.jpg'}
+          style={{ margin: 'auto', display: 'block' }}
+        />
+      }
+      actions={[
+        <Button type="link" icon={<EditOutlined />} key="edit" onClick={showEditProfileModal}>
+          Editar Perfil
+        </Button>,
+        <div className={styles.trainerContainer}>
+          {trainerData ? (
+            <>
+              <Avatar src={trainerData.img || '/face.jpg'} size={40} />
+              <span className={styles.trainerName}>{trainerData.username || 'Entrenador'}</span>
+              <Button
+                type="link"
+                icon={<TeamOutlined />}
+                className={styles.changeTrainerButton}
+                onClick={showTrainersModal}
+              >
+                Cambiar Entrenador
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="link"
+              icon={<TeamOutlined />}
+              key="change-trainer"
+              onClick={showTrainersModal}
+            >
+              Seleccionar Entrenador
+            </Button>
+          )}
         </div>
-      )}
-    </>
+      ]}
+    >
+      <Card.Meta
+        title={myData?.name || 'Nombre del Cliente'}
+        description={myData?.email || 'Email del Cliente'}
+      />
+      <FloatButton
+        icon={<UploadOutlined />}
+        shape="circle"
+        onClick={() => document.getElementById('file-upload').click()}
+        tooltip={<div>Subir Nueva Foto</div>}
+        style={{ right: 24, bottom: 24 }}
+      />
+      <input
+        type="file"
+        id="file-upload"
+        onChange={(e) => setFile(e.target.files[0])}
+        style={{ display: 'none' }}
+      />
+
+      {/* Modal para seleccionar el entrenador */}
+      <Modal
+        title="Selecciona tu Entrenador"
+        visible={isTrainersModalOpen}
+        onCancel={handleTrainersModalCancel}
+        footer={null}
+      >
+        <TrainersList />
+      </Modal>
+
+      {/* Modal para editar el perfil */}
+      <Modal
+        title="Editar Perfil"
+        visible={isEditProfileModalOpen}
+        onCancel={handleEditProfileModalCancel}
+        footer={[
+          <Button key="cancel" onClick={handleEditProfileModalCancel}>
+            Cancelar
+          </Button>,
+          <Button key="save" type="primary" onClick={handleEditProfile}>
+            Guardar Cambios
+          </Button>,
+        ]}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Nombre">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Introduce tu nombre"
+            />
+          </Form.Item>
+          <Form.Item label="Foto de Perfil">
+            <Upload
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
+              }}
+              showUploadList={false}
+            >
+              <Button icon={<UploadOutlined />}>Subir Nueva Foto</Button>
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </Card>
   );
 };
 
-export default clientProfile;
+export default ClientProfile;

@@ -1,90 +1,133 @@
-import React, { useEffect, useState } from 'react';
-import Slider from 'react-slick'; // Importa Slider
-import 'slick-carousel/slick/slick.css'; // Importa estilos predeterminados
-import 'slick-carousel/slick/slick-theme.css'; // Importa tema opcional
-import styles from '../../styles/previousimg.module.css';
+'use client'
+import React, { useEffect, useState, useRef } from 'react';
+import { Card, Carousel, Empty, Select, Button } from 'antd';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase.config';
-import { Carousel } from 'antd';
-const contentStyle = {
-    margin: 0,
-    height: '160px',
-    color: '#fff',
-    lineHeight: '160px',
-    textAlign: 'center',
-    background: '#364d79',
-};
+import styles from '../../styles/program.module.css';
+
+const { Option } = Select;
+
 const MyPhotos = ({ myUid }) => {
     const [photos, setPhotos] = useState([]);
-    const [fullscreen, setFullscreen] = useState(false);
-    const onChange = (currentSlide) => {
-        console.log(currentSlide);
-    };
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [filteredPhotos, setFilteredPhotos] = useState(null);
+    const carouselRef = useRef(null); // Referencia para controlar el Carousel
 
     useEffect(() => {
-        const q = query(collection(db, 'forms'), where('clientId', '==', myUid));
-        getDocs(q)
-            .then((querySnapshot) => {
-                const photoList = [];
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.front && data.lateral && data.back && data.timeStamp) {
-                        photoList.push({
-                            front: data.front,
-                            lateral: data.lateral,
-                            back: data.back,
-                            date: data.timeStamp
-                        });
-                    }
-                });
-                setPhotos(photoList);
-            })
-            .catch((error) => {
-                console.error('Error getting documents: ', error);
-            });
+        // Datos mockeados con las imágenes proporcionadas
+        const mockData = [
+            {
+                date: '2024-10-01',
+                images: {
+                    front: 'https://images.pexels.com/photos/1229356/pexels-photo-1229356.jpeg?auto=compress&cs=tinysrgb&w=600',
+                    lateral: 'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg?auto=compress&cs=tinysrgb&w=600',
+                    back: 'https://images.pexels.com/photos/1431282/pexels-photo-1431282.jpeg?auto=compress&cs=tinysrgb&w=600'
+                },
+            },
+            {
+                date: '2024-11-01',
+                images: {
+                    front: 'https://images.pexels.com/photos/416809/pexels-photo-416809.jpeg?auto=compress&cs=tinysrgb&w=600',
+                    lateral: 'https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg?auto=compress&cs=tinysrgb&w=600',
+                    back: 'https://images.pexels.com/photos/136404/pexels-photo-136404.jpeg?auto=compress&cs=tinysrgb&w=600'
+                },
+            },
+            {
+                date: '2024-12-01',
+                images: {
+                    front: 'https://via.placeholder.com/200?text=Frente',
+                    lateral: 'https://via.placeholder.com/200?text=Lateral',
+                    back: 'https://via.placeholder.com/200?text=Espalda'
+                },
+            },
+        ];
+
+        setPhotos(mockData);
+        setSelectedDate(mockData[0].date); // Fecha inicial seleccionada
     }, [myUid]);
 
-    const settings = {
-        dots: true,
-        infinite: true,
-        speed: 500,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        adaptiveHeight: true,
+    useEffect(() => {
+        // Filtrar las fotos según la fecha seleccionada
+        if (selectedDate) {
+            const selectedPhotos = photos.find(photoSet => photoSet.date === selectedDate);
+            setFilteredPhotos(selectedPhotos);
+        }
+    }, [selectedDate, photos]);
+
+    const handleDateChange = (value) => {
+        setSelectedDate(value);
+    };
+
+    const handlePrev = () => {
+        carouselRef.current.prev();
+    };
+
+    const handleNext = () => {
+        carouselRef.current.next();
     };
 
     return (
-        <div className={styles.myphotos}>
-            <h3>Mis Fotos</h3>
-            {photos.map((photo, index) => (
-                <div key={index} className={styles.formphotos}>
-                    <div className={styles.formdate}>
-                        <p>{photo.date.toDate().toLocaleString('es-ES', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        })}</p>
-                    </div>
-                    <Carousel afterChange={onChange}>
+        <div className={styles.photoGallery}>
+            {photos.length > 0 ? (
+                <Card
+                    title="Mis Fotos de Progreso"
+                    className={styles.photoCard}
+                    hoverable
+                >
+                    <Select
+                        value={selectedDate}
+                        onChange={handleDateChange}
+                        style={{ width: '100%', marginBottom: '1rem' }}
+                        placeholder="Selecciona una fecha"
+                    >
+                        {photos.map((photoSet, index) => (
+                            <Option key={index} value={photoSet.date}>
+                                {photoSet.date}
+                            </Option>
+                        ))}
+                    </Select>
 
-                        <div>
-                            <img src={photo.front} alt="Front" style={{ width: '100%' }} />
-                            <p>Frente</p>
-                        </div>
-                        <div>
-                            <img src={photo.lateral} alt="Lateral" style={{ width: '100%' }} />
-                            <p>Lateral</p>
-                        </div>
-                        <div>
-                            <img src={photo.back} alt="Back" style={{ width: '100%' }} />
-                            <p>Espalda</p>
-                        </div>
+                    {filteredPhotos ? (
+                        <div className={styles.carouselContainer}>
+                            <Button
+                                icon={<LeftOutlined />}
+                                onClick={handlePrev}
+                                className={styles.carouselButton}
+                            />    <Button
+                                icon={<RightOutlined />}
+                                onClick={handleNext}
+                                className={styles.carouselButton}
+                            />
+                            <Carousel
+                                ref={carouselRef}
+                                dotPosition="bottom"
+                                className={styles.photoCarousel}
+                            >
+                                <div>
+                                    <img src={filteredPhotos.images.front} alt="Frente" className={styles.carouselImage} />
+                                    <p className={styles.imageCaption}>Frente</p>
+                                </div>
+                                <div>
+                                    <img src={filteredPhotos.images.lateral} alt="Lateral" className={styles.carouselImage} />
+                                    <p className={styles.imageCaption}>Lateral</p>
+                                </div>
+                                <div>
+                                    <img src={filteredPhotos.images.back} alt="Espalda" className={styles.carouselImage} />
+                                    <p className={styles.imageCaption}>Espalda</p>
+                                </div>
+                            </Carousel>
 
-                    </Carousel>
-                </div>
-            ))}
+                        </div>
+                    ) : (
+                        <Empty description="No hay fotos disponibles para esta fecha" />
+                    )}
+                </Card>
+            ) : (
+                <Empty description="No hay fotos disponibles" />
+            )}
         </div>
     );
-}
+};
 
 export default MyPhotos;

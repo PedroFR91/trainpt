@@ -1,65 +1,60 @@
-import React, { useEffect, useState } from "react";
+// components/client/MyMeasurements.js
+import React, { useEffect, useState } from 'react';
+import { Card, Empty } from 'antd';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../../firebase.config";
-import styles from '../../styles/Measures.module.css'
+import styles from '../../styles/Measures.module.css';
+
 const MyMeasurements = ({ myUid }) => {
     const [options, setOptions] = useState({
-        chart: {
-            type: 'line'
-        },
-        title: {
-            text: 'Evolución de Medidas'
-        },
+        chart: { type: 'line' },
+        title: { text: 'Evolución de Medidas' },
         xAxis: {
             categories: [],
-            title: {
-                text: 'Fecha'
-            }
+            title: { text: 'Fecha' },
         },
         yAxis: {
-            title: {
-                text: 'Medidas (cm)'
-            }
+            title: { text: 'Medidas (cm)' },
         },
-        series: []
+        series: [],
     });
 
     useEffect(() => {
-        const fetchData = async () => {
-            const q = query(collection(db, "forms"), where("clientId", "==", myUid));
-            const querySnapshot = await getDocs(q);
-            const categories = []; // Fechas
-            const series = {}; // Datos de las series
+        // Datos mockeados para pruebas
+        const mockData = [
+            { date: '2024-10-01', measures: { pecho: 95, cintura: 80, cadera: 100 } },
+            { date: '2024-11-01', measures: { pecho: 97, cintura: 78, cadera: 98 } },
+            { date: '2024-12-01', measures: { pecho: 98, cintura: 76, cadera: 97 } },
+        ];
 
-            querySnapshot.forEach(doc => {
-                const { measures, timeStamp } = doc.data();
-                const date = timeStamp.toDate().toLocaleDateString();
-                categories.push(date);
+        // Extracción de categorías (fechas) y datos de series (medidas)
+        const categories = mockData.map((entry) => entry.date);
+        const seriesData = {};
 
-                Object.entries(measures).forEach(([measureName, value]) => {
-                    if (!series[measureName]) {
-                        series[measureName] = { name: measureName, data: [] };
-                    }
-                    series[measureName].data.push(parseFloat(value));
-                });
+        mockData.forEach((entry) => {
+            Object.entries(entry.measures).forEach(([measure, value]) => {
+                if (!seriesData[measure]) {
+                    seriesData[measure] = { name: measure, data: [] };
+                }
+                seriesData[measure].data.push(value);
             });
+        });
 
-            setOptions({
-                ...options,
-                xAxis: { ...options.xAxis, categories },
-                series: Object.values(series)
-            });
-        };
-
-        fetchData();
+        setOptions((prevOptions) => ({
+            ...prevOptions,
+            xAxis: { ...prevOptions.xAxis, categories },
+            series: Object.values(seriesData),
+        }));
     }, [myUid]);
 
     return (
-        <div className={styles.chartContainer}>
-            <HighchartsReact highcharts={Highcharts} options={options} className={styles.myGraph} />
-        </div >
+        <Card className={styles.measuresCard} title="Mis Medidas">
+            {options.series.length > 0 ? (
+                <HighchartsReact highcharts={Highcharts} options={options} />
+            ) : (
+                <Empty description="No hay datos de medidas disponibles" />
+            )}
+        </Card>
     );
 };
 
