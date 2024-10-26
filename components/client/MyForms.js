@@ -4,7 +4,7 @@ import { Table, Button, Tag, Empty } from 'antd';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import Link from 'next/link';
-import styles from '../../styles/Forms.module.css';
+import styles from '../../styles/program.module.css';
 
 const MyForms = ({ myUid }) => {
   const [formList, setFormList] = useState([]);
