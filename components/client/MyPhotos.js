@@ -70,10 +70,10 @@ const MyPhotos = ({ myUid }) => {
     return (
         <div className={styles.photoGallery}>
             {photos.length > 0 ? (
-                <Card
-                    title="Mis Fotos de Progreso"
+                <div
+
                     className={styles.photoCard}
-                    hoverable
+
                 >
                     <Select
                         value={selectedDate}
@@ -122,7 +122,7 @@ const MyPhotos = ({ myUid }) => {
                     ) : (
                         <Empty description="No hay fotos disponibles para esta fecha" />
                     )}
-                </Card>
+                </div>
             ) : (
                 <Empty description="No hay fotos disponibles" />
             )}

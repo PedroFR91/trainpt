@@ -48,13 +48,13 @@ const MyMeasurements = ({ myUid }) => {
     }, [myUid]);
 
     return (
-        <Card className={styles.measuresCard} title="Mis Medidas">
+        <div className={styles.measuresCard} >
             {options.series.length > 0 ? (
                 <HighchartsReact highcharts={Highcharts} options={options} />
             ) : (
                 <Empty description="No hay datos de medidas disponibles" />
             )}
-        </Card>
+        </div>
     );
 };
 

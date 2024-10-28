@@ -142,3 +142,14 @@
 .trainerContainer:hover .changeTrainerButton {
   display: inline-block; /* Mostrar botón solo en hover */
 }
+.chatButton {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.chatModal {
+  max-height: 80vh;
+  overflow-y: auto;
+}
