@@ -1,17 +1,23 @@
 .container {
-  width: 100%;
-  min-height: 100vh;
+  padding: 16px;
+}
 
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
+.profileCard {
+  max-width: 400px;
+  margin: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-.container h1 {
-  color: #ffffff;
-}
-.containerHeader,
-.containerList {
+
+.expandedCard {
   width: 100%;
-  height: fit-content;
+  height: 100%;
+}
+
+.sidebar {
+  background-color: #001529;
+}
+
+.header {
+  background: #fff;
+  padding: 0 20px;
 }

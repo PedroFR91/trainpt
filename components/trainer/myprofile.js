@@ -1,71 +1,85 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Card, Avatar, Button, Upload, message } from 'antd';
+import { Card, Avatar, Button, Upload, Modal, Input, Form, message } from 'antd';
 import { UploadOutlined, EditOutlined } from '@ant-design/icons';
 import { db, storage } from '../../firebase.config';
 import { doc, updateDoc } from 'firebase/firestore';
 import AuthContext from '../../context/AuthContext';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import AddText from '../../components/trainer/addText';
 import styles from '../../styles/myprofile.module.css';
 
 const MyProfile = () => {
   const { myData, myUid } = useContext(AuthContext);
   const [file, setFile] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newName, setNewName] = useState(myData?.username || '');
 
   useEffect(() => {
-    file && handleImageUpload();
+    if (file) handleImageUpload();
   }, [file]);
 
   const handleImageUpload = async () => {
-    if (!file) return;
-
-    const fileName = new Date().getTime() + file.name;
+    const fileName = `${new Date().getTime()}_${file.name}`;
     const storageRef = ref(storage, fileName);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on(
       'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-      },
-      (error) => {
-        console.log(error);
-      },
+      null,
+      (error) => message.error('Error al subir la imagen'),
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
           await updateDoc(doc(db, 'users', myUid), { img: downloadURL });
+          message.success('Imagen actualizada');
         });
       }
     );
   };
 
-  const uploadProps = {
-    beforeUpload: (file) => {
-      setFile(file);
-      return false;
-    },
-    showUploadList: false,
+  const handleEditProfile = async () => {
+    try {
+      await updateDoc(doc(db, 'users', myUid), { username: newName });
+      message.success('Perfil actualizado');
+      setIsEditModalOpen(false);
+    } catch (error) {
+      message.error('Error al actualizar el perfil');
+    }
   };
 
   return (
     <div className={styles.myContainer}>
       {myData && (
         <Card
-
-
           actions={[
-            <Upload {...uploadProps}>
-              <Button icon={<UploadOutlined />}>Cambiar Imagen</Button>
-            </Upload>,
-            <Button icon={<EditOutlined />}>Editar</Button>
+            <Button icon={<UploadOutlined />} onClick={() => document.getElementById('file-upload').click()}>
+              Cambiar Imagen
+            </Button>,
+            <Button icon={<EditOutlined />} onClick={() => setIsEditModalOpen(true)}>
+              Editar
+            </Button>
           ]}
         >
           <Card.Meta
             avatar={<Avatar src={myData.img ? myData.img : '/face.jpg'} />}
             title={myData.username}
-            description={<div className={styles.myprofileinfo}><AddText /></div>}
           />
+          <input
+            type="file"
+            id="file-upload"
+            style={{ display: 'none' }}
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+          <Modal
+            title="Editar Perfil"
+            visible={isEditModalOpen}
+            onCancel={() => setIsEditModalOpen(false)}
+            onOk={handleEditProfile}
+          >
+            <Form layout="vertical">
+              <Form.Item label="Nombre">
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
+              </Form.Item>
+            </Form>
+          </Modal>
         </Card>
       )}
     </div>
