@@ -1,0 +1,31 @@
+/* myrates.module.css */
+
+.containerRates {
+  padding: 20px;
+}
+
+.rateCard {
+  max-width: 300px;
+  min-height: 400px;
+}
+
+.priceContainer {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.priceContainer h3 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.priceContainer span {
+  margin-left: 5px;
+  font-size: 16px;
+  color: #888;
+}
+
+.rateInfo {
+  margin-top: 20px;
+}

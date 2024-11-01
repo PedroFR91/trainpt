@@ -4,7 +4,6 @@ import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { PlusOutlined, SearchOutlined, FullscreenOutlined, CloseOutlined } from '@ant-design/icons';
 import UserList from '../../components/trainer/userList';
 import Calendar from '../../components/trainer/calendar';
-import TrainerProfile from '../../components/trainer/trainerProfile';
 import MyProfile from '../../components/trainer/myprofile';
 import Rates from '../../components/trainer/myrates';
 import PreviousImages from '../../components/trainer/previousClientsImg';
@@ -53,13 +52,11 @@ const TrainerProgram = () => {
       <Sider collapsible className={styles.sidebar}>
         <div className={styles.logo}>TuLogo</div>
         <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']} onClick={handleMenuClick}>
-          <Menu.Item key="1" icon={<IoChatbubbleEllipsesOutline />}>Dashboard</Menu.Item>
-          <Menu.Item key="2" icon={<PlusOutlined />}>Mis Clientes</Menu.Item>
-          <Menu.Item key="3" icon={<PlusOutlined />}>Calendario</Menu.Item>
-          <Menu.Item key="4" icon={<PlusOutlined />}>Perfil</Menu.Item> {/* Nuevo ítem para el perfil */}
-          <Menu.Item key="5" icon={<PlusOutlined />}>Formularios</Menu.Item>
-          <Menu.Item key="6" icon={<PlusOutlined />}>Rutinas</Menu.Item>
-          <Menu.Item key="7" icon={<PlusOutlined />}>Archivos</Menu.Item>
+          <Menu.Item key="1" icon={<IoChatbubbleEllipsesOutline />}>Home</Menu.Item>
+          <Menu.Item key="2" icon={<PlusOutlined />}>Mi Perfil</Menu.Item>
+          <Menu.Item key="3" icon={<PlusOutlined />}>Rutinas</Menu.Item>
+          <Menu.Item key="4" icon={<PlusOutlined />}>Formularios</Menu.Item>
+          <Menu.Item key="5" icon={<PlusOutlined />}>Archivos</Menu.Item>
         </Menu>
       </Sider>
       <Layout className="site-layout">
@@ -72,19 +69,44 @@ const TrainerProgram = () => {
           <Avatar style={{ marginLeft: 'auto' }} src="https://via.placeholder.com/150" />
         </Header>
         <Content style={{ margin: '16px' }}>
-          <div className={`${styles.siteLayoutBackground} ${expandedCard ? styles.expandedContent : ''}`} style={{ padding: expandedCard ? 0 : 24, minHeight: 360 }}>
-            {selectedMenu === '4' ? (
-              <Row gutter={[16, 16]} className={expandedCard ? styles.expandedContent : ''}>
+          <div
+            className={`${styles.siteLayoutBackground} ${expandedCard ? styles.expandedContent : ''}`}
+            style={{
+              padding: expandedCard ? 0 : 24,
+              minHeight: 360,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start', // Alinea los elementos al inicio (arriba)
+            }}
+          >
+            {selectedMenu === '1' ? (
+              expandedCard ? (
+                <Row justify="start" align="top" style={{ width: '100%' }}>
+                  {expandedCard === 'Mis Clientes' && renderCardContent('Mis Clientes', <UserList />)}
+                  {expandedCard === 'Calendario' && renderCardContent('Calendario', <Calendar />)}
+                </Row>
+              ) : (
+                <Row gutter={[16, 16]} align="top" style={{ width: '100%' }}>
+                  <Col xs={24} md={12} lg={12}>
+                    {renderCardContent('Mis Clientes', <UserList />)}
+                  </Col>
+                  <Col xs={24} md={12} lg={12}>
+                    {renderCardContent('Calendario', <Calendar />)}
+                  </Col>
+                </Row>
+              )
+            ) : selectedMenu === '2' ? (
+              <Row gutter={[16, 16]} align="top" style={{ width: '100%' }}>
                 {expandedCard ? (
                   <Col span={24}>
-                    {expandedCard === 'Perfil del Entrenador' && renderCardContent('Perfil del Entrenador', <MyProfile />)}
+                    {expandedCard === 'Mi Perfil' && renderCardContent('Mi Perfil', <MyProfile />)}
                     {expandedCard === 'Tarifas' && renderCardContent('Tarifas', <Rates />)}
                     {expandedCard === 'Imágenes Anteriores' && renderCardContent('Imágenes Anteriores', <PreviousImages />)}
                   </Col>
                 ) : (
                   <>
                     <Col xs={24} md={12} lg={8}>
-                      {renderCardContent('Perfil del Entrenador', <MyProfile />)}
+                      {renderCardContent('Mi Perfil', <MyProfile />)}
                     </Col>
                     <Col xs={24} md={12} lg={8}>
                       {renderCardContent('Tarifas', <Rates />)}
@@ -95,37 +117,15 @@ const TrainerProgram = () => {
                   </>
                 )}
               </Row>
-            ) : selectedMenu === '5' ? ( // Renderiza Forms
-              <Forms />
-            ) : selectedMenu === '6' ? ( // Renderiza Routines
+            ) : selectedMenu === '3' ? (
               <Routines />
-            ) : selectedMenu === '7' ? ( // Renderiza Files
+            ) : selectedMenu === '4' ? (
+              <Forms />
+            ) : selectedMenu === '5' ? (
               <Files />
-            ) : (
-              expandedCard ? (
-                <Row justify="center" align="middle" style={{ height: '100%' }}>
-                  {expandedCard === 'Mis Clientes' && renderCardContent('Mis Clientes', <UserList />)}
-                  {expandedCard === 'Calendario' && renderCardContent('Calendario', <Calendar />)}
-                  {expandedCard === 'Perfil del Entrenador' && renderCardContent('Perfil del Entrenador', <TrainerProfile myUid={myUid} />)}
-                </Row>
-              ) : (
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} md={12} lg={8}>
-                    {renderCardContent('Mis Clientes', <UserList />)}
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    {renderCardContent('Calendario', <Calendar />)}
-                  </Col>
-                  <Col xs={24} md={12} lg={8}>
-                    {renderCardContent('Perfil del Entrenador', <TrainerProfile myUid={myUid} />)}
-                  </Col>
-                </Row>
-              )
-            )}
+            ) : null}
           </div>
         </Content>
-
-
         <Footer style={{ textAlign: 'center' }}>Ant Design ©{new Date().getFullYear()} Created by Ant UED</Footer>
       </Layout>
     </Layout>

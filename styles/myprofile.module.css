@@ -77,6 +77,40 @@
   justify-content: space-around;
   margin-top: 10px;
 }
+/* myprofile.module.css */
+
+/* myprofile.module.css */
+
+.myContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profileCard {
+  width: 100%;
+}
+
+.coverContainer {
+  position: relative;
+}
+
+.coverImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.coverUploadButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.bioContainer {
+  margin-top: 20px;
+}
+
 @media screen and (max-width: 767px) {
   .myprofile {
     width: 100%;
