@@ -6,7 +6,7 @@ import AuthContext from '../../context/AuthContext';
 
 const { Option } = Select;
 
-const ExerciseCreator = ({ visible, setVisible, currentExercise }) => {
+const ExerciseCreator = ({ visible, setVisible, currentExercise, onClose }) => {
     const [form] = Form.useForm();
     const { myUid } = useContext(AuthContext);
     const [apiExercises, setApiExercises] = useState([]);

@@ -1,5 +1,3 @@
-// components/trainer/myrates.js
-
 import React, { useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Card,
@@ -20,7 +18,6 @@ import {
   PlusOutlined,
   ShareAltOutlined,
   CopyOutlined,
-  BgColorsOutlined,
 } from '@ant-design/icons';
 import { collection, deleteDoc, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase.config';
@@ -44,6 +41,7 @@ const MyRates = () => {
   const [form] = Form.useForm();
   const [editorValue, setEditorValue] = useState(initialValue);
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+  const displayEditor = useMemo(() => withReact(createEditor()), []);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
 
   useEffect(() => {
@@ -177,91 +175,80 @@ const MyRates = () => {
   }, []);
 
   return (
-    <div className={styles.containerRates}>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={() => openModal()}
-        style={{ marginBottom: 16 }}
+    <div style={{ width: '90%', margin: '0 auto' }}>
+      <Card
+        title="Mis Tarifas"
+        extra={
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => openModal()}
+          >
+            Añadir Tarifa
+          </Button>
+        }
       >
-        Añadir Tarifa
-      </Button>
-      {rates.length === 0 ? (
-        <p>No hay tarifas disponibles.</p>
-      ) : (
-        <Carousel
-          dots={false}
-          arrows
-          slidesToShow={3}
-          slidesToScroll={1}
-          infinite={false}
-          responsive={[
-            {
-              breakpoint: 1024, // Tablets y pantallas medianas
-              settings: {
-                slidesToShow: 2,
-                slidesToScroll: 1,
-                arrows: true,
-              },
-            },
-            {
-              breakpoint: 768, // Móviles
-              settings: {
-                slidesToShow: 1,
-                slidesToScroll: 1,
-                arrows: true,
-              },
-            },
-          ]}
-        >
-          {rates.map((rate) => (
-            <Card
-              key={rate.id}
-              className={styles.rateCard}
-              style={{
-                backgroundColor: rate.backgroundColor || '#ffffff',
-                borderRadius: '10px',
-                margin: '0 10px',
-              }}
-              actions={[
-                <Tooltip title="Compartir" key="share">
-                  <ShareAltOutlined onClick={() => handleShare(rate)} />
-                </Tooltip>,
-                <Tooltip title="Copiar" key="copy">
-                  <CopyOutlined onClick={() => handleShare(rate)} />
-                </Tooltip>,
-                <Tooltip title="Editar" key="edit">
-                  <EditOutlined onClick={() => openModal(rate)} />
-                </Tooltip>,
-                <Tooltip title="Eliminar" key="delete">
-                  <DeleteOutlined onClick={() => handleDeleteRate(rate.id)} />
-                </Tooltip>,
-              ]}
-            >
-              <Meta
-                title={<h2 style={{ textAlign: 'center' }}>{rate.ratename}</h2>}
-                description={
-                  <>
-                    <div className={styles.priceContainer}>
-                      <h3>{rate.rateprice} €</h3>
-                      <span>/{rate.ratefrequency}</span>
-                    </div>
-                    <div className={styles.rateInfo}>
-                      <Slate editor={editor} value={deserialize(rate.rateinfo)} onChange={() => { }}>
-                        <Editable
-                          readOnly
-                          renderElement={renderElement}
-                          renderLeaf={renderLeaf}
-                        />
-                      </Slate>
-                    </div>
-                  </>
-                }
-              />
-            </Card>
-          ))}
-        </Carousel>
-      )}
+        {rates.length === 0 ? (
+          <p>No hay tarifas disponibles.</p>
+        ) : (
+          <Carousel
+            dots={false}
+            arrows
+            slidesToShow={1}
+            slidesToScroll={1}
+            infinite={false}
+          >
+            {rates.map((rate) => (
+              <Card
+                key={rate.id}
+                className={styles.rateCard}
+                bodyStyle={{
+                  backgroundColor: rate.backgroundColor || '#ffffff',
+                }}
+                style={{
+                  borderRadius: '10px',
+                  margin: '0 10px',
+                }}
+                actions={[
+                  <Tooltip title="Compartir" key="share">
+                    <ShareAltOutlined onClick={() => handleShare(rate)} />
+                  </Tooltip>,
+                  <Tooltip title="Copiar" key="copy">
+                    <CopyOutlined onClick={() => handleShare(rate)} />
+                  </Tooltip>,
+                  <Tooltip title="Editar" key="edit">
+                    <EditOutlined onClick={() => openModal(rate)} />
+                  </Tooltip>,
+                  <Tooltip title="Eliminar" key="delete">
+                    <DeleteOutlined onClick={() => handleDeleteRate(rate.id)} />
+                  </Tooltip>,
+                ]}
+              >
+                <Meta
+                  title={<h2 style={{ textAlign: 'center' }}>{rate.ratename}</h2>}
+                  description={
+                    <>
+                      <div className={styles.priceContainer}>
+                        <h3>{rate.rateprice} €</h3>
+                        <span>/{rate.ratefrequency}</span>
+                      </div>
+                      <div className={styles.rateInfo}>
+                        <Slate editor={displayEditor} value={deserialize(rate.rateinfo)} onChange={() => { }}>
+                          <Editable
+                            readOnly
+                            renderElement={renderElement}
+                            renderLeaf={renderLeaf}
+                          />
+                        </Slate>
+                      </div>
+                    </>
+                  }
+                />
+              </Card>
+            ))}
+          </Carousel>
+        )}
+      </Card>
       <Modal
         title={editingRate ? 'Editar Tarifa' : 'Añadir Tarifa'}
         visible={modalVisible}

@@ -7,7 +7,7 @@ import AuthContext from '../../context/AuthContext';
 
 const { Step } = Steps;
 
-const TrainingCreator = ({ visible, setVisible, currentTraining }) => {
+const TrainingCreator = ({ visible, setVisible, currentTraining, onClose }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [form] = Form.useForm();
     const [exercises, setExercises] = useState([]);

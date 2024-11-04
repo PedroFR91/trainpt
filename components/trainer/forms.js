@@ -1,32 +1,32 @@
 // components/trainer/forms.js
-import React, { useContext, useEffect, useState } from "react";
-import { Button, Modal, Table, Select, message } from "antd";
+import React, { useContext, useEffect, useState } from 'react';
+import { Button, Table, Select, message, Row, Col, Switch, Card, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import Follow from "../client/Follow";
-import Initial from "../client/Initial";
-import { collection, onSnapshot, query, where, updateDoc, doc, deleteDoc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase.config";
-import AuthContext from "../../context/AuthContext";
-import styles from "../../styles/forms.module.css";
+import Follow from '../client/Follow';
+import Initial from '../client/Initial';
+import { collection, onSnapshot, query, where, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase.config';
+import AuthContext from '../../context/AuthContext';
+import styles from '../../styles/forms.module.css';
+import FormViewer from './FormViewer'; // Importa el nuevo componente
 
 const { Option } = Select;
+const { Title } = Typography;
 
 const Forms = () => {
     const { myUid } = useContext(AuthContext);
     const [myForm, setMyForm] = useState([]);
-    const [initialModalVisible, setInitialModalVisible] = useState(false);
-    const [followModalVisible, setFollowModalVisible] = useState(false);
-    const [shareModalVisible, setShareModalVisible] = useState(false);
     const [selectedFormId, setSelectedFormId] = useState(null);
     const [subscriptions, setSubscriptions] = useState([]);
     const [selectedSubscriptionId, setSelectedSubscriptionId] = useState(null);
+    const [currentFormType, setCurrentFormType] = useState('initial'); // 'initial' or 'follow'
 
     useEffect(() => {
         const unsub = onSnapshot(
-            collection(db, "forms"),
+            collection(db, 'forms'),
             (snapShot) => {
                 const list = snapShot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-                setMyForm(list.filter(form => form.trainerId === myUid));
+                setMyForm(list.filter((form) => form.trainerId === myUid));
             },
             (error) => console.error(error)
         );
@@ -34,9 +34,9 @@ const Forms = () => {
     }, [myUid]);
 
     useEffect(() => {
-        const q = query(collection(db, "subscriptions"), where("trainerId", "==", myUid));
+        const q = query(collection(db, 'subscriptions'), where('trainerId', '==', myUid));
         const unsubClients = onSnapshot(q, (snapshot) => {
-            const subscriptionData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const subscriptionData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
             setSubscriptions(subscriptionData);
         });
         return () => unsubClients();
@@ -44,39 +44,38 @@ const Forms = () => {
 
     const handleDeleteForm = async (id) => {
         try {
-            await deleteDoc(doc(db, "forms", id));
-            message.success("Formulario eliminado correctamente");
+            await deleteDoc(doc(db, 'forms', id));
+            message.success('Formulario eliminado correctamente');
         } catch (error) {
-            console.error("Error al eliminar formulario: ", error);
+            console.error('Error al eliminar formulario: ', error);
         }
     };
 
-    const handleShareForm = async () => {
-        if (!selectedSubscriptionId || !selectedFormId) return;
+    const handleShareForm = async (formId) => {
+        if (!selectedSubscriptionId || !formId) return;
         try {
-            const subscriptionDocRef = doc(db, "subscriptions", selectedSubscriptionId);
+            const subscriptionDocRef = doc(db, 'subscriptions', selectedSubscriptionId);
             const subscriptionSnapshot = await getDoc(subscriptionDocRef);
 
             if (subscriptionSnapshot.exists()) {
                 const subscriptionData = subscriptionSnapshot.data();
-                const formType = myForm.find(f => f.id === selectedFormId).type;
+                const formType = myForm.find((f) => f.id === formId).type;
                 const updatedFormIds = subscriptionData.formIds || [];
 
                 updatedFormIds.push({
-                    formId: selectedFormId,
+                    formId: formId,
                     type: formType,
                 });
 
                 await updateDoc(subscriptionDocRef, {
                     formIds: updatedFormIds,
-                    status: "form"
+                    status: 'form',
                 });
 
-                setShareModalVisible(false);
-                message.success("Formulario compartido correctamente");
+                message.success('Formulario compartido correctamente');
             }
         } catch (error) {
-            console.error("Error al compartir el formulario:", error);
+            console.error('Error al compartir el formulario:', error);
         }
     };
 
@@ -91,9 +90,26 @@ const Forms = () => {
             key: 'actions',
             render: (text, record) => (
                 <span>
-                    <Button type="link" onClick={() => handleDeleteForm(record.id)}>Eliminar</Button>
-                    <Button type="link" href={`/shared/forms/${record.id}`}>Ver</Button>
-                    <Button type="link" onClick={() => { setSelectedFormId(record.id); setShareModalVisible(true); }}>Compartir</Button>
+                    <Button type="link" onClick={() => handleDeleteForm(record.id)}>
+                        Eliminar
+                    </Button>
+                    <Button type="link" onClick={() => setSelectedFormId(record.id)}>
+                        Ver
+                    </Button>
+                    <Select
+                        placeholder="Compartir"
+                        style={{ width: 120 }}
+                        onChange={(value) => {
+                            setSelectedSubscriptionId(value);
+                            handleShareForm(record.id);
+                        }}
+                    >
+                        {subscriptions.map((subscription) => (
+                            <Option key={subscription.id} value={subscription.id}>
+                                {`Cliente: ${subscription.clientId}`}
+                            </Option>
+                        ))}
+                    </Select>
                 </span>
             ),
         },
@@ -101,60 +117,49 @@ const Forms = () => {
 
     return (
         <div className={styles.formLayout}>
-            <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setInitialModalVisible(true)}
-                style={{ marginBottom: 16 }}
-            >
-                Crear Formulario Inicial
-            </Button>
-            <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setFollowModalVisible(true)}
-                style={{ marginBottom: 16 }}
-            >
-                Crear Formulario de Seguimiento
-            </Button>
-            <Table columns={columns} dataSource={myForm} rowKey="id" />
+            <Row gutter={16}>
+                {/* Parte Izquierda: Lista de Formularios y Creador */}
+                <Col xs={24} md={12}>
+                    <Card className={styles.leftCard}>
+                        <Title level={3}>Formularios</Title>
+                        <Table
+                            columns={columns}
+                            dataSource={myForm}
+                            rowKey="id"
+                            pagination={{ pageSize: 5 }}
+                            onRow={(record) => ({
+                                onClick: () => setSelectedFormId(record.id),
+                            })}
+                        />
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, marginTop: 24 }}>
+                            <Title level={4} style={{ marginRight: 16 }}>
+                                Crear Formulario
+                            </Title>
+                            <Switch
+                                checkedChildren="Seguimiento"
+                                unCheckedChildren="Inicial"
+                                onChange={(checked) => setCurrentFormType(checked ? 'follow' : 'initial')}
+                            />
+                        </div>
+                        {currentFormType === 'initial' ? <Initial /> : <Follow />}
+                    </Card>
+                </Col>
 
-            <Modal
-                title="Crear Formulario Inicial"
-                open={initialModalVisible}
-                onCancel={() => setInitialModalVisible(false)}
-                footer={null}
-            >
-                <Initial setShowInitial={setInitialModalVisible} />
-            </Modal>
-
-            <Modal
-                title="Crear Formulario de Seguimiento"
-                open={followModalVisible}
-                onCancel={() => setFollowModalVisible(false)}
-                footer={null}
-            >
-                <Follow setShowFollow={setFollowModalVisible} />
-            </Modal>
-
-            <Modal
-                title="Compartir Formulario"
-                open={shareModalVisible}
-                onCancel={() => setShareModalVisible(false)}
-                onOk={handleShareForm}
-            >
-                <Select
-                    placeholder="Selecciona una suscripción"
-                    onChange={(value) => setSelectedSubscriptionId(value)}
-                    style={{ width: '100%' }}
-                >
-                    {subscriptions.map(subscription => (
-                        <Option key={subscription.id} value={subscription.id}>
-                            {`Cliente: ${subscription.clientId}, Estado: ${subscription.status}`}
-                        </Option>
-                    ))}
-                </Select>
-            </Modal>
+                {/* Parte Derecha: Formulario Seleccionado */}
+                <Col xs={24} md={12}>
+                    {selectedFormId ? (
+                        <FormViewer
+                            formId={selectedFormId}
+                            clientId={null} // Puedes ajustar esto según tus necesidades
+                            onClose={() => setSelectedFormId(null)}
+                        />
+                    ) : (
+                        <Card className={styles.rightCard}>
+                            <Title level={4}>Selecciona un formulario para ver los detalles</Title>
+                        </Card>
+                    )}
+                </Col>
+            </Row>
         </div>
     );
 };

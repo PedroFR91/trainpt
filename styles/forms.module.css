@@ -7,3 +7,30 @@
   flex-direction: column;
   align-items: center;
 }
+/* forms.module.css */
+
+.formLayout {
+  padding: 20px;
+}
+
+.leftCard {
+  padding: 20px;
+  background-color: #fff;
+}
+
+.rightCard {
+  padding: 20px;
+  background-color: #fff;
+}
+
+.ant-card {
+  border-radius: 8px;
+}
+
+.ant-card-body {
+  padding: 16px;
+}
+
+.ant-typography {
+  margin-bottom: 16px;
+}
