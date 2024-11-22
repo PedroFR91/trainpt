@@ -1,58 +1,80 @@
-import React, { useState, useContext, useMemo, useCallback } from 'react';
-import { Card, Avatar, Button, Modal, Form, message } from 'antd';
-import { UploadOutlined, EditOutlined } from '@ant-design/icons';
-import { db, storage } from '../../firebase.config';
-import { doc, updateDoc } from 'firebase/firestore';
+// components/trainer/MyProfile.js
+
+import React, { useState, useContext, useMemo, useEffect } from 'react';
+import { Card, Avatar, Button, Modal, Form, message, Upload, Rate, List } from 'antd';
+import {
+  UploadOutlined,
+  EditOutlined,
+  LikeOutlined,
+  StarOutlined,
+  MessageOutlined,
+  CopyOutlined,
+} from '@ant-design/icons';
 import AuthContext from '../../context/AuthContext';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import styles from '../../styles/myprofile.module.css';
 import { Slate, Editable, withReact } from 'slate-react';
 import { createEditor } from 'slate';
 import { withHistory } from 'slate-history';
 import { initialValue } from './initialValue';
 import Toolbar from './Toolbar';
 import { serialize, deserialize } from './utils';
+import { updateDocument, uploadFile, getDocument } from '../../services/firebase';
+import styles from '../../styles/myprofile.module.css';
 
 const MyProfile = () => {
   const { myData, myUid, setMyData } = useContext(AuthContext);
   const [profileFile, setProfileFile] = useState(null);
-  const [coverFile, setCoverFile] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState(initialValue);
+  const [background, setBackground] = useState(myData?.background || '');
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-  const displayEditor = useMemo(() => withReact(createEditor()), []);
   const [loading, setLoading] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    setBackground(myData?.background || '');
+    fetchTrainerData();
+  }, [myData]);
+
+  const fetchTrainerData = async () => {
+    const trainerDoc = await getDocument('trainers', myUid);
+    if (trainerDoc) {
+      const likes = trainerDoc.likes ? trainerDoc.likes.length : 0;
+      const ratings = trainerDoc.ratings || [];
+      const average =
+        ratings.length > 0
+          ? (ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length).toFixed(1)
+          : 0;
+      setLikesCount(likes);
+      setAverageRating(average);
+      setComments(trainerDoc.comments || []);
+    }
+  };
 
   const handleImageUpload = async (file, field) => {
-    const fileName = `${new Date().getTime()}_${file.name}`;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      'state_changed',
-      null,
-      (error) => message.error('Error al subir la imagen'),
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-          await updateDoc(doc(db, 'users', myUid), { [field]: downloadURL });
-          message.success('Imagen actualizada');
-          if (setMyData) {
-            setMyData(prevData => ({ ...prevData, [field]: downloadURL }));
-          }
-        });
+    try {
+      const filePath = `${field}/${myUid}/${file.name}`;
+      const downloadURL = await uploadFile(filePath, file);
+      await updateDocument('trainers', myUid, { [field]: downloadURL });
+      message.success('Imagen actualizada');
+      if (setMyData) {
+        setMyData((prevData) => ({ ...prevData, [field]: downloadURL }));
       }
-    );
+    } catch (error) {
+      message.error('Error al subir la imagen');
+    }
   };
 
   const handleEditProfile = async () => {
     setLoading(true);
     try {
       const updatedBio = serialize(editorValue);
-      await updateDoc(doc(db, 'users', myUid), { bio: updatedBio });
+      await updateDocument('trainers', myUid, { bio: updatedBio });
       message.success('Perfil actualizado');
       setIsEditModalOpen(false);
       if (setMyData) {
-        setMyData(prevData => ({ ...prevData, bio: updatedBio }));
+        setMyData((prevData) => ({ ...prevData, bio: updatedBio }));
       }
     } catch (error) {
       message.error('Error al actualizar el perfil');
@@ -60,48 +82,101 @@ const MyProfile = () => {
     setLoading(false);
   };
 
-  const renderElement = useCallback((props) => {
-    const { element, attributes, children } = props;
-    switch (element.type) {
-      case 'heading-one':
-        return <h1 {...attributes}>{children}</h1>;
-      case 'numbered-list':
-        return <ol {...attributes}>{children}</ol>;
-      case 'bulleted-list':
-        return <ul {...attributes}>{children}</ul>;
-      case 'list-item':
-        return <li {...attributes}>{children}</li>;
-      default:
-        return <p {...attributes}>{children}</p>;
+  const handleBackgroundChange = async (file) => {
+    if (file) {
+      await handleImageUpload(file, 'background');
     }
-  }, []);
-
-  const renderLeaf = useCallback((props) => {
-    const { leaf, attributes, children } = props;
-    let formattedText = children;
-
-    if (leaf.bold) formattedText = <strong>{formattedText}</strong>;
-    if (leaf.italic) formattedText = <em>{formattedText}</em>;
-    if (leaf.underline) formattedText = <u>{formattedText}</u>;
-    if (leaf.strikethrough) formattedText = <del>{formattedText}</del>;
-    if (leaf.code) formattedText = <code>{formattedText}</code>;
-
-    return <span {...attributes}>{formattedText}</span>;
-  }, []);
+  };
 
   const openEditModal = () => {
     setEditorValue(deserialize(myData?.bio || ''));
     setIsEditModalOpen(true);
   };
 
+  const beforeUploadProfile = (file) => {
+    setProfileFile(file);
+    return false; // Evita la subida automática
+  };
+
+  const handleProfileUpload = async () => {
+    if (profileFile) {
+      await handleImageUpload(profileFile, 'img');
+      setProfileFile(null);
+    }
+  };
+
+  const publicProfileUrl = `${window.location.origin}/trainer/${myUid}`;
+
   return (
-    <div className={styles.myContainer}>
+    <div className={styles.profileContainer}>
       {myData && (
-        <Card className={styles.profileCardSidebar}>
-          <Avatar size={100} src={myData.img ? myData.img : '/face.jpg'} />
-          <h2 className={styles.username}>{myData.username}</h2>
-          <p className={styles.bio}>{myData.bio || 'Sin información'}</p>
-          <Button icon={<EditOutlined />} onClick={openEditModal}>Editar</Button>
+        <Card className={styles.profileCard} hoverable>
+          <div
+            className={styles.coverContainer}
+            style={{ backgroundImage: `url(${background})` }}
+          >
+            <Upload
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleBackgroundChange(file);
+                return false;
+              }}
+            >
+              <Button
+                className={styles.coverUploadButton}
+                icon={<UploadOutlined />}
+                shape="circle"
+              />
+            </Upload>
+          </div>
+          <div className={styles.contentContainer}>
+            <Avatar size={100} src={myData.img ? myData.img : '/face.jpg'} />
+            <h2 className={styles.username}>{myData.username}</h2>
+            <Upload
+              beforeUpload={beforeUploadProfile}
+              showUploadList={false}
+              onChange={handleProfileUpload}
+            >
+              <Button icon={<UploadOutlined />}>Cambiar Imagen</Button>
+            </Upload>
+            <Button icon={<EditOutlined />} onClick={openEditModal}>
+              Editar Información
+            </Button>
+            {/* Mostrar likes, ratings y comentarios */}
+            <div className={styles.socialStats}>
+              <div>
+                <LikeOutlined /> {likesCount} Me gusta
+              </div>
+              <div>
+                <StarOutlined /> {averageRating} Valoración promedio
+              </div>
+            </div>
+            <div className={styles.commentsSection}>
+              <h3>Comentarios de los clientes</h3>
+              {comments.length > 0 ? (
+                <List
+                  dataSource={comments}
+                  renderItem={(item, index) => (
+                    <List.Item key={index}>
+                      <MessageOutlined /> {item.comment}
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <p>No hay comentarios aún.</p>
+              )}
+            </div>
+            <Button
+              icon={<CopyOutlined />}
+              onClick={() => {
+                navigator.clipboard.writeText(publicProfileUrl);
+                message.success('URL del perfil público copiada al portapapeles');
+              }}
+              style={{ marginTop: 10 }}
+            >
+              Copiar URL del Perfil Público
+            </Button>
+          </div>
           <Modal
             title="Editar Perfil"
             visible={isEditModalOpen}
@@ -112,9 +187,16 @@ const MyProfile = () => {
           >
             <Form layout="vertical">
               <Form.Item label="Información">
-                <Slate editor={editor} value={editorValue} onChange={(value) => setEditorValue(value)}>
+                <Slate
+                  editor={editor}
+                  value={editorValue}
+                  onChange={(value) => setEditorValue(value)}
+                >
                   <Toolbar />
-                  <Editable renderElement={renderElement} renderLeaf={renderLeaf} placeholder="Escribe tu información aquí..." />
+                  <Editable
+                    renderElement={(props) => <p {...props.attributes}>{props.children}</p>}
+                    placeholder="Escribe tu información aquí..."
+                  />
                 </Slate>
               </Form.Item>
             </Form>

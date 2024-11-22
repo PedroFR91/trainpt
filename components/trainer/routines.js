@@ -1,13 +1,13 @@
 // components/trainer/routines.js
 
 import React, { useState, useEffect, useContext } from 'react';
-import { Button, Modal, Space, Table, notification, Card, Row, Col } from 'antd';
+import { Button, Modal, Space, Table, notification, Card, Row, Col, Select } from 'antd'; // Importamos Select
 import { db } from "../../firebase.config";
-import { collection, deleteDoc, doc, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { collection, deleteDoc, doc, addDoc, serverTimestamp, onSnapshot, query, where, getDoc } from "firebase/firestore"; // Añadimos query, where, getDoc
 import ExerciseCreator from '../general/ExerciseCreator';
 import TrainingCreator from '../general/TrainingCreator';
 import RoutineCreator from '../general/RoutineCreator';
-import { FaRegEdit, FaRegTrashAlt, FaCopy, FaEye } from 'react-icons/fa';
+import { FaRegEdit, FaRegTrashAlt, FaCopy, FaEye, FaUserPlus } from 'react-icons/fa'; // Importamos FaUserPlus
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/routines.module.css';
 import { FullscreenOutlined, CloseOutlined } from '@ant-design/icons';
@@ -25,22 +25,32 @@ const Routines = () => {
     const [routines, setRoutines] = useState([]);
 
     useEffect(() => {
-        const unsubExercises = onSnapshot(collection(db, "exercises"), (snapshot) => {
-            setExercises(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-        });
-        const unsubTrainings = onSnapshot(collection(db, "trainings"), (snapshot) => {
-            setTrainings(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-        });
-        const unsubRoutines = onSnapshot(collection(db, "routines"), (snapshot) => {
-            setRoutines(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-        });
+        const unsubExercises = onSnapshot(
+            collection(db, `trainers/${myUid}/exercises`),
+            (snapshot) => {
+                setExercises(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+            }
+        );
+        const unsubTrainings = onSnapshot(
+            collection(db, `trainers/${myUid}/trainings`),
+            (snapshot) => {
+                setTrainings(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+            }
+        );
+        const unsubRoutines = onSnapshot(
+            collection(db, `trainers/${myUid}/routines`),
+            (snapshot) => {
+                setRoutines(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+            }
+        );
 
         return () => {
             unsubExercises();
             unsubTrainings();
             unsubRoutines();
         };
-    }, []);
+    }, [myUid]);
+
 
     const renderCardContent = (cardKey, component) => (
         <Card
@@ -67,23 +77,25 @@ const Routines = () => {
 
         const handleDelete = async (id) => {
             try {
-                await deleteDoc(doc(db, "exercises", id));
+                await deleteDoc(doc(db, `trainers/${myUid}/exercises`, id));
                 notification.success({ message: 'Ejercicio eliminado' });
             } catch (error) {
                 notification.error({ message: 'Error al eliminar el ejercicio' });
             }
         };
 
+
         const handleCopy = async (item) => {
             const newItem = { ...item, name: `${item.name} (copia)` };
             delete newItem.id;
             try {
-                await addDoc(collection(db, "exercises"), { ...newItem, timeStamp: serverTimestamp() });
+                await addDoc(collection(db, `trainers/${myUid}/exercises`), { ...newItem, timeStamp: serverTimestamp() });
                 notification.success({ message: 'Ejercicio copiado' });
             } catch (error) {
                 notification.error({ message: 'Error al copiar el ejercicio' });
             }
         };
+
 
         const columns = [
             { title: 'Nombre', dataIndex: 'name', key: 'name' },
@@ -147,23 +159,25 @@ const Routines = () => {
 
         const handleDelete = async (id) => {
             try {
-                await deleteDoc(doc(db, "trainings", id));
+                await deleteDoc(doc(db, `trainers/${myUid}/trainings`, id));
                 notification.success({ message: 'Entrenamiento eliminado' });
             } catch (error) {
                 notification.error({ message: 'Error al eliminar el entrenamiento' });
             }
         };
 
+
         const handleCopy = async (item) => {
             const newItem = { ...item, name: `${item.name} (copia)` };
             delete newItem.id;
             try {
-                await addDoc(collection(db, "trainings"), { ...newItem, timeStamp: serverTimestamp() });
+                await addDoc(collection(db, `trainers/${myUid}/trainings`), { ...newItem, timeStamp: serverTimestamp() });
                 notification.success({ message: 'Entrenamiento copiado' });
             } catch (error) {
                 notification.error({ message: 'Error al copiar el entrenamiento' });
             }
         };
+
 
         const columns = [
             { title: 'Nombre', dataIndex: 'name', key: 'name' },
@@ -225,23 +239,81 @@ const Routines = () => {
         const [currentRoutine, setCurrentRoutine] = useState(null);
         const [viewRoutineModal, setViewRoutineModal] = useState(false);
 
+        // Añadimos estados para asignar rutina
+        const [assignModalVisible, setAssignModalVisible] = useState(false);
+        const [selectedClients, setSelectedClients] = useState([]);
+        const [clients, setClients] = useState([]);
+
+        const { myData } = useContext(AuthContext);
+
+        useEffect(() => {
+            // Obtener lista de clientes activos
+            const unsubClients = onSnapshot(
+                query(collection(db, 'subscriptions'), where('trainerId', '==', myUid), where('status', '==', 'active')),
+                async (snapshot) => {
+                    const clientIds = snapshot.docs.map((doc) => doc.data().clientId);
+                    const clientData = [];
+                    for (const clientId of clientIds) {
+                        const clientDocRef = doc(db, 'clients', clientId);
+                        const clientDocSnap = await getDoc(clientDocRef);
+                        if (clientDocSnap.exists()) {
+                            clientData.push({ id: clientId, ...clientDocSnap.data() });
+                        }
+                    }
+                    setClients(clientData);
+                }
+            );
+
+            return () => {
+                unsubClients();
+            };
+        }, [myUid]);
+
         const handleDelete = async (id) => {
             try {
-                await deleteDoc(doc(db, "routines", id));
+                await deleteDoc(doc(db, `trainers/${myUid}/routines`, id));
                 notification.success({ message: 'Rutina eliminada' });
             } catch (error) {
                 notification.error({ message: 'Error al eliminar la rutina' });
             }
         };
 
+
         const handleCopy = async (item) => {
             const newItem = { ...item, name: `${item.name} (copia)` };
             delete newItem.id;
             try {
-                await addDoc(collection(db, "routines"), { ...newItem, timeStamp: serverTimestamp() });
+                await addDoc(collection(db, `trainers/${myUid}/routines`), { ...newItem, timeStamp: serverTimestamp() });
                 notification.success({ message: 'Rutina copiada' });
             } catch (error) {
                 notification.error({ message: 'Error al copiar la rutina' });
+            }
+        };
+
+        // Función para abrir el modal de asignación
+        const handleAssignRoutine = (routine) => {
+            setCurrentRoutine(routine);
+            setAssignModalVisible(true);
+        };
+
+        // Función para asignar la rutina a los clientes seleccionados
+        const handleAssign = async () => {
+            try {
+                for (const clientId of selectedClients) {
+                    await addDoc(collection(db, `clients/${clientId}/assignedRoutines`), {
+                        routineId: currentRoutine.id,
+                        assignedAt: serverTimestamp(),
+                        status: 'active',
+                        trainerId: myUid,
+                    });
+                }
+                notification.success({ message: 'Rutina asignada a los clientes seleccionados' });
+                setAssignModalVisible(false);
+                setSelectedClients([]);
+                setCurrentRoutine(null);
+            } catch (error) {
+                console.error('Error al asignar rutina:', error);
+                notification.error({ message: 'Error al asignar la rutina' });
             }
         };
 
@@ -255,6 +327,7 @@ const Routines = () => {
                         <FaEye onClick={() => { setCurrentRoutine(record); setViewRoutineModal(true); }} />
                         <FaRegEdit onClick={() => { setCurrentRoutine(record); setShowRoutineModal(true); }} />
                         <FaCopy onClick={() => handleCopy(record)} />
+                        <FaUserPlus onClick={() => handleAssignRoutine(record)} /> {/* Botón para asignar rutina */}
                         <FaRegTrashAlt onClick={() => handleDelete(record.id)} />
                     </Space>
                 ),
@@ -295,6 +368,31 @@ const Routines = () => {
                     destroyOnClose
                 >
                     {/* Aquí puedes agregar el contenido para ver los detalles de la rutina */}
+                </Modal>
+                {/* Modal para asignar rutina a clientes */}
+                <Modal
+                    title="Asignar Rutina a Clientes"
+                    visible={assignModalVisible}
+                    onCancel={() => { setAssignModalVisible(false); setSelectedClients([]); setCurrentRoutine(null); }}
+                    onOk={handleAssign}
+                    okText="Asignar"
+                    cancelText="Cancelar"
+                >
+                    <p>Selecciona los clientes a los que deseas asignar la rutina:</p>
+                    <Select
+                        mode="multiple"
+                        style={{ width: '100%' }}
+                        placeholder="Selecciona clientes"
+                        value={selectedClients}
+                        onChange={setSelectedClients}
+                        optionLabelProp="label"
+                    >
+                        {clients.map((client) => (
+                            <Select.Option key={client.id} value={client.id} label={client.username || client.email}>
+                                {client.username || client.email}
+                            </Select.Option>
+                        ))}
+                    </Select>
                 </Modal>
             </>
         );

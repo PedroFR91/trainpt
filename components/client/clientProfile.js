@@ -11,6 +11,7 @@ import styles from '../../styles/program.module.css';
 
 const ClientProfile = () => {
   const { myData, myUid } = useContext(AuthContext);
+  console.log(myData)
   const [file, setFile] = useState(null);
   const [isTrainersModalOpen, setIsTrainersModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
@@ -29,7 +30,7 @@ const ClientProfile = () => {
 
       if (!querySnapshot.empty) {
         const subscription = querySnapshot.docs[0].data();
-        const trainerRef = doc(db, 'users', subscription.trainerId);
+        const trainerRef = doc(db, 'clients', subscription.trainerId);
         const trainerDoc = await getDoc(trainerRef);
 
         if (trainerDoc.exists()) {
@@ -59,7 +60,7 @@ const ClientProfile = () => {
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-          await updateDoc(doc(db, 'users', myUid), { img: downloadURL });
+          await updateDoc(doc(db, 'clients', myUid), { img: downloadURL });
           message.success('Imagen actualizada correctamente');
         });
       }
@@ -68,7 +69,7 @@ const ClientProfile = () => {
 
   const handleEditProfile = async () => {
     try {
-      await updateDoc(doc(db, 'users', myUid), { name: newName });
+      await updateDoc(doc(db, 'clients', myUid), { name: newName });
       message.success('Perfil actualizado correctamente');
       setIsEditProfileModalOpen(false);
     } catch (error) {
@@ -100,8 +101,8 @@ const ClientProfile = () => {
         <div className={styles.trainerContainer}>
           {trainerData ? (
             <>
-              <Avatar src={trainerData.img || '/face.jpg'} size={40} />
-              <span className={styles.trainerName}>{trainerData.username || 'Entrenador'}</span>
+              <Avatar src={myData.img || '/face.jpg'} size={40} />
+              <span className={styles.trainerName}>{myData.username || 'Entrenador'}</span>
               <Button
                 type="link"
                 icon={<TeamOutlined />}
@@ -125,7 +126,7 @@ const ClientProfile = () => {
       ]}
     >
       <Card.Meta
-        title={myData?.name || 'Nombre del Cliente'}
+        title={myData?.username || 'Nombre del Cliente'}
         description={myData?.email || 'Email del Cliente'}
       />
       <FloatButton

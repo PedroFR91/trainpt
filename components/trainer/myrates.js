@@ -1,3 +1,5 @@
+// components/trainer/myrates.js
+
 import React, { useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Card,
@@ -19,8 +21,6 @@ import {
   ShareAltOutlined,
   CopyOutlined,
 } from '@ant-design/icons';
-import { collection, deleteDoc, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/myrates.module.css';
 import { Slate, Editable, withReact } from 'slate-react';
@@ -29,6 +29,12 @@ import { withHistory } from 'slate-history';
 import { initialValue } from './initialValue';
 import Toolbar from './Toolbar';
 import { serialize, deserialize } from './utils';
+import {
+  addSubcollectionDocument,
+  deleteSubcollectionDocument,
+  listenToSubcollection,
+  updateSubcollectionDocument,
+} from '../../services/firebase';
 
 const { Meta } = Card;
 const { Option } = Select;
@@ -47,11 +53,14 @@ const MyRates = () => {
   useEffect(() => {
     if (!myUid) return;
 
-    const unsub = onSnapshot(
-      collection(db, 'rates'),
-      (snapShot) => {
-        const list = snapShot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setRates(list.filter((rate) => rate.rateid === myUid));
+    const unsub = listenToSubcollection(
+      'trainers',
+      myUid,
+      'rates',
+      [],
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setRates(list);
       },
       (error) => console.error('Error fetching rates: ', error)
     );
@@ -85,18 +94,16 @@ const MyRates = () => {
         const rateData = {
           ...values,
           rateinfo: serialize(editorValue),
-          rateid: myUid,
           backgroundColor: selectedColor,
         };
 
         if (editingRate) {
           // Actualizar tarifa existente
-          await updateDoc(doc(db, 'rates', editingRate.id), rateData);
+          await updateSubcollectionDocument('trainers', myUid, 'rates', editingRate.id, rateData);
           message.success('Tarifa actualizada');
         } else {
           // Crear nueva tarifa
-          const newDocRef = doc(collection(db, 'rates'));
-          await setDoc(newDocRef, { ...rateData, id: newDocRef.id });
+          await addSubcollectionDocument('trainers', myUid, 'rates', rateData);
           message.success('Tarifa añadida');
         }
 
@@ -113,7 +120,7 @@ const MyRates = () => {
 
   const handleDeleteRate = async (id) => {
     try {
-      await deleteDoc(doc(db, 'rates', id));
+      await deleteSubcollectionDocument('trainers', myUid, 'rates', id);
       message.success('Tarifa eliminada');
     } catch (error) {
       console.error('Error deleting rate: ', error);

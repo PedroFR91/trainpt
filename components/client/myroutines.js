@@ -1,179 +1,184 @@
-import { collection, onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-import styles from '../../styles/train.module.css';
+// components/client/myroutines.js
+
+import React, { useEffect, useState, useContext } from 'react';
+import { Collapse, Carousel, Card, Spin, message } from 'antd';
 import { db } from '../../firebase.config';
-import { Modal, Box, Typography } from '@mui/material';
-import { Button, List } from "antd";
-const myroutines = ({ myUid }) => {
-    const [routines, setRoutines] = useState([]);
-    const [selectedTraining, setSelectedTraining] = useState(null);
-    const [realRepsValues, setRealRepsValues] = useState({});
-    const [open, setOpen] = useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+import { collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import AuthContext from '../../context/AuthContext';
+import styles from '../../styles/routines.module.css';
+
+const { Panel } = Collapse;
+
+const MyRoutines = () => {
+    const { myUid } = useContext(AuthContext);
+    const [assignedRoutines, setAssignedRoutines] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'routines'), (snapshot) => {
-            const routinesData = [];
-            snapshot.forEach((doc) => {
-                const routineData = doc.data();
-                routineData.id = doc.id;
-                routinesData.push(routineData);
-            });
-            setRoutines(routinesData);
+        if (!myUid) return;
+        const assignedRoutinesRef = collection(db, `clients/${myUid}/assignedRoutines`);
+
+        const unsubscribe = onSnapshot(assignedRoutinesRef, async (snapshot) => {
+            const routinesData = await Promise.all(
+                snapshot.docs.map(async (docSnap) => {
+                    const assignedRoutine = docSnap.data();
+
+                    // Agregar logs para depuración
+                    console.log('assignedRoutine:', assignedRoutine);
+
+                    const trainerId = assignedRoutine.trainerId;
+                    const routineId = assignedRoutine.routineId;
+
+                    console.log('trainerId:', trainerId);
+                    console.log('routineId:', routineId);
+
+                    // Verificar si trainerId y routineId están definidos
+                    if (!trainerId || !routineId) {
+                        message.error('Datos incompletos en la rutina asignada');
+                        return null;
+                    }
+
+                    // Obtener detalles de la rutina desde el entrenador
+                    const routineRef = doc(db, `trainers/${trainerId}/routines`, routineId);
+                    const routineSnap = await getDoc(routineRef);
+                    if (routineSnap.exists()) {
+                        const routineData = routineSnap.data();
+                        return {
+                            id: docSnap.id,
+                            ...assignedRoutine,
+                            routineData,
+                        };
+                    } else {
+                        message.error('No se pudo obtener la rutina asignada');
+                        return null;
+                    }
+                })
+            );
+            // Filtrar las rutinas que son null
+            setAssignedRoutines(routinesData.filter((routine) => routine !== null));
+            setLoading(false);
         });
 
-        return () => {
-            unsubscribe();
-        };
-    }, []);
-    const showTraining = async (training) => {
-        const trainingRef = doc(db, 'trainings', training.id);
-        const trainingDoc = await getDoc(trainingRef);
-        if (trainingDoc.exists()) {
-            const trainingData = trainingDoc.data();
-            setSelectedTraining(trainingData);
-            handleOpen(); // Abrir el modal
-        }
-    };
+        return () => unsubscribe();
+    }, [myUid]);
 
-    const closeTraining = () => {
-        setSelectedTraining(null);
-        handleClose()
-    };
-    const handleRealRepsChange = (e, supersetIndex, exerciseIndex) => {
-        const updatedValue = e.target.value;
 
-        // Actualiza el estado local con el nuevo valor de realReps
-        setRealRepsValues((prevValues) => ({
-            ...prevValues,
-            [`${exerciseIndex}-${supersetIndex}`]: updatedValue,
-        }));
-    };
-    // Agrega una función para actualizar realReps en Firebase
-    const updateRealRepsInFirebase = async (supersetIndex, exerciseIndex) => {
-        if (selectedTraining && selectedTraining.id) {
-            // Asegúrate de que selectedTraining sea una copia actualizada
-            const updatedTraining = { ...selectedTraining };
-            const exercise = updatedTraining.exercises[exerciseIndex];
+    if (loading) {
+        return <Spin size="large" />;
+    }
 
-            // Actualiza el valor de realReps en el ejercicio
-            exercise.superset[supersetIndex].realReps = realRepsValues[`${exerciseIndex}-${supersetIndex}`];
+    if (assignedRoutines.length === 0) {
+        return <p>No tienes rutinas asignadas.</p>;
+    }
 
-            // Actualiza el documento de entrenamiento en Firebase
-            const trainingRef = doc(db, 'trainings', selectedTraining.id);
-            await updateDoc(trainingRef, selectedTraining);
-
-            // No es necesario actualizar el estado local aquí, Firebase debería reflejar los cambios en tiempo real
-        }
-    };
-    const style = {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '100%',
-        height: '100%',
-        bgcolor: 'background.paper',
-        boxShadow: 24,
-        p: 4,
-        overflow: 'scroll', // Para permitir desplazamiento si el contenido es largo
-    };
-
-    console.log(routines)
     return (
-        <div className={styles.myRoutine}>
-            {routines
-                .filter((routine) => routine.link === myUid)
-                .map((routine, index) => (
-                    <div key={routine.id} className={styles.routine}>
-                        <div>
-                            <div>
-                                <p>
-                                    <span>Rutina {index + 1}</span>
-                                    <span>{routine.name}</span>
-                                </p>
-                                <p>
-                                    <span>Descripción:</span>
-                                    <span>{routine.description}</span>
-                                </p>
-                            </div>
-                            <div>
-                                <p>Entrenamientos</p>
-                                <ul>
-                                    {routine.trainings.map((training) => (
-                                        <div key={training.id}>
-                                            <span>Nombre Entrenamiento:</span>
-                                            <span>{training.name}</span>
-                                            <Button type="primary" onClick={() => showTraining(training)}>Ver Entrenamiento</Button>
-
-                                        </div>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                        <Modal
-                            open={open}
-                            onClose={handleClose}
-                            aria-labelledby="modal-modal-title"
-                            aria-describedby="modal-modal-description"
-                        >
-                            <Box sx={style}>
-                                {selectedTraining && (
-                                    <Box>
-                                        <Typography id="modal-modal-title" variant="h6" component="h2">
-                                            Entrenamiento Seleccionado: {selectedTraining.name}
-                                        </Typography>
-                                        <Button onClick={closeTraining} style={{ marginBottom: '20px' }}>Cerrar Entrenamiento</Button>
-                                        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                                            Descripción: {selectedTraining.description}
-                                        </Typography>
-                                        <Typography sx={{ mt: 2, fontWeight: 'bold' }}>
-                                            Ejercicios:
-                                        </Typography>
-                                        {selectedTraining.exercises.map((exercise, exerciseIndex) => (
-                                            <Box key={exerciseIndex} sx={{ mt: 1 }}>
-                                                <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                                                    {exerciseIndex + 1}. {exercise.name}
-                                                </Typography>
-                                                <Typography variant="body2">
-                                                    Descripción: {exercise.description}
-                                                </Typography>
-                                                {exercise.superset && exercise.superset.length > 0 && (
-                                                    <Box>
-                                                        <Typography sx={{ mt: 1 }}>Supersets:</Typography>
-                                                        {exercise.superset.map((superset, supersetIndex) => (
-                                                            <Box key={supersetIndex} display="flex" alignItems="center" sx={{ mt: 1 }}>
-                                                                <Typography variant="body2" sx={{ width: '100px' }}>
-                                                                    Repetitions: {superset.repetitions}
-                                                                </Typography>
-                                                                <input
-                                                                    type="text"
-                                                                    value={realRepsValues[`${exerciseIndex}-${supersetIndex}`] || ""}
-                                                                    onChange={(e) => handleRealRepsChange(e, supersetIndex, exerciseIndex)}
-                                                                    style={{ marginRight: '10px', width: '30px' }}
-                                                                />
-                                                                <Button
-                                                                    variant="contained"
-                                                                    onClick={() => updateRealRepsInFirebase(supersetIndex, exerciseIndex)}
-                                                                >
-                                                                    Actualizar
-                                                                </Button>
-                                                            </Box>
-                                                        ))}
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                )}
-                            </Box>
-                        </Modal>
-
-                    </div>
-                ))}
+        <div className={styles.myRoutines}>
+            {assignedRoutines.map((assignedRoutine) => (
+                <Card key={assignedRoutine.id} title={assignedRoutine.routineData.name}>
+                    <p>{assignedRoutine.routineData.description}</p>
+                    <Collapse accordion>
+                        {Object.entries(assignedRoutine.routineData.days).map(([day, dayData]) => (
+                            <Panel header={day} key={day}>
+                                <TrainingCarousel
+                                    trainerId={assignedRoutine.trainerId}
+                                    trainingId={dayData.trainingId}
+                                />
+                            </Panel>
+                        ))}
+                    </Collapse>
+                </Card>
+            ))}
         </div>
     );
 };
 
-export default myroutines
+const TrainingCarousel = ({ trainerId, trainingId }) => {
+    const [trainingData, setTrainingData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTrainingData = async () => {
+            const trainingRef = doc(db, `trainers/${trainerId}/trainings`, trainingId);
+            const trainingSnap = await getDoc(trainingRef);
+            if (trainingSnap.exists()) {
+                setTrainingData(trainingSnap.data());
+            } else {
+                message.error('No se pudo obtener el entrenamiento asignado');
+            }
+            setLoading(false);
+        };
+        fetchTrainingData();
+    }, [trainerId, trainingId]);
+
+    if (loading) {
+        return <Spin size="large" />;
+    }
+
+    if (!trainingData) {
+        return <p>No se pudo cargar el entrenamiento.</p>;
+    }
+
+    // Verificar que trainingData.exercises es un arreglo
+    if (!Array.isArray(trainingData.exercises) || trainingData.exercises.length === 0) {
+        return <p>No hay ejercicios disponibles.</p>;
+    }
+
+    return (
+        <div>
+            <h3>{trainingData.name}</h3>
+            <p>{trainingData.description}</p>
+            <Carousel dots={false}>
+                {trainingData.exercises.map((exercise, index) => {
+                    console.log('Exercise:', exercise);
+                    const exerciseId = exercise.exerciseId || exercise.id; // Use 'id' if 'exerciseId' is not present
+                    if (!exerciseId) {
+                        console.error('Exercise ID is missing for exercise:', exercise);
+                        return null; // Skip this exercise
+                    }
+                    return (
+                        <ExerciseCard
+                            key={index}
+                            trainerId={trainerId}
+                            exerciseId={exerciseId}
+                            exerciseData={exercise}
+                        />
+                    );
+                })}
+
+            </Carousel>
+        </div>
+    );
+};
+
+const ExerciseCard = ({ trainerId, exerciseId, exerciseData }) => {
+    const [exerciseDetails, setExerciseDetails] = useState(null);
+
+    useEffect(() => {
+        const fetchExerciseDetails = async () => {
+            const exerciseRef = doc(db, `trainers/${trainerId}/exercises`, exerciseId);
+            const exerciseSnap = await getDoc(exerciseRef);
+            if (exerciseSnap.exists()) {
+                setExerciseDetails(exerciseSnap.data());
+            } else {
+                message.error('No se pudo obtener los detalles del ejercicio');
+            }
+        };
+        fetchExerciseDetails();
+    }, [trainerId, exerciseId]);
+
+    if (!exerciseDetails) {
+        return <Spin size="large" />;
+    }
+
+    return (
+        <Card title={exerciseDetails.name}>
+            <p>{exerciseDetails.description}</p>
+            <p>
+                Series: {exerciseData.sets} - Repeticiones: {exerciseData.reps} - Descanso: {exerciseData.rest} seg
+            </p>
+            {/* Aquí puedes agregar más detalles o elementos multimedia del ejercicio */}
+        </Card>
+    );
+};
+
+export default MyRoutines;

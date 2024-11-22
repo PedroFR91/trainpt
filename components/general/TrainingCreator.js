@@ -17,10 +17,13 @@ const TrainingCreator = ({ visible, setVisible, currentTraining, onClose }) => {
     const { myUid } = useContext(AuthContext);
 
     useEffect(() => {
-        const unsubExercises = onSnapshot(collection(db, "exercises"), (snapshot) => {
-            const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setExercises(list);
-        });
+        const unsubExercises = onSnapshot(
+            collection(db, `trainers/${myUid}/exercises`),
+            (snapshot) => {
+                const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+                setExercises(list);
+            }
+        );
 
         if (currentTraining) {
             form.setFieldsValue(currentTraining);
@@ -33,7 +36,8 @@ const TrainingCreator = ({ visible, setVisible, currentTraining, onClose }) => {
         }
 
         return () => unsubExercises();
-    }, [currentTraining, form, visible]);
+    }, [currentTraining, form, myUid]);
+
 
     const nextStep = () => {
         if (currentStep === 0) {
@@ -52,47 +56,52 @@ const TrainingCreator = ({ visible, setVisible, currentTraining, onClose }) => {
     };
 
     const handleFinish = async () => {
-        try {
-            const values = form.getFieldsValue(['name', 'description']);
-            const selectedExercisesData = selectedExercises.map(id => exercises.find(ex => ex.id === id));
-            const trainingData = {
-                name: values.name.trim(),
-                description: values.description.trim(),
-                exercises: selectedExercisesData,
-                series: series,
-                trainerId: myUid,
-                timeStamp: serverTimestamp(),
-            };
+        // Obtener los valores del formulario
+        const values = form.getFieldsValue(['name', 'description']);
+        const selectedExercisesData = selectedExercises.map(id => exercises.find(ex => ex.id === id));
+        const trainingData = {
+            name: values.name.trim(),
+            description: values.description.trim(),
+            exercises: selectedExercisesData,
+            series: series,
+            trainerId: myUid,
+            timeStamp: serverTimestamp(),
+        };
 
-            if (currentTraining) {
-                await updateDoc(doc(db, 'trainings', currentTraining.id), trainingData);
+        try {
+            // Si es un entrenamiento existente, actualizarlo
+            if (currentTraining && currentTraining.id) {
+                await updateDoc(doc(db, `trainers/${myUid}/trainings`, currentTraining.id), trainingData);
                 notification.success({
                     message: 'Entrenamiento actualizado',
                     description: 'El entrenamiento ha sido actualizado exitosamente',
-                    placement: 'topRight',
                 });
             } else {
-                await addDoc(collection(db, 'trainings'), trainingData);
+                // Si es un entrenamiento nuevo, crearlo
+                await addDoc(collection(db, `trainers/${myUid}/trainings`), trainingData);
                 notification.success({
                     message: 'Entrenamiento creado',
                     description: 'El entrenamiento ha sido creado exitosamente',
-                    placement: 'topRight',
                 });
             }
+
+            // Resetear campos después de guardar
             form.resetFields();
             setSelectedExercises([]);
             setSeries({});
-            setVisible(false);
-            setCurrentStep(0); // Reiniciar al primer paso
+            setVisible(false); // Cierra el TrainingCreator modal
+
+            // Importante: No cerrar RoutineCreator
         } catch (error) {
             console.error("Error al guardar el entrenamiento: ", error);
             notification.error({
                 message: 'Error',
                 description: 'Hubo un error al guardar el entrenamiento',
-                placement: 'topRight',
             });
         }
     };
+
+
 
     const handleSeriesChange = (exerciseId, serieIndex, field, value) => {
         setSeries(prevSeries => {

@@ -1,11 +1,16 @@
+// components/trainer/PreviousClientsImg.js
+
 import React, { useContext, useEffect, useState } from 'react';
 import { Upload, Button, Card, List, Modal, Input, message } from 'antd';
-import { UploadOutlined, DeleteOutlined, EditOutlined, ShareAltOutlined } from '@ant-design/icons';
-import { doc, setDoc, serverTimestamp, onSnapshot, collection, deleteDoc } from 'firebase/firestore';
-import { db, storage } from '../../firebase.config';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { UploadOutlined, DeleteOutlined, ShareAltOutlined } from '@ant-design/icons';
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/myprofile.module.css';
+import {
+  listenToSubcollection,
+  deleteSubcollectionDocument,
+  uploadFile,
+  addSubcollectionDocument,
+} from '../../services/firebase';
 
 const PreviousClientsImg = () => {
   const { myUid } = useContext(AuthContext);
@@ -16,11 +21,16 @@ const PreviousClientsImg = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'clientPhotos'),
+    if (!myUid) return;
+
+    const unsub = listenToSubcollection(
+      'trainers',
+      myUid,
+      'clientPhotos',
+      [],
       (snapShot) => {
         const list = snapShot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setPhotos(list.filter(photo => photo.trainerId === myUid));
+        setPhotos(list);
       },
       (error) => console.error(error)
     );
@@ -28,23 +38,17 @@ const PreviousClientsImg = () => {
   }, [myUid]);
 
   const handleUpload = async (file, period) => {
-    const fileName = new Date().getTime() + file.name;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    await uploadTask;
-    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+    const filePath = `trainers/${myUid}/clientPhotos/${file.name}`;
+    const downloadURL = await uploadFile(filePath, file);
 
     const photoData = {
-      trainerId: myUid,
       clientName,
       period,
       img: downloadURL,
       title: file.name,
-      createdAt: serverTimestamp(),
     };
 
-    await setDoc(doc(collection(db, 'clientPhotos')), photoData);
+    await addSubcollectionDocument('trainers', myUid, 'clientPhotos', photoData);
   };
 
   const handleSubmit = async () => {
@@ -53,23 +57,36 @@ const PreviousClientsImg = () => {
       return;
     }
 
-    await handleUpload(fileBefore, 'before');
-    await handleUpload(fileAfter, 'after');
+    try {
+      await handleUpload(fileBefore, 'before');
+      await handleUpload(fileAfter, 'after');
 
-    setClientName('');
-    setFileBefore(null);
-    setFileAfter(null);
-    setModalVisible(false);
+      setClientName('');
+      setFileBefore(null);
+      setFileAfter(null);
+      setModalVisible(false);
+      message.success('Imágenes subidas correctamente.');
+    } catch (error) {
+      console.error('Error uploading images: ', error);
+      message.error('Error al subir las imágenes.');
+    }
   };
 
-  const handleDeleteGroup = async (client) => {
-    const photosToDelete = photos.filter(photo => photo.clientName === client);
+  const handleDeleteGroup = async (clientName) => {
+    try {
+      const photosToDelete = photos.filter(photo => photo.clientName === clientName);
 
-    await Promise.all(
-      photosToDelete.map(async (photo) => {
-        await deleteDoc(doc(db, 'clientPhotos', photo.id));
-      })
-    );
+      await Promise.all(
+        photosToDelete.map(async (photo) => {
+          await deleteSubcollectionDocument('trainers', myUid, 'clientPhotos', photo.id);
+        })
+      );
+
+      message.success('Fotos eliminadas correctamente.');
+    } catch (error) {
+      console.error('Error deleting photos: ', error);
+      message.error('Error al eliminar las fotos.');
+    }
   };
 
   const handleShare = (photo) => {
@@ -107,7 +124,6 @@ const PreviousClientsImg = () => {
                       <div className={styles.imgTitle}>{photo.title}</div>
                       <div className={styles.imgActions}>
                         <Button icon={<ShareAltOutlined />} onClick={() => handleShare(photo)} />
-                        <Button icon={<EditOutlined />} />
                         <Button icon={<DeleteOutlined />} onClick={() => handleDeleteGroup(photo.clientName)} />
                       </div>
                     </div>
@@ -123,14 +139,21 @@ const PreviousClientsImg = () => {
         onCancel={() => setModalVisible(false)}
         onOk={handleSubmit}
       >
+        <Input
+          placeholder="Nombre del cliente"
+          value={clientName}
+          onChange={(e) => setClientName(e.target.value)}
+          style={{ marginBottom: 16 }}
+        />
         <Upload
           beforeUpload={(file) => {
             setFileBefore(file);
             return false;
           }}
           fileList={fileBefore ? [fileBefore] : []}
+          listType="picture"
         >
-          <Button icon={<UploadOutlined />}>Subir imagen antes</Button>
+          <Button icon={<UploadOutlined />}>Subir imagen "Antes"</Button>
         </Upload>
         <Upload
           beforeUpload={(file) => {
@@ -138,14 +161,11 @@ const PreviousClientsImg = () => {
             return false;
           }}
           fileList={fileAfter ? [fileAfter] : []}
+          listType="picture"
+          style={{ marginTop: 16 }}
         >
-          <Button icon={<UploadOutlined />}>Subir imagen después</Button>
+          <Button icon={<UploadOutlined />}>Subir imagen "Después"</Button>
         </Upload>
-        <Input
-          placeholder="Nombre del cliente"
-          value={clientName}
-          onChange={(e) => setClientName(e.target.value)}
-        />
       </Modal>
     </div>
   );

@@ -14,33 +14,35 @@ import {
     Row,
     Col,
     Carousel,
+    message,
 } from 'antd';
 import { db, storage } from '../../firebase.config';
 import styles from '../../styles/sharedform.module.css';
 import { AiOutlineUpload } from 'react-icons/ai';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import AuthContext from '../../context/AuthContext';
-import { getDoc, doc, updateDoc } from 'firebase/firestore';
+import { getDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const { TextArea } = Input;
 const { Title } = Typography;
 
-const FormViewer = ({ formId, clientId, onClose }) => {
-    const { myUid } = useContext(AuthContext);
+const FormViewer = ({ trainerId, formId, clientId, assignedFormId, onClose }) => {
+    const { myUid, role } = useContext(AuthContext);
 
     const [formStructure, setFormStructure] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
+    const [form] = Form.useForm();
 
     useEffect(() => {
         const fetchFormStructure = async () => {
             try {
-                const formDocRef = doc(db, 'forms', formId);
+                // Obtener el formulario desde la subcolección correcta
+                const formDocRef = doc(db, 'trainers', trainerId, 'forms', formId);
                 const formSnapshot = await getDoc(formDocRef);
                 if (formSnapshot.exists()) {
                     setFormStructure(formSnapshot.data());
-                    // Verificar si el usuario es el cliente (tiene el mismo id que el clientId)
-                    setIsClient(clientId === myUid);
+                    setIsClient(role === 'client' && clientId === myUid);
                 } else {
                     console.log('Formulario no encontrado');
                 }
@@ -51,64 +53,66 @@ const FormViewer = ({ formId, clientId, onClose }) => {
             }
         };
 
-        if (formId) {
+        if (formId && trainerId) {
             fetchFormStructure();
         }
-    }, [formId, clientId, myUid]);
+    }, [formId, trainerId, myUid, role, clientId]);
 
-    const handleUpdate = async () => {
-        try {
-            const formRef = doc(db, 'forms', formId);
-            await updateDoc(formRef, { ...formStructure });
-            console.log('Formulario actualizado');
-            if (onClose) onClose(); // Cerrar el formulario después de guardar
-        } catch (error) {
-            console.error('Error al actualizar el formulario:', error);
+    const handleFinish = async (values) => {
+        if (isClient) {
+            try {
+                // Subir fotos solo si son nuevas
+                const uploadPhoto = async (file) => {
+                    if (!file) return null; // Validar que el archivo no sea nulo
+                    const name = new Date().getTime() + file.name;
+                    const storageRef = ref(storage, name);
+                    const uploadTask = uploadBytesResumable(storageRef, file);
+
+                    await uploadTask;
+                    return await getDownloadURL(uploadTask.snapshot.ref);
+                };
+
+                const frontUrl =
+                    values.front && values.front.fileList && values.front.fileList[0]?.originFileObj
+                        ? await uploadPhoto(values.front.fileList[0].originFileObj)
+                        : formStructure.front;
+
+                const backUrl =
+                    values.back && values.back.fileList && values.back.fileList[0]?.originFileObj
+                        ? await uploadPhoto(values.back.fileList[0].originFileObj)
+                        : formStructure.back;
+
+                const lateralUrl =
+                    values.lateral && values.lateral.fileList && values.lateral.fileList[0]?.originFileObj
+                        ? await uploadPhoto(values.lateral.fileList[0].originFileObj)
+                        : formStructure.lateral;
+
+                // Actualizar el formulario asignado en la colección de formularios asignados
+                const assignedFormRef = doc(db, 'clients', myUid, 'assignedForms', assignedFormId);
+                await updateDoc(assignedFormRef, {
+                    responses: {
+                        ...values,
+                        front: frontUrl,
+                        back: backUrl,
+                        lateral: lateralUrl,
+                    },
+                    status: 'completed',
+                    completedAt: serverTimestamp(),
+                });
+
+                message.success('Formulario enviado correctamente');
+                if (onClose) onClose();
+            } catch (error) {
+                console.error('Error al enviar el formulario:', error);
+                message.error('Error al enviar el formulario');
+            }
         }
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormStructure((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const handleMeasuresChange = (e) => {
-        const { name, value } = e.target;
-        setFormStructure((prev) => ({
-            ...prev,
-            measures: {
-                ...prev.measures,
-                [name]: value,
-            },
-        }));
-    };
-
-    const uploadPhoto = async (fieldName, file) => {
-        const name = new Date().getTime() + file.name;
-        const storageRef = ref(storage, name);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        try {
-            await uploadTask;
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-            setFormStructure((prev) => ({
-                ...prev,
-                [fieldName]: downloadURL,
-            }));
-        } catch (error) {
-            console.error(`Error al subir ${fieldName}:`, error);
-        }
-    };
 
     if (loading || !formStructure) {
         return <Spin size="large" className={styles.loadingSpinner} />;
     }
-
-    const isInitial = formStructure.type === 'Inicial';
 
     // Preparar las fotos para el carrusel
     const photos = [
@@ -124,16 +128,11 @@ const FormViewer = ({ formId, clientId, onClose }) => {
                     <Form
                         layout="vertical"
                         className={styles.form}
-                        onFinish={isClient ? handleUpdate : null}
+                        form={form}
+                        onFinish={handleFinish}
                     >
                         <Title level={3}>
-                            {isClient
-                                ? isInitial
-                                    ? 'Formulario Inicial (Editable)'
-                                    : 'Formulario de Seguimiento (Editable)'
-                                : isInitial
-                                    ? 'Formulario Inicial (Vista de Solo Lectura)'
-                                    : 'Formulario de Seguimiento (Vista de Solo Lectura)'}
+                            {formStructure.name}
                         </Title>
 
                         {/* Sección de Datos Generales y Medidas en dos columnas */}
@@ -142,106 +141,183 @@ const FormViewer = ({ formId, clientId, onClose }) => {
                                 {/* Columna de Datos Generales */}
                                 <Col xs={24} md={12}>
                                     <Title level={4}>Datos Generales</Title>
-                                    <Form.Item label="Nombre">
-                                        <Input
-                                            name="name"
-                                            value={formStructure.name || ''}
-                                            onChange={handleChange}
-                                            readOnly={!isClient}
-                                        />
+                                    <Form.Item label="Nombre" name="name" initialValue={formStructure.name}>
+                                        <Input disabled={!isClient} />
                                     </Form.Item>
-                                    <Form.Item label="Sexo">
-                                        <Select
-                                            name="gender"
-                                            value={formStructure.gender || ''}
-                                            onChange={(value) =>
-                                                setFormStructure({ ...formStructure, gender: value })
-                                            }
-                                            disabled={!isClient}
-                                        >
+                                    <Form.Item label="Sexo" name="gender" initialValue={formStructure.gender}>
+                                        <Select disabled={!isClient}>
                                             <Select.Option value="man">Hombre</Select.Option>
                                             <Select.Option value="woman">Mujer</Select.Option>
+                                            <Select.Option value="other">Otro</Select.Option>
                                         </Select>
                                     </Form.Item>
-                                    {isInitial && (
-                                        <>
-                                            <Form.Item label="Peso">
-                                                <Input
-                                                    name="weight"
-                                                    value={formStructure.weight || ''}
-                                                    onChange={handleChange}
-                                                    readOnly={!isClient}
-                                                />
-                                            </Form.Item>
-                                            <Form.Item label="Altura">
-                                                <Input
-                                                    name="height"
-                                                    value={formStructure.height || ''}
-                                                    onChange={handleChange}
-                                                    readOnly={!isClient}
-                                                />
-                                            </Form.Item>
-                                        </>
-                                    )}
-                                    {!isInitial && (
-                                        <Form.Item label="Peso actual">
-                                            <Input
-                                                name="currentWeight"
-                                                value={formStructure.currentWeight || ''}
-                                                onChange={handleChange}
-                                                readOnly={!isClient}
-                                            />
+                                    <Form.Item label="Peso" name="weight" initialValue={formStructure.weight}>
+                                        <Input disabled={!isClient} />
+                                    </Form.Item>
+                                    {formStructure.type === 'initial' && (
+                                        <Form.Item label="Altura" name="height" initialValue={formStructure.height}>
+                                            <Input disabled={!isClient} />
                                         </Form.Item>
                                     )}
+                                    {formStructure.generalFields && formStructure.generalFields.map((field, index) => (
+                                        <Form.Item
+                                            key={index}
+                                            label={field.label}
+                                            name={`general_${index}`}
+                                        >
+                                            {field.type === 'input' && <Input disabled={!isClient} />}
+                                            {field.type === 'textarea' && <TextArea disabled={!isClient} />}
+                                            {field.type === 'select' && (
+                                                <Select disabled={!isClient}>
+                                                    {field.options.map((option, idx) => (
+                                                        <Select.Option key={idx} value={option}>
+                                                            {option}
+                                                        </Select.Option>
+                                                    ))}
+                                                </Select>
+                                            )}
+                                        </Form.Item>
+                                    ))}
                                 </Col>
 
                                 {/* Columna de Medidas */}
                                 <Col xs={24} md={12}>
                                     <Title level={4}>Medidas</Title>
-                                    <Row gutter={16}>
-                                        {Object.keys(formStructure.measures || {}).map((key) => (
-                                            <Col xs={24} sm={12} key={key}>
-                                                <Form.Item
-                                                    label={key.charAt(0).toUpperCase() + key.slice(1)}
-                                                >
-                                                    <Input
-                                                        name={key}
-                                                        value={formStructure.measures[key] || ''}
-                                                        onChange={handleMeasuresChange}
-                                                        readOnly={!isClient}
-                                                    />
-                                                </Form.Item>
-                                            </Col>
-                                        ))}
-                                    </Row>
+                                    {formStructure.measures && Object.keys(formStructure.measures).map((key) => (
+                                        <Form.Item
+                                            key={key}
+                                            label={key.charAt(0).toUpperCase() + key.slice(1)}
+                                            name={`measure_${key}`}
+                                            initialValue={formStructure.measures[key]}
+                                        >
+                                            <Input disabled={!isClient} />
+                                        </Form.Item>
+                                    ))}
                                 </Col>
                             </Row>
                         </Card>
 
                         {/* Sección de Dieta */}
-                        <Card type="inner" title="Dieta" className={styles.sectionCard}>
-                            <Form.Item label="Intolerancias">
-                                <TextArea
-                                    name="intolerances"
-                                    value={formStructure.intolerances || ''}
-                                    onChange={handleChange}
-                                    readOnly={!isClient}
-                                    rows={3}
-                                />
-                            </Form.Item>
-                            <Form.Item label="Preferencias de comida">
-                                <TextArea
-                                    name="preferredFoods"
-                                    value={formStructure.preferredFoods || ''}
-                                    onChange={handleChange}
-                                    readOnly={!isClient}
-                                    rows={3}
-                                />
-                            </Form.Item>
-                        </Card>
+                        {formStructure.dietFields && formStructure.dietFields.length > 0 && (
+                            <Card type="inner" title="Dieta" className={styles.sectionCard}>
+                                {formStructure.dietFields.map((field, index) => (
+                                    <Form.Item
+                                        key={index}
+                                        label={field.label}
+                                        name={`diet_${index}`}
+                                    >
+                                        {field.type === 'input' && <Input disabled={!isClient} />}
+                                        {field.type === 'textarea' && <TextArea disabled={!isClient} />}
+                                        {field.type === 'select' && (
+                                            <Select disabled={!isClient}>
+                                                {field.options.map((option, idx) => (
+                                                    <Select.Option key={idx} value={option}>
+                                                        {option}
+                                                    </Select.Option>
+                                                ))}
+                                            </Select>
+                                        )}
+                                    </Form.Item>
+                                ))}
+                            </Card>
+                        )}
 
-                        {/* Sección de Fotos con Carrusel */}
-                        {photos.length > 0 && (
+                        {/* Sección de Entrenamiento */}
+                        {formStructure.trainingFields && formStructure.trainingFields.length > 0 && (
+                            <Card type="inner" title="Entrenamiento" className={styles.sectionCard}>
+                                {formStructure.trainingFields.map((field, index) => (
+                                    <Form.Item
+                                        key={index}
+                                        label={field.label}
+                                        name={`training_${index}`}
+                                    >
+                                        {field.type === 'input' && <Input disabled={!isClient} />}
+                                        {field.type === 'textarea' && <TextArea disabled={!isClient} />}
+                                        {field.type === 'select' && (
+                                            <Select disabled={!isClient}>
+                                                {field.options.map((option, idx) => (
+                                                    <Select.Option key={idx} value={option}>
+                                                        {option}
+                                                    </Select.Option>
+                                                ))}
+                                            </Select>
+                                        )}
+                                    </Form.Item>
+                                ))}
+                            </Card>
+                        )}
+
+                        {/* Sección de Fotos */}
+                        {isClient && (
+                            <Card type="inner" title="Fotos" className={styles.sectionCard}>
+                                <Form.Item label="Frente" name="front">
+                                    <Upload
+                                        listType="picture-card"
+                                        beforeUpload={() => false}
+                                        defaultFileList={
+                                            formStructure.front ? [{
+                                                uid: '-1',
+                                                name: 'front.png',
+                                                status: 'done',
+                                                url: formStructure.front,
+                                            }] : []
+                                        }
+                                    >
+                                        {formStructure.front ? null : (
+                                            <div>
+                                                <AiOutlineUpload />
+                                                <div style={{ marginTop: 8 }}>Subir</div>
+                                            </div>
+                                        )}
+                                    </Upload>
+                                </Form.Item>
+                                <Form.Item label="Espalda" name="back">
+                                    <Upload
+                                        listType="picture-card"
+                                        beforeUpload={() => false}
+                                        defaultFileList={
+                                            formStructure.back ? [{
+                                                uid: '-1',
+                                                name: 'back.png',
+                                                status: 'done',
+                                                url: formStructure.back,
+                                            }] : []
+                                        }
+                                    >
+                                        {formStructure.back ? null : (
+                                            <div>
+                                                <AiOutlineUpload />
+                                                <div style={{ marginTop: 8 }}>Subir</div>
+                                            </div>
+                                        )}
+                                    </Upload>
+                                </Form.Item>
+                                <Form.Item label="Lateral" name="lateral">
+                                    <Upload
+                                        listType="picture-card"
+                                        beforeUpload={() => false}
+                                        defaultFileList={
+                                            formStructure.lateral ? [{
+                                                uid: '-1',
+                                                name: 'lateral.png',
+                                                status: 'done',
+                                                url: formStructure.lateral,
+                                            }] : []
+                                        }
+                                    >
+                                        {formStructure.lateral ? null : (
+                                            <div>
+                                                <AiOutlineUpload />
+                                                <div style={{ marginTop: 8 }}>Subir</div>
+                                            </div>
+                                        )}
+                                    </Upload>
+                                </Form.Item>
+                            </Card>
+                        )}
+
+                        {/* Mostrar fotos en carrusel si no es cliente */}
+                        {!isClient && photos.length > 0 && (
                             <Card type="inner" title="Fotos" className={styles.sectionCard}>
                                 <Carousel dots={true}>
                                     {photos.map((photo, index) => (
@@ -258,11 +334,11 @@ const FormViewer = ({ formId, clientId, onClose }) => {
                             </Card>
                         )}
 
-                        {/* Botón de Guardar para el Cliente */}
+                        {/* Botón de Enviar para el Cliente */}
                         {isClient && (
                             <Form.Item>
                                 <Button type="primary" htmlType="submit">
-                                    Guardar
+                                    Enviar
                                 </Button>
                             </Form.Item>
                         )}

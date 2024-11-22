@@ -1,83 +1,107 @@
+// components/trainer/UserList.js
+
 import React, { useEffect, useState, useContext } from 'react';
-import { List, Avatar, Skeleton } from 'antd';
-import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../../firebase.config';
+import { List, Avatar, Skeleton, message, Button } from 'antd';
 import AuthContext from '../../context/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import styles from '../../styles/trainerhome.module.css'; // Reutilizando el mismo archivo de estilos
+import styles from '../../styles/trainerhome.module.css';
+import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase.config';
+import Chat from '../chat/Chat';
 
 const UserList = () => {
   const [initLoading, setInitLoading] = useState(true);
   const [clients, setClients] = useState([]);
-  const [myData, setMyData] = useState(null);
-  const { myUid } = useContext(AuthContext);
+  const [selectedClientId, setSelectedClientId] = useState(null);
+  const { myUid, myData } = useContext(AuthContext);
   const router = useRouter();
 
   useEffect(() => {
-    // Obtener la información del usuario actual
-    if (myUid) {
-      const userRef = doc(db, 'users', myUid);
-      const unsubUser = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          setMyData(doc.data());
-        }
-      });
+    if (!myUid) return;
 
-      // Obtener la lista de clientes
-      const q = query(collection(db, 'subscriptions'), where('trainerId', '==', myUid));
-      const unsubClients = onSnapshot(q, (querySnapshot) => {
-        const clientIds = querySnapshot.docs.map((doc) => doc.data().clientId);
+    // Escuchar las suscripciones activas del entrenador
+    const q = query(
+      collection(db, 'subscriptions'),
+      where('trainerId', '==', myUid),
+      where('status', '==', 'active')
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      async (subscriptionSnapshot) => {
+        const clientIds = subscriptionSnapshot.docs.map((doc) => doc.data().clientId);
         if (clientIds.length > 0) {
-          const clientsQuery = query(collection(db, 'users'), where('id', 'in', clientIds));
-          onSnapshot(clientsQuery, (clientsSnapshot) => {
-            const clientsData = clientsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setClients(clientsData);
-            setInitLoading(false);
-          });
+          const clientsData = [];
+          for (const clientId of clientIds) {
+            const clientDoc = await getDoc(doc(db, 'clients', clientId));
+            if (clientDoc.exists()) {
+              clientsData.push({ id: clientId, ...clientDoc.data() });
+            }
+          }
+          setClients(clientsData);
+          setInitLoading(false);
         } else {
           setClients([]);
           setInitLoading(false);
         }
-      });
+      },
+      (error) => {
+        console.error(error);
+        message.error('Error al obtener las suscripciones');
+        setInitLoading(false);
+      }
+    );
 
-      return () => {
-        unsubUser();
-        unsubClients();
-      };
-    }
+    return () => unsubscribe();
   }, [myUid]);
 
-  const handleSubscriptionLinkClick = (userId) => {
+  const handleSubscriptionLinkClick = (clientId) => {
     if (myData) {
       localStorage.setItem('userRole', myData.role);
     }
-    router.push(`/shared/subcription/${userId}`);
+    router.push(`/shared/subscription/${clientId}`);
+  };
+
+  const closeChat = () => {
+    setSelectedClientId(null);
   };
 
   return (
-    <List
-      className={styles.containerList} // Aplicando el contenedor personalizado
-      loading={initLoading}
-      itemLayout="horizontal"
-      dataSource={clients}
-      renderItem={(client) => (
-        <List.Item
-          actions={[
-            <Link href={`/shared/clients/${client.id}`} key="view">Ver Info</Link>,
-            <span onClick={() => handleSubscriptionLinkClick(client.id)} key="subscription">Ver Suscripción</span>
-          ]}
-        >
-          <Skeleton avatar title={false} loading={initLoading} active>
-            <List.Item.Meta
-              avatar={<Avatar src={client.img || '/face.jpg'} />}
-              title={client.username}
-              description="Información del cliente"
-            />
-          </Skeleton>
-        </List.Item>
+    <div>
+      <List
+        className={styles.containerList}
+        loading={initLoading}
+        itemLayout="horizontal"
+        dataSource={clients}
+        renderItem={(client) => (
+          <List.Item
+            actions={[
+              <Link href={`/shared/clients/${client.id}`} key="view">Ver Info</Link>,
+              <Button key="chat" onClick={() => setSelectedClientId(client.id)}>
+                {selectedClientId === client.id ? 'Chat Abierto' : 'Chatear'}
+              </Button>,
+            ]}
+          >
+            <Skeleton avatar title={false} loading={initLoading} active>
+              <List.Item.Meta
+                avatar={<Avatar src={client.img || '/face.jpg'} />}
+                title={client.username}
+                description="Información del cliente"
+              />
+            </Skeleton>
+          </List.Item>
+        )}
+      />
+      {selectedClientId && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>Chat con el cliente</h3>
+            <Button onClick={closeChat}>X</Button>
+          </div>
+          <Chat selectedClientId={selectedClientId} />
+        </div>
       )}
-    />
+    </div>
   );
 };
 

@@ -21,7 +21,7 @@ const RoutineCreator = ({ visible, setVisible, currentRoutine, setCurrentRoutine
 
   useEffect(() => {
     const unsubTrainings = onSnapshot(
-      query(collection(db, "trainings"), where("trainerId", "==", myUid)),
+      collection(db, `trainers/${myUid}/trainings`),
       (snapshot) => {
         const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setTrainings(list);
@@ -42,10 +42,9 @@ const RoutineCreator = ({ visible, setVisible, currentRoutine, setCurrentRoutine
       setDayTrainingMap({});
     }
 
-    return () => {
-      unsubTrainings();
-    };
+    return () => unsubTrainings();
   }, [currentRoutine, form, myUid]);
+
 
   const nextStep = () => {
     form.validateFields()
@@ -68,28 +67,23 @@ const RoutineCreator = ({ visible, setVisible, currentRoutine, setCurrentRoutine
       description: values.description.trim(),
       trainerId: myUid,
       days: Object.fromEntries(
-        Object.entries(dayTrainingMap).map(([day, trainingId]) => [
-          day,
-          { trainingId },
-        ])
+        Object.entries(dayTrainingMap).map(([day, trainingId]) => [day, { trainingId }])
       ),
       timeStamp: serverTimestamp(),
     };
 
     try {
       if (currentRoutine) {
-        await updateDoc(doc(db, 'routines', currentRoutine.id), routineData);
+        await updateDoc(doc(db, `trainers/${myUid}/routines`, currentRoutine.id), routineData);
         notification.success({
           message: 'Rutina actualizada',
           description: 'La rutina ha sido actualizada exitosamente',
-          placement: 'topRight',
         });
       } else {
-        await addDoc(collection(db, 'routines'), routineData);
+        await addDoc(collection(db, `trainers/${myUid}/routines`), routineData);
         notification.success({
           message: 'Rutina creada',
           description: 'La rutina ha sido creada exitosamente',
-          placement: 'topRight',
         });
       }
       form.resetFields();
@@ -102,10 +96,10 @@ const RoutineCreator = ({ visible, setVisible, currentRoutine, setCurrentRoutine
       notification.error({
         message: 'Error',
         description: 'Hubo un error al guardar la rutina',
-        placement: 'topRight',
       });
     }
   };
+
 
   const handleSubmit = () => {
     form.validateFields()
@@ -143,6 +137,14 @@ const RoutineCreator = ({ visible, setVisible, currentRoutine, setCurrentRoutine
       [day]: trainingId,
     }));
   };
+  const handleEditTraining = (training) => {
+    const copiedTraining = { ...training, name: `${training.name} (copia)` };
+    delete copiedTraining.id;
+    setEditingTraining(copiedTraining);
+    setShowNewTrainingModal(true); // Solo abrir el modal de edición
+  };
+
+
 
   if (loading) {
     return <Spin size="large" />;
@@ -205,11 +207,24 @@ const RoutineCreator = ({ visible, setVisible, currentRoutine, setCurrentRoutine
                     titles={['Disponibles', 'Seleccionados']}
                     targetKeys={selectedTrainings}
                     onChange={setSelectedTrainings}
-                    render={item => item.name}
+                    render={item => (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{item.name}</span>
+                        <Button
+                          type="link"
+                          onClick={() => handleEditTraining(item)}
+                          style={{ marginLeft: '8px' }}
+                        >
+                          Editar
+                        </Button>
+                      </div>
+                    )}
                     rowKey={(item) => item.id}
                   />
                 </Space>
               </div>
+
+
               {/* Paso 3: Asignar Días y Entrenamientos */}
               <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
                 {daysOfWeek.map((day) => (
