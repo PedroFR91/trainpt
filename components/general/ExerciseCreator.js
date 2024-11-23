@@ -68,19 +68,18 @@ const ExerciseCreator = ({ visible, setVisible, currentExercise, onClose }) => {
                 timeStamp: serverTimestamp(),
             };
 
-            // Agregar el GIF si se seleccionó un ejercicio desde la API
             if (selectedApiExercise) {
                 exerciseData.gifUrl = selectedApiExercise.gifUrl;
             }
 
             if (currentExercise) {
-                await updateDoc(doc(db, 'exercises', currentExercise.id), exerciseData);
+                await updateDoc(doc(db, `trainers/${myUid}/exercises`, currentExercise.id), exerciseData);
                 notification.success({
                     message: 'Ejercicio actualizado',
                     description: 'El ejercicio ha sido actualizado exitosamente',
                 });
             } else {
-                await addDoc(collection(db, 'exercises'), exerciseData);
+                await addDoc(collection(db, `trainers/${myUid}/exercises`), exerciseData);
                 notification.success({
                     message: 'Ejercicio creado',
                     description: 'El ejercicio ha sido creado exitosamente',
@@ -96,6 +95,7 @@ const ExerciseCreator = ({ visible, setVisible, currentExercise, onClose }) => {
             });
         }
     };
+
 
     return (
         <Modal

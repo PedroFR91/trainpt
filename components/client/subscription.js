@@ -7,17 +7,17 @@ import {
     updateDoc,
     doc,
 } from "firebase/firestore";
-import { db, storage } from "../../../firebase.config";
+import { db, storage } from '../../firebase.config'
 import { useRouter } from "next/router";
-import AuthContext from "../../../context/AuthContext";
+import AuthContext from "../../context/AuthContext";
 import { Card, Button, Modal, Select, message, Form, Upload, Input } from "antd";
-import Chat from "../../../components/chat/chat";
-import Initial from "../../../components/client/Initial";
-import RoutineCreator from "../../../components/general/RoutineCreator";
-import styles from "../../../styles/Subscription.module.css";
+import Chat from "../chat/chat";
+
+import RoutineCreator from "../general/RoutineCreator";
+import styles from "../../styles/Subscription.module.css";
 import Link from "next/link";
 import { UploadOutlined } from "@ant-design/icons";
-import RoutineDetails from "../../../components/general/RoutineDetails";
+import RoutineDetails from "../general/RoutineDetails";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 
 const { Meta } = Card;

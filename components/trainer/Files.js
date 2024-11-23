@@ -1,16 +1,5 @@
-// components/trainer/Files.js
-
 import React, { useEffect, useState, useContext } from "react";
 import styles from "../../styles/files.module.css";
-import { db, storage } from "../../firebase.config";
-import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    onSnapshot,
-    serverTimestamp,
-} from "firebase/firestore";
 import {
     Card,
     Image,
@@ -42,14 +31,18 @@ import {
     FaFileWord,
     FaFileAlt,
 } from "react-icons/fa";
-import ReactPlayer from "react-player"; // Asegúrate de tener instalado react-player
+import ReactPlayer from "react-player";
 import AuthContext from "../../context/AuthContext";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import {
+    addSubcollectionDocument,
+    deleteSubcollectionDocument,
+    listenToSubcollection,
+    uploadFile,
+} from '../../services/firebase';
 
 const { Meta } = Card;
 const { Dragger } = Upload;
 const { TabPane } = Tabs;
-const { TextArea } = Input;
 
 const Files = () => {
     const { myUid } = useContext(AuthContext);
@@ -61,22 +54,22 @@ const Files = () => {
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [newVideoTitle, setNewVideoTitle] = useState("");
 
-    // Estados para Archivos
+    // Estados para Archivos y Fotos
     const [fileList, setFileList] = useState([]);
-
-    // Estados para Fotos
     const [photoList, setPhotoList] = useState([]);
 
     // Cargar Videos
     useEffect(() => {
-        const unsub = onSnapshot(
-            collection(db, "videos"),
+        if (!myUid) return;
+
+        const unsub = listenToSubcollection(
+            'trainers',
+            myUid,
+            'videos',
+            [],
             (snapshot) => {
-                let list = snapshot.docs
-                    .map((doc) => ({ id: doc.id, ...doc.data() }))
-                    .filter((video) => video.trainerId === myUid);
+                const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                 setVideoList(list);
-                // Solo establecer selectedVideo si no hay uno seleccionado
                 if (list.length > 0 && selectedVideo === null) {
                     setSelectedVideo(list[0]);
                 }
@@ -86,49 +79,53 @@ const Files = () => {
         return () => unsub();
     }, [myUid]);
 
-    // Asegurarse de que selectedVideo siempre esté actualizado
+    // Actualizar `selectedVideo` cuando cambian los videos
     useEffect(() => {
-        if (videoList.length > 0 && selectedVideo === null) {
+        if (videoList.length > 0 && !selectedVideo) {
             setSelectedVideo(videoList[0]);
         } else if (videoList.length === 0) {
             setSelectedVideo(null);
         }
     }, [videoList]);
 
-    // Cargar Archivos
+    // Cargar Archivos y Fotos
     useEffect(() => {
-        const unsub = onSnapshot(
-            collection(db, "files"),
+        if (!myUid) return;
+
+        const unsubFiles = listenToSubcollection(
+            'trainers',
+            myUid,
+            'files',
+            [],
             (snapshot) => {
-                let list = snapshot.docs
-                    .map((doc) => ({ id: doc.id, ...doc.data() }))
-                    .filter((file) => file.trainerId === myUid);
+                const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                 setFileList(list);
             },
             (error) => console.log(error)
         );
-        return () => unsub();
-    }, [myUid]);
 
-    // Cargar Fotos
-    useEffect(() => {
-        const unsub = onSnapshot(
-            collection(db, "photos"),
+        const unsubPhotos = listenToSubcollection(
+            'trainers',
+            myUid,
+            'photos',
+            [],
             (snapshot) => {
-                let list = snapshot.docs
-                    .map((doc) => ({ id: doc.id, ...doc.data() }))
-                    .filter((photo) => photo.trainerId === myUid);
+                const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                 setPhotoList(list);
             },
             (error) => console.log(error)
         );
-        return () => unsub();
+
+        return () => {
+            unsubFiles();
+            unsubPhotos();
+        };
     }, [myUid]);
 
-    // Funciones para eliminar elementos
+    // Función para eliminar videos, archivos y fotos
     const deleteVideo = async (videoId) => {
         try {
-            await deleteDoc(doc(db, "videos", videoId));
+            await deleteSubcollectionDocument('trainers', myUid, 'videos', videoId);
             message.success("Video eliminado correctamente");
             if (selectedVideo && selectedVideo.id === videoId) {
                 setSelectedVideo(null);
@@ -141,7 +138,7 @@ const Files = () => {
 
     const deleteFile = async (fileId) => {
         try {
-            await deleteDoc(doc(db, "files", fileId));
+            await deleteSubcollectionDocument('trainers', myUid, 'files', fileId);
             message.success("Archivo eliminado correctamente");
         } catch (error) {
             console.error("Error al eliminar archivo:", error);
@@ -151,7 +148,7 @@ const Files = () => {
 
     const deletePhoto = async (photoId) => {
         try {
-            await deleteDoc(doc(db, "photos", photoId));
+            await deleteSubcollectionDocument('trainers', myUid, 'photos', photoId);
             message.success("Foto eliminada correctamente");
         } catch (error) {
             console.error("Error al eliminar foto:", error);
@@ -159,7 +156,7 @@ const Files = () => {
         }
     };
 
-    // Funciones para añadir elementos
+    // Función para añadir videos
     const addVideo = async () => {
         if (!newVideoUrl || !ReactPlayer.canPlay(newVideoUrl)) {
             message.error("Por favor ingresa una URL de video válida");
@@ -170,10 +167,8 @@ const Files = () => {
             const videoData = {
                 url: newVideoUrl,
                 title: newVideoTitle || "Sin título",
-                trainerId: myUid,
-                timeStamp: serverTimestamp(),
             };
-            await addDoc(collection(db, "videos"), videoData);
+            await addSubcollectionDocument('trainers', myUid, 'videos', videoData);
             message.success("Video añadido correctamente");
             setUploadVideoModalVisible(false);
             setNewVideoUrl("");
@@ -190,31 +185,16 @@ const Files = () => {
         multiple: true,
         customRequest: async ({ file, onSuccess, onError }) => {
             try {
-                const storageRef = ref(storage, `files/${myUid}/${file.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-
-                uploadTask.on(
-                    "state_changed",
-                    () => { },
-                    (error) => {
-                        console.error("Error subiendo archivo:", error);
-                        message.error("Error al subir archivo");
-                        onError(error);
-                    },
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        const fileData = {
-                            name: file.name,
-                            url: downloadURL,
-                            type: file.type,
-                            trainerId: myUid,
-                            timeStamp: serverTimestamp(),
-                        };
-                        await addDoc(collection(db, "files"), fileData);
-                        message.success(`${file.name} subido correctamente.`);
-                        onSuccess("ok");
-                    }
-                );
+                const filePath = `trainers/${myUid}/files/${file.name}`;
+                const downloadURL = await uploadFile(filePath, file);
+                const fileData = {
+                    name: file.name,
+                    url: downloadURL,
+                    type: file.type,
+                };
+                await addSubcollectionDocument('trainers', myUid, 'files', fileData);
+                message.success(`${file.name} subido correctamente.`);
+                onSuccess("ok");
             } catch (error) {
                 console.error("Error subiendo archivo:", error);
                 onError(error);
@@ -228,30 +208,15 @@ const Files = () => {
         accept: "image/*",
         customRequest: async ({ file, onSuccess, onError }) => {
             try {
-                const storageRef = ref(storage, `photos/${myUid}/${file.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
-
-                uploadTask.on(
-                    "state_changed",
-                    () => { },
-                    (error) => {
-                        console.error("Error subiendo foto:", error);
-                        message.error("Error al subir foto");
-                        onError(error);
-                    },
-                    async () => {
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        const photoData = {
-                            name: file.name,
-                            url: downloadURL,
-                            trainerId: myUid,
-                            timeStamp: serverTimestamp(),
-                        };
-                        await addDoc(collection(db, "photos"), photoData);
-                        message.success(`${file.name} subido correctamente.`);
-                        onSuccess("ok");
-                    }
-                );
+                const filePath = `trainers/${myUid}/photos/${file.name}`;
+                const downloadURL = await uploadFile(filePath, file);
+                const photoData = {
+                    name: file.name,
+                    url: downloadURL,
+                };
+                await addSubcollectionDocument('trainers', myUid, 'photos', photoData);
+                message.success(`${file.name} subido correctamente.`);
+                onSuccess("ok");
             } catch (error) {
                 console.error("Error subiendo foto:", error);
                 onError(error);
@@ -261,22 +226,9 @@ const Files = () => {
 
     // Función para obtener el icono según el tipo de archivo
     const getFileIcon = (type) => {
-        if (type === "application/pdf")
-            return <FaFilePdf size={64} color="#ff4d4f" />;
-        if (
-            type.startsWith("application/vnd.ms-excel") ||
-            type.startsWith(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        )
-            return <FaFileExcel size={64} color="#52c41a" />;
-        if (
-            type.startsWith("application/msword") ||
-            type.startsWith(
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
-        )
-            return <FaFileWord size={64} color="#1890ff" />;
+        if (type === "application/pdf") return <FaFilePdf size={64} color="#ff4d4f" />;
+        if (type.startsWith("application/vnd.ms-excel")) return <FaFileExcel size={64} color="#52c41a" />;
+        if (type.startsWith("application/msword")) return <FaFileWord size={64} color="#1890ff" />;
         return <FaFileAlt size={64} color="#1890ff" />;
     };
 
@@ -284,15 +236,7 @@ const Files = () => {
         <div className={styles.filesContainer}>
             <Tabs defaultActiveKey="1">
                 {/* Pestaña de Videos */}
-                <TabPane
-                    tab={
-                        <span>
-                            <VideoCameraOutlined />
-                            Videos
-                        </span>
-                    }
-                    key="1"
-                >
+                <TabPane tab={<span><VideoCameraOutlined /> Videos</span>} key="1">
                     <Row gutter={[16, 16]}>
                         <Col xs={24} md={12}>
                             <Button
@@ -319,11 +263,7 @@ const Files = () => {
                                             </Tooltip>,
                                         ]}
                                         onClick={() => setSelectedVideo(video)}
-                                        className={
-                                            selectedVideo && selectedVideo.id === video.id
-                                                ? styles.selectedItem
-                                                : ""
-                                        }
+                                        className={selectedVideo?.id === video.id ? styles.selectedItem : ""}
                                     >
                                         <List.Item.Meta
                                             avatar={<VideoCameraOutlined style={{ fontSize: 24 }} />}
@@ -338,17 +278,16 @@ const Files = () => {
                             {selectedVideo ? (
                                 <Card title={selectedVideo.title || "Sin título"}>
                                     <ReactPlayer
-                                        key={selectedVideo.url}
+                                        key={selectedVideo.url}  // Clave única para forzar actualización
                                         url={selectedVideo.url}
                                         controls
                                         width="100%"
                                         height="360px"
+                                        playing  // Inicia la reproducción automáticamente
                                     />
                                 </Card>
                             ) : (
-                                <Card>
-                                    <p>Selecciona un video para reproducirlo</p>
-                                </Card>
+                                <Card><p>Selecciona un video para reproducirlo</p></Card>
                             )}
                         </Col>
                     </Row>
@@ -379,22 +318,12 @@ const Files = () => {
                 </TabPane>
 
                 {/* Pestaña de Archivos */}
-                <TabPane
-                    tab={
-                        <span>
-                            <FileOutlined />
-                            Archivos
-                        </span>
-                    }
-                    key="2"
-                >
+                <TabPane tab={<span><FileOutlined /> Archivos</span>} key="2">
                     <Dragger {...uploadFileProps} style={{ marginBottom: 16 }}>
                         <p className="ant-upload-drag-icon">
                             <InboxOutlined />
                         </p>
-                        <p className="ant-upload-text">
-                            Haz clic o arrastra archivos para subir
-                        </p>
+                        <p className="ant-upload-text">Haz clic o arrastra archivos para subir</p>
                     </Dragger>
                     <List
                         grid={{ gutter: 16, column: 4 }}
@@ -403,11 +332,7 @@ const Files = () => {
                             <List.Item>
                                 <Card
                                     hoverable
-                                    cover={
-                                        <div className={styles.fileIcon}>
-                                            {getFileIcon(file.type)}
-                                        </div>
-                                    }
+                                    cover={<div className={styles.fileIcon}>{getFileIcon(file.type)}</div>}
                                     actions={[
                                         <Tooltip title="Eliminar">
                                             <Button
@@ -436,22 +361,12 @@ const Files = () => {
                 </TabPane>
 
                 {/* Pestaña de Fotos */}
-                <TabPane
-                    tab={
-                        <span>
-                            <PictureOutlined />
-                            Fotos
-                        </span>
-                    }
-                    key="3"
-                >
+                <TabPane tab={<span><PictureOutlined /> Fotos</span>} key="3">
                     <Dragger {...uploadPhotoProps} style={{ marginBottom: 16 }}>
                         <p className="ant-upload-drag-icon">
                             <InboxOutlined />
                         </p>
-                        <p className="ant-upload-text">
-                            Haz clic o arrastra fotos para subir
-                        </p>
+                        <p className="ant-upload-text">Haz clic o arrastra fotos para subir</p>
                     </Dragger>
                     <List
                         grid={{ gutter: 16, column: 4 }}

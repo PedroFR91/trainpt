@@ -1,8 +1,22 @@
+// components/chat/Chat.js
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Card, Input, Button, Upload, message } from 'antd';
 import { FaArrowAltCircleRight, FaFileAlt, FaTrashAlt } from 'react-icons/fa';
 import { UploadOutlined } from '@ant-design/icons';
-import { doc, updateDoc, arrayUnion, serverTimestamp, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import {
+  doc,
+  updateDoc,
+  arrayUnion,
+  serverTimestamp,
+  onSnapshot,
+  setDoc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
 import { db, storage } from '../../firebase.config';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import AuthContext from '../../context/AuthContext';
@@ -11,7 +25,7 @@ import styles from '../../styles/chat.module.css';
 const { TextArea } = Input;
 const { Meta } = Card;
 
-const Chat = () => {
+const Chat = ({ selectedClientId }) => {
   const { myData, myUid } = useContext(AuthContext);
   const [messageText, setMessageText] = useState('');
   const [myChat, setMyChat] = useState([]);
@@ -22,36 +36,65 @@ const Chat = () => {
 
   useEffect(() => {
     const fetchChatId = async () => {
-      // Suponiendo que obtienes el clientId y trainerId desde la suscripción
-      const subscription = { trainerId: 'TjFuz1IyD9OcNvPaKBFvsGO2GGv2', clientId: 'K3AmWAuaUQM4jH52J2lkqF2ztfo1' };
-      setTrainerId(subscription.trainerId);
-      setClientId(subscription.clientId);
+      if (!myData || !myUid) return;
 
-      // Generar el mismo chatId para ambos (cliente y entrenador) asegurando un orden consistente
-      const chatId = subscription.trainerId > subscription.clientId
-        ? `${subscription.clientId}_${subscription.trainerId}`
-        : `${subscription.trainerId}_${subscription.clientId}`;
+      if (myData.role === 'client') {
+        // Obtener la suscripción activa del cliente
+        const subscriptionRef = collection(db, 'subscriptions');
+        const q = query(
+          subscriptionRef,
+          where('clientId', '==', myUid),
+          where('status', '==', 'active')
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const subscription = querySnapshot.docs[0].data();
+          setTrainerId(subscription.trainerId);
+          setClientId(myUid);
 
-      const chatDocRef = doc(db, 'chats', chatId);
-      const unsubscribe = onSnapshot(chatDocRef, (doc) => {
-        if (doc.exists()) {
-          setMyChat(doc.data().messages || []);
+          const chatId = generateChatId(myUid, subscription.trainerId);
+          listenToChat(chatId);
         } else {
-          setMyChat([]);
+          message.warning('No tienes una suscripción activa con un entrenador.');
         }
-      });
+      } else if (myData.role === 'trainer') {
+        if (!selectedClientId) {
+          message.warning('Selecciona un cliente para chatear.');
+          return;
+        }
+        setTrainerId(myUid);
+        setClientId(selectedClientId);
 
-      return () => unsubscribe();
+        const chatId = generateChatId(myUid, selectedClientId);
+        listenToChat(chatId);
+      }
     };
 
     fetchChatId();
-  }, [myUid]);
+  }, [myUid, myData, selectedClientId]);
 
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [myChat]);
+
+  const generateChatId = (id1, id2) => {
+    return id1 > id2 ? `${id2}_${id1}` : `${id1}_${id2}`;
+  };
+
+  const listenToChat = (chatId) => {
+    const chatDocRef = doc(db, 'chats', chatId);
+    const unsubscribe = onSnapshot(chatDocRef, (doc) => {
+      if (doc.exists()) {
+        setMyChat(doc.data().messages || []);
+      } else {
+        setMyChat([]);
+      }
+    });
+
+    return () => unsubscribe();
+  };
 
   const handleSendMessage = async () => {
     if (!messageText && fileList.length === 0) {
@@ -65,9 +108,7 @@ const Chat = () => {
       timestamp: new Date(),
     };
 
-    const chatId = trainerId > clientId
-      ? `${clientId}_${trainerId}`
-      : `${trainerId}_${clientId}`;
+    const chatId = generateChatId(trainerId, clientId);
 
     const chatDocRef = doc(db, 'chats', chatId);
 
@@ -114,7 +155,7 @@ const Chat = () => {
           type: file.type,
         };
         setFileList((prevList) => [...prevList, newFile]);
-        onSuccess("ok");
+        onSuccess('ok');
       }
     );
   };
@@ -151,7 +192,7 @@ const Chat = () => {
           <a href={file.url} target="_blank" rel="noopener noreferrer" key="download">
             Descargar
           </a>,
-          <FaTrashAlt onClick={() => setFileList(fileList.filter(f => f.url !== file.url))} />
+          <FaTrashAlt onClick={() => setFileList(fileList.filter((f) => f.url !== file.url))} />,
         ]}
       >
         <Meta title={file.name} />
@@ -163,7 +204,10 @@ const Chat = () => {
     <div className={styles.chatContainer}>
       <div className={styles.messagesContainer} ref={messagesContainerRef}>
         {myChat.map((msg, index) => (
-          <div key={index} className={msg.username === myData?.username ? styles.myMessage : styles.theirMessage}>
+          <div
+            key={index}
+            className={msg.username === myData?.username ? styles.myMessage : styles.theirMessage}
+          >
             <div>
               <strong>{msg.username}: </strong>
               <p>{formatMessage(msg.text)}</p>
@@ -173,6 +217,7 @@ const Chat = () => {
                 </div>
               )}
             </div>
+
           </div>
         ))}
       </div>

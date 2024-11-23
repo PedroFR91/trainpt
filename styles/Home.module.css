@@ -6,7 +6,7 @@
   overflow-x: hidden;
   z-index: -10;
 }
-.header{
+.header {
   width: 100%;
   height: 10vh;
   position: fixed;
@@ -19,7 +19,7 @@
   align-items: center;
   padding-right: 3rem;
 }
-.menu{
+.menu {
   width: 30%;
   display: flex;
   justify-content: space-between;
@@ -87,27 +87,28 @@
   position: relative;
   overflow: hidden;
 }
-.mybutton{
-border: 1px solid var(--orange);
-padding: 0.1rem 2rem;
-border-radius: 10px;
-background-color: #f69d21;
-color: #ffffff;
-
+.mybutton {
+  border: 1px solid var(--orange);
+  padding: 0.1rem 2rem;
+  border-radius: 10px;
+  background-color: #f69d21;
+  color: #ffffff;
 }
-.mybutton:hover{
+.mybutton:hover {
   background-color: #ffffff;
 }
 .acceso div form button:hover {
   background-color: #ffffff;
   color: #212121;
 }
-.toggleButton,.underline {
+.toggleButton,
+.underline {
   position: relative;
 }
 
-.toggleButton::before,.underline::before {
-  content: '';
+.toggleButton::before,
+.underline::before {
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -116,11 +117,12 @@ color: #ffffff;
   background-color: #f69d21;
   transition: width 1.5s;
 }
-.underline::before{
-  transition: width .5s;
+.underline::before {
+  transition: width 0.5s;
 }
 
-.toggleButton:hover::before,.underline:hover::before {
+.toggleButton:hover::before,
+.underline:hover::before {
   width: 100%;
 }
 
@@ -161,7 +163,7 @@ color: #ffffff;
   }
 }
 .message:after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   bottom: 0;
@@ -187,11 +189,10 @@ color: #ffffff;
   align-items: center;
   text-align: center;
 }
-.sectionContainer{
+.sectionContainer {
   width: 100%;
   height: 100vh;
   display: flex;
-
 }
 .sectionContainer > div {
   width: 100%;
@@ -214,25 +215,30 @@ color: #ffffff;
   padding: 0 2rem;
   position: relative;
   overflow: hidden;
-
 }
 @keyframes shine {
   from {
     -webkit-mask-position: 150%;
   }
-  
+
   to {
     -webkit-mask-position: -50%;
   }
 }
 .text::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to right, transparent 0%, transparent 50%, #212121 50%, #212121cc 100%);
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 50%,
+    #212121 50%,
+    #212121cc 100%
+  );
   background-size: 200% 100%;
   background-position: 100%;
   transition: background-position 0.7s;
@@ -246,11 +252,16 @@ color: #ffffff;
   transform: scale(1.1);
   cursor: pointer;
   color: #ffffff; /* Cambiar el color del texto al hacer hover */
-  mask-image: linear-gradient(-75deg, rgba(0,0,0,.6) 30%, #000 50%, rgba(0,0,0,.6) 70%);
+  mask-image: linear-gradient(
+    -75deg,
+    rgba(0, 0, 0, 0.6) 30%,
+    #000 50%,
+    rgba(0, 0, 0, 0.6) 70%
+  );
   mask-size: 200%;
   animation: shine 2s infinite;
 }
-  .media{
+.media {
   width: 100%;
   height: 100%;
   background-color: #ffffffdd;
@@ -277,7 +288,6 @@ color: #ffffff;
 }
 .footer a:hover {
   transform: scale(1.1);
- 
 }
 .top {
   width: 100%;
@@ -296,7 +306,7 @@ color: #ffffff;
 .social Link :hover {
   cursor: pointer;
 }
-.links:hover{
+.links:hover {
   color: #f69d21;
 }
 .leftSection,
@@ -347,7 +357,6 @@ color: #ffffff;
   justify-content: space-evenly;
   align-items: center;
   background-color: #ffffff;
-
 }
 .client {
   border-radius: 10px;
@@ -360,9 +369,9 @@ color: #ffffff;
   align-items: center;
   background-color: #212121cc;
   color: #ffffff;
-  font-family: 'Roboto';
+  font-family: "Roboto";
 }
-.client img{
+.client img {
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -371,7 +380,7 @@ color: #ffffff;
 .client div {
   margin: 1rem 0;
 }
-.hamburgerButton{
+.hamburgerButton {
   display: none;
 }
 
@@ -384,24 +393,25 @@ color: #ffffff;
     text-align: center;
     margin: 1rem;
   }
- .header{
-  width: 100%;
-  height: 10vh;
- }
-  .header div img{
+  .header {
+    width: 100%;
+    height: 10vh;
+  }
+  .header div img {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%, -50%);
     height: 50px;
-   }
-  .menu,.mybutton{
+  }
+  .menu,
+  .mybutton {
     display: none;
   }
-  .hamburgerButton{
+  .hamburgerButton {
     display: block;
   }
-  .hamburger{
+  .hamburger {
     position: fixed;
     top: 0;
     left: 0;
@@ -414,9 +424,9 @@ color: #ffffff;
     flex-direction: column;
     justify-content: space-evenly;
     align-items: center;
-    padding-bottom:4rem;
+    padding-bottom: 4rem;
   }
-  .menumobile{
+  .menumobile {
     width: 100%;
     height: 100%;
     display: flex;
@@ -425,11 +435,12 @@ color: #ffffff;
     align-items: center;
     color: #ffffff;
   }
-  .menumobile a,.mybuttonmobile a{
+  .menumobile a,
+  .mybuttonmobile a {
     color: #ffffff;
     margin: 1rem;
   }
-  .buttonclose{
+  .buttonclose {
     position: absolute;
     top: 1rem;
     right: 0.5rem;
@@ -442,10 +453,10 @@ color: #ffffff;
     margin: 0;
     padding: 0;
   }
-  .sectionContainer .media{
+  .sectionContainer .media {
     display: none;
   }
-  .sectionContainer .text{
+  .sectionContainer .text {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -454,27 +465,27 @@ color: #ffffff;
     text-align: center;
     padding: 0 1rem;
   }
-  .sectionContainer .text p{
+  .sectionContainer .text p {
     width: 90%;
     font-size: 40px;
     text-align: center;
   }
-  .section >div{
+  .section > div {
     width: 100%;
   }
-  
-  .media, .text {
+
+  .media,
+  .text {
     width: 100%;
     height: auto; /* Cambiar height a auto para que se ajuste automáticamente al contenido */
     margin: 0;
     padding: 0;
-  
   }
-  .opinions{
+  .opinions {
     flex-direction: column;
     height: fit-content;
   }
-  .client{
+  .client {
     width: 90%;
   }
 }

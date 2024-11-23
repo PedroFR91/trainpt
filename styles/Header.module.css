@@ -1,0 +1,29 @@
+/* styles/Header.module.css */
+.header {
+  color: #ffffff; /* Texto en blanco */
+  background-color: #001529; /* Asegúrate de que el fondo sea oscuro para que el blanco resalte */
+  display: flex;
+  align-items: center;
+}
+
+.header h2 {
+  color: #ffffff;
+  margin: 0;
+}
+
+.header .anticon, /* Clase general para íconos de Ant Design */
+.header .ant-avatar,
+.header .ant-badge,
+.header .anticon-setting,
+.header .anticon-logout,
+.header .anticon-bell {
+  color: #ffffff; /* Colorear todos los íconos en blanco */
+}
+
+.header .ant-avatar {
+  border: 2px solid #ffffff; /* Borde blanco para destacar el avatar */
+}
+
+.header .ant-btn-text {
+  color: #ffffff; /* Para el botón de logout en blanco */
+}

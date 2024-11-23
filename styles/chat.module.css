@@ -1,48 +1,56 @@
+/* styles/chat.module.css */
+
 .chatContainer {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;
+  height: calc(70vh); /* Ajusta 64px a la altura real de tu header */
+  padding: 16px;
+  overflow: hidden;
 }
 
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
-  border-radius: 10px;
+  padding: 16px;
+  background-color: #f0f0f0;
 }
 
 .inputContainer {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.filePreview {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  padding: 8px;
+  background-color: #ffffff;
 }
 
 .myMessage {
-  background-color: #daf7a6;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  align-self: flex-end;
+  background-color: #e6f7ff;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  max-width: 70%;
 }
 
 .theirMessage {
-  background-color: #ffdddd;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  text-align: right;
+  align-self: flex-start;
+  background-color: #fafafa;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  max-width: 70%;
 }
 
 .filesGallery {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.filePreview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
 }

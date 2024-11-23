@@ -18,14 +18,15 @@ const Acceso = () => {
   const [message, setMessage] = useState(null);
   const [googleUser, setGoogleUser] = useState(null); // Estado para el usuario autenticado con Google
 
+  // Dentro de la función signInWithGoogle
   const signInWithGoogle = async () => {
     try {
       const response = await handleGoogleSignIn(auth, db, router);
       if (response.message === "Seleccione su rol") {
-        setGoogleUser(response.user); // Guarda el usuario autenticado
+        setGoogleUser(response.user);
         setMessage("Seleccione su rol para continuar");
       } else {
-        setMessage(response.message);
+        router.push('/dashboard'); // Redirigir al dashboard después del inicio de sesión
       }
     } catch (error) {
       console.error(error);
@@ -33,21 +34,12 @@ const Acceso = () => {
     }
   };
 
-  const createGoogleUserWithRole = async (role) => {
-    if (!googleUser) return;
-    try {
-      await createGoogleUser(auth, db, googleUser, role, router);
-      setGoogleUser(null); // Limpia el estado después de crear el usuario
-    } catch (error) {
-      console.error(error);
-      setError(true);
-    }
-  };
-
+  // Dentro de handleLogin y handleRegister
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await handleEmailLogin(auth, db, email, password, router);
+      router.push('/dashboard'); // Redirigir al dashboard
     } catch (error) {
       console.error(error);
       setError(true);
@@ -62,11 +54,26 @@ const Acceso = () => {
     }
     try {
       await handleEmailRegister(auth, db, email, password, userName, selected, router);
+      router.push('/dashboard'); // Redirigir al dashboard
     } catch (error) {
       console.error(error);
       setError(true);
     }
   };
+
+
+  const createGoogleUserWithRole = async (role) => {
+    if (!googleUser) return;
+    try {
+      await createGoogleUser(auth, db, googleUser, role, router);
+      setGoogleUser(null); // Limpia el estado después de crear el usuario
+    } catch (error) {
+      console.error(error);
+      setError(true);
+    }
+  };
+
+
 
   return (
     <div className={styles.acceso}>
@@ -185,4 +192,4 @@ const Acceso = () => {
   );
 };
 
-export default Acceso;
+export default Acceso

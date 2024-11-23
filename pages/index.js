@@ -83,7 +83,7 @@ export default function Home() {
             </Link>
           </div>
           <div className={styles.mybutton}>
-            <Link href={"/acceso"} className={styles.underline}>
+            <Link href={"/login"} className={styles.underline}>
               Accede
             </Link>
           </div>
