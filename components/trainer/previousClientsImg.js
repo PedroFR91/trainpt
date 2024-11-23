@@ -1,7 +1,5 @@
-// components/trainer/PreviousClientsImg.js
-
 import React, { useContext, useEffect, useState } from 'react';
-import { Upload, Button, Card, List, Modal, Input, message } from 'antd';
+import { Upload, Button, Card, Select, Modal, Input, message, Carousel } from 'antd';
 import { UploadOutlined, DeleteOutlined, ShareAltOutlined } from '@ant-design/icons';
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/myprofile.module.css';
@@ -12,11 +10,14 @@ import {
   addSubcollectionDocument,
 } from '../../services/firebase';
 
+const { Option } = Select;
+
 const PreviousClientsImg = () => {
   const { myUid } = useContext(AuthContext);
   const [fileBefore, setFileBefore] = useState(null);
   const [fileAfter, setFileAfter] = useState(null);
   const [clientName, setClientName] = useState('');
+  const [selectedClient, setSelectedClient] = useState('');
   const [photos, setPhotos] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -94,6 +95,8 @@ const PreviousClientsImg = () => {
     message.success('URL de la imagen copiada al portapapeles');
   };
 
+  const uniqueClients = Array.from(new Set(photos.map(photo => photo.clientName)));
+
   return (
     <div className={styles.container}>
       <Button
@@ -104,35 +107,75 @@ const PreviousClientsImg = () => {
       >
         Subir imágenes de clientes
       </Button>
-      <List
-        itemLayout="vertical"
-        dataSource={Array.from(new Set(photos.map(photo => photo.clientName)))}
-        renderItem={client => (
-          <List.Item
-            key={client}
-            actions={[
-              <Button icon={<DeleteOutlined />} onClick={() => handleDeleteGroup(client)} />
-            ]}
-          >
-            <Card title={client} className={styles.clientCard}>
-              <div className={styles.clientImgGroup}>
-                {photos
-                  .filter(photo => photo.clientName === client)
-                  .map(photo => (
-                    <div key={photo.id} className={styles.clientImgWrapper}>
-                      <img src={photo.img} alt={photo.title} className={styles.clientImg} />
-                      <div className={styles.imgTitle}>{photo.title}</div>
-                      <div className={styles.imgActions}>
-                        <Button icon={<ShareAltOutlined />} onClick={() => handleShare(photo)} />
-                        <Button icon={<DeleteOutlined />} onClick={() => handleDeleteGroup(photo.clientName)} />
-                      </div>
-                    </div>
-                  ))}
+
+      {/* Selector para elegir cliente */}
+      <Select
+        style={{ width: '100%', marginBottom: 16 }}
+        placeholder="Selecciona un cliente"
+        onChange={setSelectedClient}
+        value={selectedClient}
+        optionLabelProp="label"
+      >
+        {uniqueClients.map((client) => {
+          const clientPhoto = photos.find(photo => photo.clientName === client);
+          return (
+            <Option key={client} value={client} label={client}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {clientPhoto?.img && (
+                  <img
+                    src={clientPhoto.img}
+                    alt={client}
+                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                )}
+                <span>{client}</span>
               </div>
-            </Card>
-          </List.Item>
-        )}
-      />
+            </Option>
+          );
+        })}
+      </Select>
+
+      {/* Renderiza el carrusel del cliente seleccionado */}
+      {selectedClient && (
+        <Card title={selectedClient} className={styles.clientCard}>
+          <Carousel
+            dots
+            arrows
+            autoplay
+            style={{ margin: '0 auto', maxWidth: '400px' }}
+          >
+            {photos
+              .filter(photo => photo.clientName === selectedClient)
+              .map(photo => (
+                <div key={photo.id} className={styles.clientImgWrapper}>
+                  <img
+                    src={photo.img}
+                    alt={photo.title}
+                    className={styles.clientImg}
+                    style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: '10px' }}
+                  />
+                  <div className={styles.imgTitle}>{photo.title}</div>
+                </div>
+              ))}
+          </Carousel>
+          <div className={styles.imgActions} style={{ textAlign: 'center', marginTop: '16px' }}>
+            {photos
+              .filter(photo => photo.clientName === selectedClient)
+              .map(photo => (
+                <Button
+                  key={photo.id}
+                  icon={<ShareAltOutlined />}
+                  onClick={() => handleShare(photo)}
+                  style={{ marginRight: '8px' }}
+                >
+                  Compartir
+                </Button>
+              ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Modal para subir imágenes */}
       <Modal
         title="Subir imágenes de clientes"
         visible={modalVisible}
