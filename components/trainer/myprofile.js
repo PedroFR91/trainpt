@@ -37,6 +37,20 @@ const MyProfile = () => {
     setMyData((prev) => ({ ...prev, [field]: downloadURL }));
   };
 
+  const beforeUploadProfile = (file) => {
+    setProfileFile(file);
+    return false; // Evita la subida automática
+  };
+
+  const handleProfileUpload = async () => {
+    if (profileFile) {
+      await handleImageUpload(profileFile, 'img');
+      setProfileFile(null);
+    }
+  };
+
+  const publicProfileUrl = `${window.location.origin}/trainer/${myUid}`;
+
   return (
     <ProfileCard
       profileData={myData}
