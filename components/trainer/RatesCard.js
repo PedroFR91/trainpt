@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Carousel } from 'antd';
-import { EditOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 import styles from '../../styles/myrates.module.css';
 
 const { Meta } = Card;
@@ -17,8 +17,6 @@ const RatesCard = ({ rates, onEdit }) => {
                     slidesToShow={1}
                     slidesToScroll={1}
                     infinite={false}
-                    nextArrow={<RightOutlined style={{ fontSize: '20px', color: '#333' }} />}
-                    prevArrow={<LeftOutlined style={{ fontSize: '20px', color: '#333' }} />}
                 >
                     {rates.map((rate) => (
                         <Card
