@@ -42,7 +42,6 @@ import {
 
 const { Meta } = Card;
 const { Dragger } = Upload;
-const { TabPane } = Tabs;
 
 const Files = () => {
     const { myUid } = useContext(AuthContext);
@@ -236,7 +235,7 @@ const Files = () => {
         <div className={styles.filesContainer}>
             <Tabs defaultActiveKey="1">
                 {/* Pestaña de Videos */}
-                <TabPane tab={<span><VideoCameraOutlined /> Videos</span>} key="1">
+                <Tabs tab={<span><VideoCameraOutlined /> Videos</span>} key="1">
                     <Row gutter={[16, 16]}>
                         <Col xs={24} md={12}>
                             <Button
@@ -315,10 +314,10 @@ const Files = () => {
                             </Form.Item>
                         </Form>
                     </Modal>
-                </TabPane>
+                </Tabs>
 
                 {/* Pestaña de Archivos */}
-                <TabPane tab={<span><FileOutlined /> Archivos</span>} key="2">
+                <Tabs tab={<span><FileOutlined /> Archivos</span>} key="2">
                     <Dragger {...uploadFileProps} style={{ marginBottom: 16 }}>
                         <p className="ant-upload-drag-icon">
                             <InboxOutlined />
@@ -358,10 +357,10 @@ const Files = () => {
                             </List.Item>
                         )}
                     />
-                </TabPane>
+                </Tabs>
 
                 {/* Pestaña de Fotos */}
-                <TabPane tab={<span><PictureOutlined /> Fotos</span>} key="3">
+                <Tabs tab={<span><PictureOutlined /> Fotos</span>} key="3">
                     <Dragger {...uploadPhotoProps} style={{ marginBottom: 16 }}>
                         <p className="ant-upload-drag-icon">
                             <InboxOutlined />
@@ -401,7 +400,7 @@ const Files = () => {
                             </List.Item>
                         )}
                     />
-                </TabPane>
+                </Tabs>
             </Tabs>
         </div>
     );

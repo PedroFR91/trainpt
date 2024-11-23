@@ -84,23 +84,19 @@ export const handleEmailLogin = async (auth, db, email, password, router) => {
         const res = await signInWithEmailAndPassword(auth, email, password);
         const user = res.user;
 
-        // Obtener el hash de la contraseña del usuario en Firestore
-        const userDocRef = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(userDocRef);
+        // Verificar en las colecciones `trainers` y `clients`
+        const trainerDocRef = doc(db, "trainers", user.uid);
+        const clientDocRef = doc(db, "clients", user.uid);
 
-        if (userSnapshot.exists()) {
-            const userData = userSnapshot.data();
+        const trainerSnapshot = await getDoc(trainerDocRef);
+        const clientSnapshot = await getDoc(clientDocRef);
 
-            // Comparar contraseñas
-            const isPasswordValid = await bcrypt.compare(password, userData.password);
-            if (!isPasswordValid) {
-                throw new Error("Contraseña incorrecta.");
-            }
-
-            // Redirigir al dashboard si todo es correcto
-            router.push("/dashboard");
+        if (trainerSnapshot.exists()) {
+            router.push("/dashboard"); // Redirigir al dashboard del entrenador
+        } else if (clientSnapshot.exists()) {
+            router.push("/dashboard"); // Redirigir al dashboard del cliente
         } else {
-            throw new Error("Usuario no encontrado.");
+            throw new Error("Usuario no encontrado en trainers ni en clients.");
         }
     } catch (error) {
         console.error("Error en el inicio de sesión:", error);
@@ -108,35 +104,30 @@ export const handleEmailLogin = async (auth, db, email, password, router) => {
     }
 };
 
-
-
-
 export const handleEmailRegister = async (auth, db, email, password, userName, selectedRole, router) => {
     try {
         // Crear usuario en Firebase Authentication
         const res = await createUserWithEmailAndPassword(auth, email, password);
         const user = res.user;
 
-        // Hashear la contraseña
-        const hashedPassword = await bcrypt.hash(password, 10); // Salt rounds = 10
-
-        // Crear el documento del usuario en Firestore
-        const collectionName = selectedRole === 'trainer' ? 'trainers' : 'clients';
+        // Crear documento en la colección correspondiente
+        const collectionName = selectedRole === "trainer" ? "trainers" : "clients";
         const newUserDocRef = doc(db, collectionName, user.uid);
 
-        const newUserData = {
+        const userData = {
             id: user.uid,
             email: email,
             username: userName,
             role: selectedRole,
-            password: hashedPassword, // Guardar la contraseña hasheada
             timeStamp: serverTimestamp(),
             googleLinked: false,
         };
-        await setDoc(newUserDocRef, newUserData);
 
-        // Redirigir al usuario
-        router.push("/dashboard");
+        await setDoc(newUserDocRef, userData);
+
+        // Redirigir al dashboard correspondiente
+        const dashboardPath = "/dashboard";
+        router.push(dashboardPath);
     } catch (error) {
         console.error("Error en el registro:", error);
         throw error;

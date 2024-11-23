@@ -15,6 +15,7 @@ import FilesSection from '../components/trainer/FilesSection';
 import ProgramSection from '../components/client/ProgramSection';
 import SubscriptionSection from '../components/client/SubscriptionSection';
 import { auth } from '../firebase.config';
+import { signOut } from 'firebase/auth';
 
 const { Sider, Content } = Layout;
 
@@ -33,12 +34,13 @@ const Dashboard = () => {
 
     const toggleChat = () => setChatVisible(!isChatVisible);
 
-    const handleLogout = () => {
-        auth.signOut().then(() => {
-            router.push('/login');
-        }).catch(error => {
-            console.error("Error during logout: ", error);
-        });
+    const handleLogout = async () => {
+        try {
+            await signOut(auth); // Cerrar sesión en Firebase
+            router.push("/login"); // Redirigir al login
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+        }
     };
 
     const renderContent = () => {
@@ -67,7 +69,7 @@ const Dashboard = () => {
             </Sider>
             <Layout>
                 <DashboardHeader
-                    onLogout={() => console.log('Logout')}
+                    onLogout={handleLogout}
                     newMessages={0}
                     publicSections={publicSections}
                     setPublicSections={setPublicSections}
