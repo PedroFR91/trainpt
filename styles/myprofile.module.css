@@ -1,6 +1,6 @@
 .container {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -89,6 +89,10 @@
 
 .profileCard {
   max-width: 400px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   margin: auto;
   border-radius: 10px;
   overflow: hidden;
@@ -114,8 +118,11 @@
 .contentContainer {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   align-items: center;
   padding: 20px;
+
+  height: 100%;
 }
 
 .username {

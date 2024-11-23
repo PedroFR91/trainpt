@@ -1,101 +1,65 @@
-// components/layout/Header.js
-
 import React, { useContext, useEffect, useState } from 'react';
-import { Layout, Avatar, Button, Badge, Dropdown, Menu, notification } from 'antd';
+import { Layout, Avatar, Button, Badge, Dropdown, Menu, notification, Modal, Switch } from 'antd';
 import { LogoutOutlined, SettingOutlined, BellOutlined } from '@ant-design/icons';
-import Link from 'next/link';
-import AuthContext from '../../context/AuthContext';
-import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase.config';
+import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/Header.module.css';
 
 const { Header } = Layout;
 
-const DashboardHeader = ({ onLogout, newMessages }) => {
+const DashboardHeader = ({ onLogout, trainerId }) => {
     const { myData, myUid } = useContext(AuthContext);
-    const [pendingRequests, setPendingRequests] = useState([]);
-    const [pendingCount, setPendingCount] = useState(0);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [publicSections, setPublicSections] = useState({
+        rates: true,
+        socialMedia: true,
+        comments: true,
+    });
 
+    // Cargar configuración de Firebase
     useEffect(() => {
-        if (myData?.role === 'trainer') {
-            const q = query(
-                collection(db, 'subscriptions'),
-                where('trainerId', '==', myUid),
-                where('status', '==', 'pending')
-            );
-            const unsubscribe = onSnapshot(q, (querySnapshot) => {
-                const requests = [];
-                querySnapshot.forEach((doc) => {
-                    requests.push({ id: doc.id, ...doc.data() });
-                });
-                setPendingRequests(requests);
-                setPendingCount(requests.length);
-            });
-            return () => unsubscribe();
-        }
-    }, [myData, myUid]);
+        const fetchPublicSections = async () => {
+            if (!trainerId) return;
 
-    const handleAcceptRequest = async (requestId) => {
+            const docRef = doc(db, 'trainers', trainerId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setPublicSections(data.publicSections || {});
+            }
+        };
+
+        fetchPublicSections();
+    }, [trainerId]);
+
+    const handleSectionToggle = async (section) => {
+        if (!publicSections || !publicSections.hasOwnProperty(section)) {
+            console.error(`La sección ${section} no existe en publicSections`, publicSections);
+            return;
+        }
+
+        const updatedSections = { ...publicSections, [section]: !publicSections[section] };
+        setPublicSections(updatedSections);
+
+        // Actualizar en Firebase
         try {
-            const requestRef = doc(db, 'subscriptions', requestId);
-            await updateDoc(requestRef, {
-                status: 'active',
-                acceptedAt: new Date(),
-            });
+            const docRef = doc(db, 'trainers', trainerId);
+            await updateDoc(docRef, { publicSections: updatedSections });
             notification.success({
-                message: 'Solicitud aceptada',
-                description: 'Has aceptado la solicitud del cliente.',
+                message: 'Configuración actualizada',
+                description: `La sección ${section} ha sido actualizada.`,
             });
         } catch (error) {
-            console.error('Error al aceptar la solicitud:', error);
+            console.error('Error al actualizar en Firebase:', error);
             notification.error({
                 message: 'Error',
-                description: 'No se pudo aceptar la solicitud.',
+                description: 'No se pudo actualizar la configuración.',
             });
         }
     };
 
-    const handleRejectRequest = async (requestId) => {
-        try {
-            const requestRef = doc(db, 'subscriptions', requestId);
-            await updateDoc(requestRef, {
-                status: 'rejected',
-                rejectedAt: new Date(),
-            });
-            notification.success({
-                message: 'Solicitud rechazada',
-                description: 'Has rechazado la solicitud del cliente.',
-            });
-        } catch (error) {
-            console.error('Error al rechazar la solicitud:', error);
-            notification.error({
-                message: 'Error',
-                description: 'No se pudo rechazar la solicitud.',
-            });
-        }
-    };
-
-    const menu = (
-        <Menu>
-            {pendingRequests.length > 0 ? (
-                pendingRequests.map((request) => (
-                    <Menu.Item key={request.id}>
-                        <span>Solicitud de cliente: {request.username}/{request.email}</span>
-                        <div>
-                            <Button type="link" onClick={() => handleAcceptRequest(request.id)}>
-                                Aceptar
-                            </Button>
-                            <Button type="link" danger onClick={() => handleRejectRequest(request.id)}>
-                                Rechazar
-                            </Button>
-                        </div>
-                    </Menu.Item>
-                ))
-            ) : (
-                <Menu.Item>No tienes solicitudes pendientes</Menu.Item>
-            )}
-        </Menu>
-    );
 
     return (
         <Header className={styles.header}>
@@ -104,16 +68,15 @@ const DashboardHeader = ({ onLogout, newMessages }) => {
                     <h2>Dashboard</h2>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {myData?.role === 'trainer' && (
-                        <Dropdown overlay={menu} trigger={['click']}>
-                            <Badge count={pendingCount} offset={[10, 0]}>
-                                <BellOutlined style={{ fontSize: 20, marginRight: 20, color: '#ffffff' }} />
-                            </Badge>
-                        </Dropdown>
-                    )}
-                    <Link href="/subscription/[clientId]">
-                        <SettingOutlined style={{ fontSize: 20, marginRight: 20, color: '#ffffff' }} />
-                    </Link>
+                    <Badge count={0} offset={[0, 10]}>
+                        <BellOutlined style={{ fontSize: 20, marginRight: 20, color: '#ffffff' }} />
+                    </Badge>
+                    <Button
+                        icon={<SettingOutlined />}
+                        type="text"
+                        style={{ marginRight: 20, color: '#ffffff' }}
+                        onClick={() => setIsModalVisible(true)}
+                    />
                     <Avatar src={myData?.img || '/placeholder.png'} style={{ marginRight: 10 }} />
                     <span>{myData?.username || 'Usuario'}</span>
                     <Button
@@ -126,6 +89,34 @@ const DashboardHeader = ({ onLogout, newMessages }) => {
                     </Button>
                 </div>
             </div>
+
+            {/* Modal para configurar secciones públicas */}
+            <Modal
+                title="Configuración de Secciones Públicas"
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                footer={null}
+            >
+                <p>Selecciona las secciones que deseas mostrar en tu perfil público:</p>
+                <div>
+                    <Switch
+                        checked={publicSections.rates}
+                        onChange={() => handleSectionToggle('rates')}
+                    /> Tarifas
+                </div>
+                <div>
+                    <Switch
+                        checked={publicSections.socialMedia}
+                        onChange={() => handleSectionToggle('socialMedia')}
+                    /> Redes Sociales
+                </div>
+                <div>
+                    <Switch
+                        checked={publicSections.comments}
+                        onChange={() => handleSectionToggle('comments')}
+                    /> Comentarios
+                </div>
+            </Modal>
         </Header>
     );
 };

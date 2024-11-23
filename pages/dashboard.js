@@ -23,6 +23,12 @@ const Dashboard = () => {
     const [isChatVisible, setChatVisible] = useState(false);
     const [newMessages, setNewMessages] = useState(0);
     const [selectedSection, setSelectedSection] = useState('home');
+    const [publicSections, setPublicSections] = useState({
+        rates: true,
+        socialMedia: true,
+        comments: true,
+    });
+
     const router = useRouter();
 
     const toggleChat = () => setChatVisible(!isChatVisible);
@@ -60,7 +66,12 @@ const Dashboard = () => {
                 <Sidebar onSelectSection={setSelectedSection} />
             </Sider>
             <Layout>
-                <DashboardHeader onLogout={handleLogout} newMessages={newMessages} />
+                <DashboardHeader
+                    onLogout={() => console.log('Logout')}
+                    newMessages={0}
+                    publicSections={publicSections}
+                    setPublicSections={setPublicSections}
+                />
                 <Content style={{ margin: '16px' }}>
                     {renderContent()}
                 </Content>

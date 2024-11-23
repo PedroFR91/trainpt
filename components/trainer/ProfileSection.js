@@ -8,14 +8,14 @@ import PreviousImages from './previousClientsImg';
 const ProfileSection = () => (
     <Row gutter={[16, 16]}>
         <Col xs={24} md={12} lg={8}>
-            <Card title="Mi Perfil" bordered={false}>
-                <MyProfile />
-            </Card>
+
+            <MyProfile />
+
         </Col>
         <Col xs={24} md={12} lg={8}>
-            <Card title="Tarifas" bordered={false}>
-                <Rates />
-            </Card>
+
+            <Rates />
+
         </Col>
         <Col xs={24} md={12} lg={8}>
             <Card title="Imágenes Anteriores" bordered={false}>

@@ -1,54 +1,18 @@
-// components/trainer/myrates.js
-
-import React, { useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import {
-  Card,
-  Button,
-  Carousel,
-  Modal,
-  Form,
-  Input,
-  message,
-  Select,
-  Row,
-  Col,
-  Tooltip,
-} from 'antd';
-import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  ShareAltOutlined,
-  CopyOutlined,
-} from '@ant-design/icons';
+// components/trainer/MyRates.js
+import React, { useState, useEffect, useContext } from 'react';
+import { Button, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import AuthContext from '../../context/AuthContext';
-import styles from '../../styles/myrates.module.css';
-import { Slate, Editable, withReact } from 'slate-react';
-import { createEditor } from 'slate';
-import { withHistory } from 'slate-history';
-import { initialValue } from './initialValue';
-import Toolbar from './Toolbar';
-import { serialize, deserialize } from './utils';
+import RatesCard from './RatesCard';
 import {
   addSubcollectionDocument,
   deleteSubcollectionDocument,
   listenToSubcollection,
-  updateSubcollectionDocument,
 } from '../../services/firebase';
-
-const { Meta } = Card;
-const { Option } = Select;
 
 const MyRates = () => {
   const { myUid } = useContext(AuthContext);
   const [rates, setRates] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingRate, setEditingRate] = useState(null);
-  const [form] = Form.useForm();
-  const [editorValue, setEditorValue] = useState(initialValue);
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-  const displayEditor = useMemo(() => withReact(createEditor()), []);
-  const [selectedColor, setSelectedColor] = useState('#ffffff');
 
   useEffect(() => {
     if (!myUid) return;
@@ -67,255 +31,17 @@ const MyRates = () => {
     return () => unsub();
   }, [myUid]);
 
-  const openModal = (rate = null) => {
-    if (rate) {
-      // Editar tarifa existente
-      setEditingRate(rate);
-      form.setFieldsValue({
-        ratename: rate.ratename,
-        rateprice: rate.rateprice,
-        ratefrequency: rate.ratefrequency,
-      });
-      setEditorValue(deserialize(rate.rateinfo));
-      setSelectedColor(rate.backgroundColor || '#ffffff');
-    } else {
-      // Crear nueva tarifa
-      setEditingRate(null);
-      form.resetFields();
-      setEditorValue(initialValue);
-      setSelectedColor('#ffffff');
-    }
-    setModalVisible(true);
-  };
-
-  const handleAddOrEditRate = () => {
-    form.validateFields().then(async (values) => {
-      try {
-        const rateData = {
-          ...values,
-          rateinfo: serialize(editorValue),
-          backgroundColor: selectedColor,
-        };
-
-        if (editingRate) {
-          // Actualizar tarifa existente
-          await updateSubcollectionDocument('trainers', myUid, 'rates', editingRate.id, rateData);
-          message.success('Tarifa actualizada');
-        } else {
-          // Crear nueva tarifa
-          await addSubcollectionDocument('trainers', myUid, 'rates', rateData);
-          message.success('Tarifa añadida');
-        }
-
-        form.resetFields();
-        setEditorValue(initialValue);
-        setSelectedColor('#ffffff');
-        setModalVisible(false);
-      } catch (error) {
-        console.error('Error saving rate: ', error);
-        message.error('Error al guardar la tarifa');
-      }
-    });
-  };
-
-  const handleDeleteRate = async (id) => {
-    try {
-      await deleteSubcollectionDocument('trainers', myUid, 'rates', id);
-      message.success('Tarifa eliminada');
-    } catch (error) {
-      console.error('Error deleting rate: ', error);
-      message.error('Error al eliminar la tarifa');
-    }
-  };
-
   const handleShare = (rate) => {
-    const tempElement = document.createElement('textarea');
-    tempElement.value = `Tarifa: ${rate.ratename}\nPrecio: ${rate.rateprice} ${rate.ratefrequency}\nDetalles:\n${rate.rateinfo}`;
-    document.body.appendChild(tempElement);
-    tempElement.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempElement);
+    navigator.clipboard.writeText(`Tarifa: ${rate.ratename}\nPrecio: ${rate.rateprice} €/${rate.ratefrequency}`);
     message.success('Tarifa copiada al portapapeles');
   };
 
-  const renderElement = useCallback((props) => {
-    const { element, attributes, children } = props;
-    switch (element.type) {
-      case 'heading-one':
-        return <h1 {...attributes}>{children}</h1>;
-      case 'numbered-list':
-        return <ol {...attributes}>{children}</ol>;
-      case 'bulleted-list':
-        return <ul {...attributes}>{children}</ul>;
-      case 'list-item':
-        return <li {...attributes}>{children}</li>;
-      default:
-        return <p {...attributes}>{children}</p>;
-    }
-  }, []);
-
-  const renderLeaf = useCallback((props) => {
-    const { leaf, attributes, children } = props;
-    let formattedText = children;
-
-    if (leaf.bold) {
-      formattedText = <strong>{formattedText}</strong>;
-    }
-
-    if (leaf.italic) {
-      formattedText = <em>{formattedText}</em>;
-    }
-
-    if (leaf.underline) {
-      formattedText = <u>{formattedText}</u>;
-    }
-
-    if (leaf.strikethrough) {
-      formattedText = <del>{formattedText}</del>;
-    }
-
-    if (leaf.code) {
-      formattedText = <code>{formattedText}</code>;
-    }
-
-    return <span {...attributes}>{formattedText}</span>;
-  }, []);
-
   return (
-    <div style={{ width: '90%', margin: '0 auto' }}>
-      <Card
-        title="Mis Tarifas"
-        extra={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => openModal()}
-          >
-            Añadir Tarifa
-          </Button>
-        }
-      >
-        {rates.length === 0 ? (
-          <p>No hay tarifas disponibles.</p>
-        ) : (
-          <Carousel
-            dots={false}
-            arrows
-            slidesToShow={1}
-            slidesToScroll={1}
-            infinite={false}
-          >
-            {rates.map((rate) => (
-              <Card
-                key={rate.id}
-                className={styles.rateCard}
-                bodyStyle={{
-                  backgroundColor: rate.backgroundColor || '#ffffff',
-                }}
-                style={{
-                  borderRadius: '10px',
-                  margin: '0 10px',
-                }}
-                actions={[
-                  <Tooltip title="Compartir" key="share">
-                    <ShareAltOutlined onClick={() => handleShare(rate)} />
-                  </Tooltip>,
-                  <Tooltip title="Copiar" key="copy">
-                    <CopyOutlined onClick={() => handleShare(rate)} />
-                  </Tooltip>,
-                  <Tooltip title="Editar" key="edit">
-                    <EditOutlined onClick={() => openModal(rate)} />
-                  </Tooltip>,
-                  <Tooltip title="Eliminar" key="delete">
-                    <DeleteOutlined onClick={() => handleDeleteRate(rate.id)} />
-                  </Tooltip>,
-                ]}
-              >
-                <Meta
-                  title={<h2 style={{ textAlign: 'center' }}>{rate.ratename}</h2>}
-                  description={
-                    <>
-                      <div className={styles.priceContainer}>
-                        <h3>{rate.rateprice} €</h3>
-                        <span>/{rate.ratefrequency}</span>
-                      </div>
-                      <div className={styles.rateInfo}>
-                        <Slate editor={displayEditor} value={deserialize(rate.rateinfo)} onChange={() => { }}>
-                          <Editable
-                            readOnly
-                            renderElement={renderElement}
-                            renderLeaf={renderLeaf}
-                          />
-                        </Slate>
-                      </div>
-                    </>
-                  }
-                />
-              </Card>
-            ))}
-          </Carousel>
-        )}
-      </Card>
-      <Modal
-        title={editingRate ? 'Editar Tarifa' : 'Añadir Tarifa'}
-        visible={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        onOk={handleAddOrEditRate}
-        width={800}
-      >
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="ratename"
-                label="Nombre de Tarifa"
-                rules={[{ required: true, message: 'Por favor ingrese el nombre de la tarifa' }]}
-              >
-                <Input placeholder="Ejemplo: Tarifa Premium" />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="rateprice"
-                label="Precio (€)"
-                rules={[{ required: true, message: 'Por favor ingrese el precio de la tarifa' }]}
-              >
-                <Input type="number" min={0} placeholder="Ejemplo: 29.99" />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item
-                name="ratefrequency"
-                label="Frecuencia"
-                rules={[{ required: true, message: 'Por favor seleccione la frecuencia' }]}
-              >
-                <Select placeholder="Selecciona">
-                  <Option value="Mensual">Mensual</Option>
-                  <Option value="Anual">Anual</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item label="Detalles">
-            <Slate editor={editor} value={editorValue} onChange={(value) => setEditorValue(value)}>
-              <Toolbar />
-              <Editable
-                renderElement={renderElement}
-                renderLeaf={renderLeaf}
-                placeholder="Describe las características de esta tarifa..."
-              />
-            </Slate>
-          </Form.Item>
-          <Form.Item label="Color de Fondo">
-            <Input
-              type="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-              style={{ width: '100%', padding: 0, border: 'none' }}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+    <div>
+      <RatesCard rates={rates} onShare={handleShare} />
+      <Button type="primary" icon={<PlusOutlined />} onClick={() => console.log('Añadir Tarifa')}>
+        Añadir Tarifa
+      </Button>
     </div>
   );
 };

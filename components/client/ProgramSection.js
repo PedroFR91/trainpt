@@ -35,7 +35,7 @@ const ProgramSection = () => (
                 <AssignedForms />
             </Card>
         </Col>
-        {/* <Col xs={24} md={12} lg={8}>
+        <Col xs={24} md={12} lg={8}>
             <Card title="Mis Medidas" bordered={false}>
                 <MyMeasurements />
             </Card>
@@ -44,7 +44,7 @@ const ProgramSection = () => (
             <Card title="Mis Fotos" bordered={false}>
                 <MyPhotos />
             </Card>
-        </Col> */}
+        </Col>
     </Row>
 );
 
