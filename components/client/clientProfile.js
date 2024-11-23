@@ -124,6 +124,7 @@ const ClientProfile = () => {
           )}
         </div>
       ]}
+      title="Mi Perfil" bordered={false} hoverable
     >
       <Card.Meta
         title={myData?.username || 'Nombre del Cliente'}
