@@ -1,47 +1,57 @@
 import React from 'react';
 import { Card, Carousel } from 'antd';
-import { ShareAltOutlined, CopyOutlined } from '@ant-design/icons';
+import { EditOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import styles from '../../styles/myrates.module.css';
 
 const { Meta } = Card;
 
-const RatesCard = ({ rates, onShare, publicView = false }) => {
+const RatesCard = ({ rates, onEdit }) => {
     return (
-        <Card title="Tarifas" hoverable>
+        <Card title="Mis Tarifas" hoverable>
             {rates.length === 0 ? (
                 <p>No hay tarifas disponibles.</p>
             ) : (
-                <Carousel dots={false} arrows slidesToShow={1} slidesToScroll={1} infinite={false}>
+                <Carousel
+                    dots
+                    arrows
+                    slidesToShow={1}
+                    slidesToScroll={1}
+                    infinite={false}
+                    nextArrow={<RightOutlined style={{ fontSize: '20px', color: '#333' }} />}
+                    prevArrow={<LeftOutlined style={{ fontSize: '20px', color: '#333' }} />}
+                >
                     {rates.map((rate) => (
                         <Card
                             key={rate.id}
                             className={styles.rateCard}
                             bodyStyle={{
                                 backgroundColor: rate.backgroundColor || '#ffffff',
+                                padding: '20px',
                             }}
                             style={{
                                 borderRadius: '10px',
-                                margin: '0 10px',
+                                margin: '10px 0',
+                                minHeight: '250px',
                             }}
-                            actions={
-                                !publicView
-                                    ? [
-                                        <ShareAltOutlined key="share" onClick={() => onShare(rate)} />,
-                                        <CopyOutlined key="copy" onClick={() => onShare(rate)} />,
-                                    ]
-                                    : null
-                            }
+                            actions={[
+                                <EditOutlined key="edit" onClick={() => onEdit(rate)} />,
+                            ]}
                         >
                             <Meta
                                 title={<h2 style={{ textAlign: 'center' }}>{rate.ratename}</h2>}
                                 description={
-                                    <>
+                                    <div>
                                         <div className={styles.priceContainer}>
                                             <h3>{rate.rateprice} €</h3>
                                             <span>/{rate.ratefrequency}</span>
                                         </div>
-                                        <div className={styles.rateInfo}>{rate.rateinfo}</div>
-                                    </>
+                                        <div
+                                            className={styles.rateInfo}
+                                            dangerouslySetInnerHTML={{
+                                                __html: rate.rateinfo || "Sin información adicional",
+                                            }}
+                                        ></div>
+                                    </div>
                                 }
                             />
                         </Card>
