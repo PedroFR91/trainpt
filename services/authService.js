@@ -1,5 +1,7 @@
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import bcrypt from 'bcryptjs';
+
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -78,34 +80,27 @@ export const createGoogleUser = async (auth, db, user, selectedRole, router) => 
 
 export const handleEmailLogin = async (auth, db, email, password, router) => {
     try {
+        // Autenticación inicial con Firebase Authentication
         const res = await signInWithEmailAndPassword(auth, email, password);
         const user = res.user;
 
+        // Obtener el hash de la contraseña del usuario en Firestore
         const userDocRef = doc(db, "users", user.uid);
         const userSnapshot = await getDoc(userDocRef);
-        const userData = userSnapshot.data();
 
-        if (userData && userData.role) {
-            const collectionName = userData.role === 'trainer' ? 'trainers' : 'clients';
-            const userCollectionDocRef = doc(db, collectionName, user.uid);
-            const userCollectionSnapshot = await getDoc(userCollectionDocRef);
+        if (userSnapshot.exists()) {
+            const userData = userSnapshot.data();
 
-            if (!userCollectionSnapshot.exists()) {
-                // Si el usuario no existe en la colección correspondiente, crearlo
-                const newUserData = {
-                    id: user.uid,
-                    email: user.email,
-                    username: user.displayName || user.email.split('@')[0],
-                    role: userData.role,
-                    timeStamp: serverTimestamp(),
-                    googleLinked: false,
-                };
-                await setDoc(userCollectionDocRef, newUserData);
+            // Comparar contraseñas
+            const isPasswordValid = await bcrypt.compare(password, userData.password);
+            if (!isPasswordValid) {
+                throw new Error("Contraseña incorrecta.");
             }
 
+            // Redirigir al dashboard si todo es correcto
             router.push("/dashboard");
         } else {
-            throw new Error("No se encontraron datos del usuario.");
+            throw new Error("Usuario no encontrado.");
         }
     } catch (error) {
         console.error("Error en el inicio de sesión:", error);
@@ -114,11 +109,18 @@ export const handleEmailLogin = async (auth, db, email, password, router) => {
 };
 
 
+
+
 export const handleEmailRegister = async (auth, db, email, password, userName, selectedRole, router) => {
     try {
+        // Crear usuario en Firebase Authentication
         const res = await createUserWithEmailAndPassword(auth, email, password);
         const user = res.user;
 
+        // Hashear la contraseña
+        const hashedPassword = await bcrypt.hash(password, 10); // Salt rounds = 10
+
+        // Crear el documento del usuario en Firestore
         const collectionName = selectedRole === 'trainer' ? 'trainers' : 'clients';
         const newUserDocRef = doc(db, collectionName, user.uid);
 
@@ -127,12 +129,13 @@ export const handleEmailRegister = async (auth, db, email, password, userName, s
             email: email,
             username: userName,
             role: selectedRole,
+            password: hashedPassword, // Guardar la contraseña hasheada
             timeStamp: serverTimestamp(),
             googleLinked: false,
         };
         await setDoc(newUserDocRef, newUserData);
 
-
+        // Redirigir al usuario
         router.push("/dashboard");
     } catch (error) {
         console.error("Error en el registro:", error);

@@ -1,5 +1,4 @@
 // pages/trainer/[trainerId].js
-<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Row, Col, Card, Typography } from 'antd';
@@ -9,15 +8,6 @@ import ProfileCard from '../../components/trainer/ProfileCard';
 import RatesCard from '../../components/trainer/RatesCard';
 
 const { Title, Text } = Typography;
-=======
-
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { Card, Avatar, Rate, List, Button } from 'antd';
-import { LikeOutlined, StarOutlined, MessageOutlined } from '@ant-design/icons';
-import { getDocument } from '../../services/firebase';
-import styles from '../../styles/trainerhome.module.css';
->>>>>>> 62724d042d6e23a6444ad590c8e6b063d9a4bb7d
 
 const PublicTrainerProfile = () => {
     const router = useRouter();
