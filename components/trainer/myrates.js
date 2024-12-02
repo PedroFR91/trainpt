@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Row,
@@ -10,86 +10,99 @@ import {
   Input,
   Divider,
   Skeleton,
+  message,
 } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
-import RichTextEditor from './RichTextEditor'; // Usar el componente con carga dinámica
+import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { listenToCollection, updateDocument, addDocument, deleteDocument } from '../../services/firebase';
+import RichTextEditor from './RichTextEditor';
 
 const { Option } = Select;
 
-const initialMockRates = [
-  {
-    id: '1',
-    name: 'Plus',
-    monthlyPrice: 20,
-    quarterlyPrice: 55,
-    semiannualPrice: 110,
-    yearlyPrice: 200,
-    features: '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li></ul>',
-    backgroundColor: '#f0f5ff',
-  },
-  {
-    id: '2',
-    name: 'Premium',
-    monthlyPrice: 40,
-    quarterlyPrice: 110,
-    semiannualPrice: 220,
-    yearlyPrice: 400,
-    features:
-      '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li><li>Feature 4</li></ul>',
-    backgroundColor: '#f5f0ff',
-  },
-  {
-    id: '3',
-    name: 'Supreme',
-    monthlyPrice: 60,
-    quarterlyPrice: 165,
-    semiannualPrice: 330,
-    yearlyPrice: 600,
-    features:
-      '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li><li>Feature 4</li><li>Feature 5</li></ul>',
-    backgroundColor: '#fff5f0',
-  },
-];
-
 const MyRates = () => {
   const [selectedPeriodicity, setSelectedPeriodicity] = useState('monthly'); // Estado para periodicidad seleccionada
-  const [rates, setRates] = useState([]); // Estado para las tarifas (se carga desde mock)
+  const [rates, setRates] = useState([]); // Estado para las tarifas
   const [loading, setLoading] = useState(true); // Skeleton inicial
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false); // Modal para agregar tarifa
   const [editingRate, setEditingRate] = useState(null); // Tarifa que se está editando
   const [form] = Form.useForm();
+  const [addForm] = Form.useForm(); // Formulario para agregar tarifas
   const [featuresContent, setFeaturesContent] = useState(''); // Estado para RichTextEditor
+  const [newFeaturesContent, setNewFeaturesContent] = useState(''); // Estado para nuevas características
 
-  React.useEffect(() => {
-    setTimeout(() => {
-      setRates(initialMockRates);
-      setLoading(false);
-    }, 2000); // Simula un delay de 2 segundos
+  useEffect(() => {
+    const unsubscribe = listenToCollection(
+      'rates', // Nombre de la colección en Firebase
+      [],
+      (snapshot) => {
+        const ratesData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setRates(ratesData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error al escuchar tarifas:', error);
+        message.error('Error al cargar tarifas desde Firebase');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   const handleEdit = (rate) => {
     setEditingRate(rate);
     form.setFieldsValue(rate);
-    setFeaturesContent(rate.features); // Establece el contenido de características
+    setFeaturesContent(rate.features || ''); // Establece el contenido de características
     setIsModalVisible(true);
   };
 
-  const handleSave = (values) => {
-    const updatedRates = rates.map((rate) =>
-      rate.id === editingRate.id
-        ? { ...editingRate, ...values, features: featuresContent }
-        : rate
-    );
-    setRates(updatedRates);
-    setIsModalVisible(false);
-    setEditingRate(null);
-    form.resetFields();
-    setFeaturesContent('');
+  const handleSave = async (values) => {
+    try {
+      await updateDocument('rates', editingRate.id, {
+        ...values,
+        features: featuresContent,
+      });
+
+      message.success('Tarifa actualizada correctamente');
+      setIsModalVisible(false);
+      setEditingRate(null);
+      form.resetFields();
+      setFeaturesContent('');
+    } catch (error) {
+      console.error('Error al actualizar tarifa:', error);
+      message.error('Error al guardar la tarifa');
+    }
+  };
+
+  const handleAdd = async (values) => {
+    try {
+      await addDocument('rates', {
+        ...values,
+        features: newFeaturesContent,
+      });
+
+      message.success('Tarifa agregada correctamente');
+      setIsAddModalVisible(false);
+      addForm.resetFields();
+      setNewFeaturesContent('');
+    } catch (error) {
+      console.error('Error al agregar tarifa:', error);
+      message.error('Error al agregar la tarifa');
+    }
+  };
+
+  const handleDelete = async (rateId) => {
+    try {
+      await deleteDocument('rates', rateId);
+      message.success('Tarifa eliminada correctamente');
+    } catch (error) {
+      console.error('Error al eliminar tarifa:', error);
+      message.error('Error al eliminar la tarifa');
+    }
   };
 
   return (
     <div>
-      {/* Select para periodicidad */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <Select
           value={selectedPeriodicity}
@@ -101,11 +114,18 @@ const MyRates = () => {
           <Option value="semiannual">Semestral</Option>
           <Option value="yearly">Anual</Option>
         </Select>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          style={{ marginLeft: '10px' }}
+          onClick={() => setIsAddModalVisible(true)}
+        >
+          Agregar Tarifa
+        </Button>
       </div>
 
       <Row gutter={[16, 16]} justify="center">
         {loading ? (
-          // Skeleton inicial
           Array.from({ length: 3 }).map((_, index) => (
             <Col xs={24} md={8} key={index}>
               <Skeleton active />
@@ -129,6 +149,14 @@ const MyRates = () => {
                   >
                     Editar
                   </Button>,
+                  <Button
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(rate.id)}
+                    type="link"
+                    danger
+                  >
+                    Eliminar
+                  </Button>,
                 ]}
               >
                 <h2>{rate.name}</h2>
@@ -141,6 +169,17 @@ const MyRates = () => {
                         ? `${rate.semiannualPrice} €/semestre`
                         : `${rate.yearlyPrice} €/año`}
                 </h3>
+                <div>
+                  <strong>Revisión:</strong> {rate.revisionPeriodicity}
+                </div>
+                <div style={{ textAlign: 'left', padding: '10px 20px' }}>
+                  <strong>Incluye:</strong>
+                  <ul>
+                    {rate.includes?.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
                 <div
                   style={{ textAlign: 'left', padding: '0 20px' }}
                   dangerouslySetInnerHTML={{ __html: rate.features }}
@@ -168,56 +207,156 @@ const MyRates = () => {
           initialValues={{
             name: '',
             monthlyPrice: '',
+            quarterlyPrice: '',
+            semiannualPrice: '',
             yearlyPrice: '',
             backgroundColor: '#ffffff',
           }}
           onFinish={handleSave}
           layout="vertical"
         >
+          <Form.Item label="Nombre de la tarifa" name="name" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Precio Mensual" name="monthlyPrice" rules={[{ required: true }]}>
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Precio Trimestral" name="quarterlyPrice" rules={[{ required: true }]}>
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Precio Semestral" name="semiannualPrice" rules={[{ required: true }]}>
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Precio Anual" name="yearlyPrice" rules={[{ required: true }]}>
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Características (texto)">
+            <RichTextEditor value={featuresContent} onChange={setFeaturesContent} />
+          </Form.Item>
+          <Form.Item label="Color de fondo" name="backgroundColor">
+            <Input type="color" />
+          </Form.Item>
+          <Form.Item
+            label="Periodicidad de Revisión"
+            name="revisionPeriodicity"
+            rules={[{ required: true }]}
+          >
+            <Select>
+              <Option value="Semanal">Semanal</Option>
+              <Option value="Quincenal">Quincenal</Option>
+              <Option value="Mensual">Mensual</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="Incluye (selección múltiple)"
+            name="includes"
+            rules={[{ required: true }]}
+          >
+            <Select mode="multiple" placeholder="Selecciona lo que incluye">
+              <Option value="Rutina">Rutina</Option>
+              <Option value="Dieta">Dieta</Option>
+              <Option value="Soporte adicional">Soporte adicional</Option>
+            </Select>
+          </Form.Item>
+
+          <Divider />
+          <Button type="primary" htmlType="submit">
+            Guardar
+          </Button>
+        </Form>
+      </Modal>
+
+      {/* Modal para agregar nueva tarifa */}
+      <Modal
+        title="Agregar Nueva Tarifa"
+        visible={isAddModalVisible}
+        onCancel={() => {
+          setIsAddModalVisible(false);
+          addForm.resetFields();
+          setNewFeaturesContent('');
+        }}
+        footer={null}
+      >
+        <Form
+          form={addForm}
+          initialValues={{
+            name: '',
+            monthlyPrice: '',
+            quarterlyPrice: '',
+            semiannualPrice: '',
+            yearlyPrice: '',
+            backgroundColor: '#ffffff',
+          }}
+          onFinish={handleAdd}
+          layout="vertical"
+        >
           <Form.Item
             label="Nombre de la tarifa"
             name="name"
-            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+            rules={[{ required: true }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             label="Precio Mensual"
             name="monthlyPrice"
-            rules={[{ required: true, message: 'Por favor, ingresa el precio mensual' }]}
+            rules={[{ required: true }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item
             label="Precio Trimestral"
             name="quarterlyPrice"
-            rules={[{ required: true, message: 'Por favor, ingresa el precio trimestral' }]}
+            rules={[{ required: true }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item
             label="Precio Semestral"
             name="semiannualPrice"
-            rules={[{ required: true, message: 'Por favor, ingresa el precio semestral' }]}
+            rules={[{ required: true }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item
             label="Precio Anual"
             name="yearlyPrice"
-            rules={[{ required: true, message: 'Por favor, ingresa el precio anual' }]}
+            rules={[{ required: true }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item label="Características (texto)">
             <RichTextEditor
-              value={featuresContent}
-              onChange={setFeaturesContent}
+              value={newFeaturesContent}
+              onChange={setNewFeaturesContent}
             />
           </Form.Item>
           <Form.Item label="Color de fondo" name="backgroundColor">
             <Input type="color" />
           </Form.Item>
+          <Form.Item
+            label="Periodicidad de Revisión"
+            name="revisionPeriodicity"
+            rules={[{ required: true }]}
+          >
+            <Select>
+              <Option value="Semanal">Semanal</Option>
+              <Option value="Quincenal">Quincenal</Option>
+              <Option value="Mensual">Mensual</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="Incluye (selección múltiple)"
+            name="includes"
+            rules={[{ required: true }]}
+          >
+            <Select mode="multiple" placeholder="Selecciona lo que incluye">
+              <Option value="Rutina">Rutina</Option>
+              <Option value="Dieta">Dieta</Option>
+              <Option value="Soporte adicional">Soporte adicional</Option>
+            </Select>
+          </Form.Item>
+
           <Divider />
           <Button type="primary" htmlType="submit">
             Guardar
