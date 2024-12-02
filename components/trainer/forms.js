@@ -1,7 +1,7 @@
 // components/trainer/Forms.js
 
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Table, Select, message, Row, Col, Card, Modal, Tag } from 'antd';
+import { Button, Table, Select, message, Row, Col, Card, Modal, Tag, Dropdown, Menu } from 'antd';
 import FormComponent from '../client/FormComponent';
 import AuthContext from '../../context/AuthContext';
 import styles from '../../styles/forms.module.css';
@@ -127,6 +127,39 @@ const Forms = () => {
         setCurrentForm(formToAssign);
         setAssignModalVisible(true);
     };
+    const handleDuplicateForm = async (formId) => {
+        try {
+            let formToDuplicate;
+            if (formId.startsWith('base-')) {
+                // Si es un formulario base
+                formToDuplicate = baseForms.find((form) => form.id === formId);
+            } else {
+                // Obtener formulario de Firebase
+                formToDuplicate = await getSubcollectionDocument('trainers', myUid, 'forms', formId);
+            }
+
+            if (formToDuplicate) {
+                // Crear una copia del formulario sin abrir modal
+                const duplicatedForm = {
+                    ...formToDuplicate,
+                    name: `Copia de ${formToDuplicate.name}`,
+                    createdAt: serverTimestamp(),
+                    isBase: false, // Aseguramos que el campo isBase sea false
+                };
+
+                delete duplicatedForm.id; // Eliminar ID antiguo
+                const newFormId = await addSubcollectionDocument('trainers', myUid, 'forms', duplicatedForm);
+
+                if (newFormId) {
+                    message.success('Formulario duplicado correctamente');
+                }
+            }
+        } catch (error) {
+            console.error('Error al duplicar formulario:', error);
+            message.error('Error al duplicar el formulario');
+        }
+    };
+
 
     const handleAssign = async () => {
         try {
@@ -148,7 +181,29 @@ const Forms = () => {
             message.error('Error al asignar el formulario');
         }
     };
-
+    const getActionsMenu = (record) => (
+        <Menu>
+            {!record.isBase && (
+                <>
+                    <Menu.Item key="delete" onClick={() => handleDeleteForm(record.id)}>
+                        Eliminar
+                    </Menu.Item>
+                    <Menu.Item key="edit" onClick={() => handleEditForm(record.id)}>
+                        Editar
+                    </Menu.Item>
+                </>
+            )}
+            <Menu.Item key="copy" onClick={() => handleCopyForm(record.id)}>
+                Copiar
+            </Menu.Item>
+            <Menu.Item key="duplicate" onClick={() => handleDuplicateForm(record.id)}>
+                Duplicar
+            </Menu.Item>
+            <Menu.Item key="assign" onClick={() => handleAssignForm(record)}>
+                Asignar
+            </Menu.Item>
+        </Menu>
+    );
     const columns = [
         {
             title: 'Tipo',
@@ -168,26 +223,10 @@ const Forms = () => {
         {
             title: 'Acciones',
             key: 'actions',
-            render: (text, record) => (
-                <span>
-                    {!record.isBase && (
-                        <>
-                            <Button type="link" onClick={() => handleDeleteForm(record.id)}>
-                                Eliminar
-                            </Button>
-                            <Button type="link" onClick={() => handleEditForm(record.id)}>
-                                Editar
-                            </Button>
-                        </>
-                    )}
-
-                    <Button type="link" onClick={() => handleCopyForm(record.id)}>
-                        Copiar
-                    </Button>
-                    <Button type="link" onClick={() => handleAssignForm(record)}>
-                        Asignar
-                    </Button>
-                </span>
+            render: (_, record) => (
+                <Dropdown overlay={getActionsMenu(record)} trigger={['click']}>
+                    <Button>Acciones</Button>
+                </Dropdown>
             ),
         },
     ];
