@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
-import { Card, Row, Col, Switch, Button, Modal, Form, Input, Divider, Skeleton } from 'antd';
+import {
+  Card,
+  Row,
+  Col,
+  Select,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Divider,
+  Skeleton,
+} from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import RichTextEditor from './RichTextEditor'; // Usar el componente con carga dinámica
+
+const { Option } = Select;
 
 const initialMockRates = [
   {
     id: '1',
     name: 'Plus',
     monthlyPrice: 20,
+    quarterlyPrice: 55,
+    semiannualPrice: 110,
     yearlyPrice: 200,
     features: '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li></ul>',
     backgroundColor: '#f0f5ff',
@@ -17,30 +31,35 @@ const initialMockRates = [
     id: '2',
     name: 'Premium',
     monthlyPrice: 40,
+    quarterlyPrice: 110,
+    semiannualPrice: 220,
     yearlyPrice: 400,
-    features: '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li><li>Feature 4</li></ul>',
+    features:
+      '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li><li>Feature 4</li></ul>',
     backgroundColor: '#f5f0ff',
   },
   {
     id: '3',
     name: 'Supreme',
     monthlyPrice: 60,
+    quarterlyPrice: 165,
+    semiannualPrice: 330,
     yearlyPrice: 600,
-    features: '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li><li>Feature 4</li><li>Feature 5</li></ul>',
+    features:
+      '<ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li><li>Feature 4</li><li>Feature 5</li></ul>',
     backgroundColor: '#fff5f0',
   },
 ];
 
 const MyRates = () => {
-  const [isYearly, setIsYearly] = useState(false); // Estado para alternar entre mensual y anual
+  const [selectedPeriodicity, setSelectedPeriodicity] = useState('monthly'); // Estado para periodicidad seleccionada
   const [rates, setRates] = useState([]); // Estado para las tarifas (se carga desde mock)
   const [loading, setLoading] = useState(true); // Skeleton inicial
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRate, setEditingRate] = useState(null); // Tarifa que se está editando
   const [form] = Form.useForm();
-  const [featuresContent, setFeaturesContent] = useState(''); // Estado para ReactQuill
+  const [featuresContent, setFeaturesContent] = useState(''); // Estado para RichTextEditor
 
-  // Simula la carga de datos
   React.useEffect(() => {
     setTimeout(() => {
       setRates(initialMockRates);
@@ -70,15 +89,18 @@ const MyRates = () => {
 
   return (
     <div>
-      {/* Switch para alternar mensual/anual */}
+      {/* Select para periodicidad */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <span>Mensual</span>
-        <Switch
-          checked={isYearly}
-          onChange={(checked) => setIsYearly(checked)}
-          style={{ margin: '0 10px' }}
-        />
-        <span>Anual (ahorra hasta 20%)</span>
+        <Select
+          value={selectedPeriodicity}
+          onChange={(value) => setSelectedPeriodicity(value)}
+          style={{ width: 200 }}
+        >
+          <Option value="monthly">Mensual</Option>
+          <Option value="quarterly">Trimestral</Option>
+          <Option value="semiannual">Semestral</Option>
+          <Option value="yearly">Anual</Option>
+        </Select>
       </div>
 
       <Row gutter={[16, 16]} justify="center">
@@ -111,9 +133,13 @@ const MyRates = () => {
               >
                 <h2>{rate.name}</h2>
                 <h3 style={{ margin: '20px 0', fontSize: '24px' }}>
-                  {isYearly
-                    ? `${rate.yearlyPrice} €/año`
-                    : `${rate.monthlyPrice} €/mes`}
+                  {selectedPeriodicity === 'monthly'
+                    ? `${rate.monthlyPrice} €/mes`
+                    : selectedPeriodicity === 'quarterly'
+                      ? `${rate.quarterlyPrice} €/trimestre`
+                      : selectedPeriodicity === 'semiannual'
+                        ? `${rate.semiannualPrice} €/semestre`
+                        : `${rate.yearlyPrice} €/año`}
                 </h3>
                 <div
                   style={{ textAlign: 'left', padding: '0 20px' }}
@@ -163,6 +189,20 @@ const MyRates = () => {
             <Input type="number" />
           </Form.Item>
           <Form.Item
+            label="Precio Trimestral"
+            name="quarterlyPrice"
+            rules={[{ required: true, message: 'Por favor, ingresa el precio trimestral' }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item
+            label="Precio Semestral"
+            name="semiannualPrice"
+            rules={[{ required: true, message: 'Por favor, ingresa el precio semestral' }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item
             label="Precio Anual"
             name="yearlyPrice"
             rules={[{ required: true, message: 'Por favor, ingresa el precio anual' }]}
@@ -170,10 +210,9 @@ const MyRates = () => {
             <Input type="number" />
           </Form.Item>
           <Form.Item label="Características (texto)">
-            <ReactQuill
+            <RichTextEditor
               value={featuresContent}
               onChange={setFeaturesContent}
-              theme="snow"
             />
           </Form.Item>
           <Form.Item label="Color de fondo" name="backgroundColor">

@@ -1,30 +1,39 @@
 // components/client/SubscriptionSection.js
+
 import React, { useContext, useEffect, useState } from "react";
 import { query, collection, where, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db, storage } from '../../firebase.config';
+import { db, storage } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
-import { Card, Button, Modal, Select, message, Form, Upload, Input } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+    Card,
+    Button,
+    Steps,
+    Modal,
+    Form,
+    Upload,
+    Input,
+    message,
+} from "antd";
+import {
+    UploadOutlined,
+    CheckOutlined,
+    FileTextOutlined,
+    SettingOutlined,
+    SmileOutlined,
+} from "@ant-design/icons";
 import styles from "../../styles/Subscription.module.css";
-import RoutineCreator from "../general/RoutineCreator";
-import RoutineDetails from "../general/RoutineDetails";
-import Chat from "../chat/chat";
 
-const { Meta } = Card;
+const { Step } = Steps;
 
 const SubscriptionSection = () => {
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [showChat, setShowChat] = useState(false);
-    const [showInitialForm, setShowInitialForm] = useState(false);
-    const [showRoutineSelectorModal, setShowRoutineSelectorModal] = useState(false);
-    const [showRoutineModal, setShowRoutineModal] = useState(false);
-    const [routines, setRoutines] = useState([]);
-    const [selectedRoutine, setSelectedRoutine] = useState(null);
+    const [currentStep, setCurrentStep] = useState(0);
     const [dietComment, setDietComment] = useState("");
     const [dietFile, setDietFile] = useState(null);
     const [uploadingDiet, setUploadingDiet] = useState(false);
-
+    const [formVisible, setFormVisible] = useState(false);
+    const [assignedForms, setAssignedForms] = useState([]); // Cambiado a array vacío
     const { myData } = useContext(AuthContext);
 
     useEffect(() => {
@@ -39,131 +48,83 @@ const SubscriptionSection = () => {
                     const docId = querySnapshot.docs[0].id;
                     const docData = querySnapshot.docs[0].data();
                     setSubscription({ ...docData, id: docId });
-                } else {
-                    console.log("No se encontró una suscripción para el cliente:", myData.id);
+                    setCurrentStep(getStepIndex(docData.status));
                 }
                 setLoading(false);
             };
 
-            const fetchRoutines = async () => {
-                const routinesSnapshot = await getDocs(collection(db, "routines"));
-                setRoutines(routinesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            };
-
             fetchSubscription();
-            fetchRoutines();
         }
     }, [myData?.id]);
 
-    const handleUploadDiet = async () => {
-        if (!dietFile || !dietComment) {
-            message.error("Por favor sube un archivo y agrega un comentario.");
-            return;
-        }
+    useEffect(() => {
+        const fetchClientForms = async () => {
+            if (!myData?.id) return;
 
-        setUploadingDiet(true);
-        try {
-            const storageRef = ref(storage, `dietas/${subscription.id}/${dietFile.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, dietFile);
+            const formsRef = collection(db, "clients", myData.id, "forms");
+            const formsSnapshot = await getDocs(formsRef);
 
-            uploadTask.on(
-                'state_changed',
-                null,
-                (error) => {
-                    setUploadingDiet(false);
-                    message.error("Error al subir la dieta.");
-                },
-                async () => {
-                    const dietURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    const subscriptionRef = doc(db, "subscriptions", subscription.id);
-                    await updateDoc(subscriptionRef, {
-                        diet: {
-                            comment: dietComment,
-                            fileURL: dietURL,
-                        },
-                        status: "complete",
-                    });
-                    setSubscription({
-                        ...subscription,
-                        status: "complete",
-                        diet: { comment: dietComment, fileURL: dietURL },
-                    });
-                    message.success("Dieta guardada exitosamente.");
-                }
-            );
-        } catch (error) {
-            message.error("Error al guardar la dieta.");
-        } finally {
-            setUploadingDiet(false);
-        }
+            if (!formsSnapshot.empty) {
+                const formsList = formsSnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setAssignedForms(formsList);
+            } else {
+                console.log("No se encontraron formularios para el cliente:", myData.id);
+            }
+        };
+
+        fetchClientForms();
+    }, [myData?.id]);
+
+    const getStepIndex = (status) => {
+        const steps = ["pending", "form", "routine", "diet", "complete"];
+        return steps.indexOf(status);
     };
 
-    const stepsToShow = [
+    const steps = [
         {
-            step: "previous",
-            title: "Petición de Servicios",
+            title: "Solicitud Pendiente",
+            icon: <SettingOutlined />,
             description: myData?.role === "trainer"
-                ? "El cliente ha solicitado tus servicios. Acepta la petición para continuar."
-                : "Esperando la aceptación del entrenador.",
+                ? "Aceptar la solicitud del cliente y enviar el formulario inicial."
+                : "Esperando que el entrenador acepte tu solicitud.",
             action: myData?.role === "trainer" && (
-                <Button type="primary" onClick={assignInitialForm}>
-                    Aceptar Petición
+                <Button type="primary" onClick={() => updateSubscriptionStatus("form")}>
+                    Aceptar y Enviar Formulario
                 </Button>
             ),
         },
         {
-            step: "form",
             title: "Formulario Inicial",
-            description: "Por favor, completa el formulario enviado por tu entrenador.",
-            action: <Button type="primary" onClick={() => setShowInitialForm(!showInitialForm)}>
-                {showInitialForm ? "Cerrar Formulario" : "Ver Formulario"}
-            </Button>,
-        },
-        {
-            step: "routine",
-            title: "Rutina Propuesta",
-            description: myData?.role === "trainer"
-                ? "Selecciona o crea una rutina para tu cliente."
-                : "Revisa la rutina personalizada enviada por tu entrenador.",
-            action: myData?.role === "trainer" ? (
-                <>
-                    <Button type="primary" onClick={() => setShowRoutineSelectorModal(true)}>
-                        Seleccionar o Crear Rutina
-                    </Button>
-                    <Button
-                        type="primary"
-                        disabled={!selectedRoutine}
-                        onClick={assignRoutine}
-                    >
-                        Asignar Rutina
-                    </Button>
-                </>
+            icon: <FileTextOutlined />,
+            description: "Por favor, completa el formulario inicial enviado por tu entrenador.",
+            action: assignedForms.length > 0 ? ( // Validación corregida
+                <Button type="primary" onClick={() => setFormVisible(true)}>
+                    Ver Formulario
+                </Button>
             ) : (
-                <Card
-                    hoverable
-                    style={{ width: 300 }}
-                    cover={<img alt="Rutina" src="/routine.jpg" />}
-                >
-                    <Meta
-                        title="Rutina Propuesta"
-                        description={
-                            subscription?.assignedRoutine ? (
-                                <Link href={`/trainer/routines/${subscription.assignedRoutine}`}>
-                                    Ver Rutina
-                                </Link>
-                            ) : (
-                                "No se ha asignado una rutina aún."
-                            )
-                        }
-                    />
-                </Card>
-            )
+                <p>No se ha asignado ningún formulario inicial todavía.</p>
+            ),
         },
         {
-            step: "dieta",
+            title: "Rutina Propuesta",
+            icon: <CheckOutlined />,
+            description: "El entrenador propone una rutina personalizada.",
+            action: myData?.role === "trainer" ? (
+                <Button type="primary" onClick={() => updateSubscriptionStatus("diet")}>
+                    Asignar Rutina
+                </Button>
+            ) : (
+                <p>Revisar la rutina asignada en tu perfil.</p>
+            ),
+        },
+        {
             title: "Plan de Dieta",
-            description: "Sube tu plan de dieta y escribe notas adicionales.",
-            action: (
+            icon: <SmileOutlined />,
+            description: "El entrenador asigna un plan de dieta personalizado.",
+            action: myData?.role === "trainer" ? (
                 <Form layout="vertical">
                     <Form.Item label="Subir Plan de Dieta">
                         <Upload beforeUpload={(file) => { setDietFile(file); return false; }}>
@@ -182,12 +143,14 @@ const SubscriptionSection = () => {
                         Guardar Dieta
                     </Button>
                 </Form>
-            )
+            ) : (
+                <p>Revisar el plan de dieta asignado en tu perfil.</p>
+            ),
         },
         {
-            step: "complete",
             title: "Estado de la Suscripción",
-            description: "Servicios contratados, precios, fechas de revisiones, etc.",
+            icon: <SmileOutlined />,
+            description: "Servicios contratados y próximos pasos.",
             content: (
                 <ul>
                     <li>Precio: 50€ al mes</li>
@@ -195,11 +158,9 @@ const SubscriptionSection = () => {
                     <li>Fecha de inicio: {new Date().toLocaleDateString()}</li>
                     <li>Próxima revisión: 15 de octubre</li>
                 </ul>
-            )
-        }
+            ),
+        },
     ];
-
-    const currentStepIndex = stepsToShow.findIndex((step) => step.step === subscription?.status);
 
     if (loading || !subscription) {
         return <div>Cargando estado de la suscripción...</div>;
@@ -207,29 +168,40 @@ const SubscriptionSection = () => {
 
     return (
         <div className={styles.subscriptionContainer}>
-            <div className={styles.timelineSection}>
-                {stepsToShow.map(({ step, title, description, action }, index) => (
-                    <Card
-                        key={step}
-                        hoverable={index === currentStepIndex}
-                        className={`${styles.timelineCard} ${index !== currentStepIndex ? styles.blurCard : ''}`}
-                        style={{
-                            width: "100%",
-                            marginBottom: "1rem",
-                            transition: "transform 0.3s ease",
-                            transform: index === currentStepIndex ? "scale(1.05)" : "scale(1)",
-                            opacity: index === currentStepIndex ? 1 : 0.6,
-                        }}
-                    >
-                        <Meta
-                            title={title}
-                            description={description}
-                            style={{ fontSize: index === currentStepIndex ? "1.2rem" : "1rem" }}
-                        />
-                        {index === currentStepIndex && <div className={styles.cardAction}>{action}</div>}
-                    </Card>
+            <Steps current={currentStep} direction="vertical">
+                {steps.map(({ title, icon, description, action, content }, index) => (
+                    <Step
+                        key={index}
+                        title={title}
+                        icon={icon}
+                        description={
+                            <div>
+                                <p>{description}</p>
+                                {action && <div style={{ marginTop: "1rem" }}>{action}</div>}
+                                {content && <div style={{ marginTop: "1rem" }}>{content}</div>}
+                            </div>
+                        }
+                    />
                 ))}
-            </div>
+            </Steps>
+
+            {/* Modal para Formulario Inicial */}
+            <Modal
+                title="Formulario Inicial"
+                visible={formVisible}
+                onCancel={() => setFormVisible(false)}
+                footer={null}
+            >
+                {assignedForms[0] ? (
+                    <div>
+                        <h3>{assignedForms[0].title || "Formulario Inicial"}</h3>
+                        <p>{assignedForms[0].description || "Por favor, completa las preguntas a continuación."}</p>
+                        {/* Renderizar las preguntas del formulario */}
+                    </div>
+                ) : (
+                    <p>No se encontró el formulario.</p>
+                )}
+            </Modal>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-// components/trainer/forms.js
+// components/trainer/Forms.js
 
 import React, { useContext, useEffect, useState } from 'react';
 import { Button, Table, Select, message, Row, Col, Card, Modal, Tag } from 'antd';
@@ -13,8 +13,8 @@ import {
     addSubcollectionDocument,
     listenToCollection,
 } from '../../services/firebase';
-import { where, query, getDocs, serverTimestamp } from 'firebase/firestore';
-
+import { where, serverTimestamp } from 'firebase/firestore';
+import baseForms from '../../utils/baseForms';
 const { Option } = Select;
 
 const Forms = () => {
@@ -28,6 +28,10 @@ const Forms = () => {
     const [assignModalVisible, setAssignModalVisible] = useState(false);
     const [selectedClients, setSelectedClients] = useState([]);
     const [currentForm, setCurrentForm] = useState(null);
+    const [showFormComponent, setShowFormComponent] = useState(false);
+    const [formToEdit, setFormToEdit] = useState(null);
+
+
 
     useEffect(() => {
         if (!myUid) return;
@@ -39,7 +43,7 @@ const Forms = () => {
             [],
             (snapshot) => {
                 const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-                setMyForms(list);
+                setMyForms([...baseForms, ...list]);
             },
             (error) => console.error(error)
         );
@@ -80,26 +84,47 @@ const Forms = () => {
     };
 
     const handleEditForm = (formId) => {
-        setSelectedFormId(formId);
-        setShowFormViewer(true);
+        // Obtener el formulario y abrir FormComponent para editar
+        const formToEdit = myForms.find((form) => form.id === formId);
+        setFormToEdit(formToEdit);
+        setShowFormComponent(true);
     };
 
     const handleCopyForm = async (formId) => {
         try {
-            const formToCopy = await getSubcollectionDocument('trainers', myUid, 'forms', formId);
+            let formToCopy;
+            if (formId.startsWith('base-')) {
+                // Obtener datos del formulario base
+                formToCopy = baseForms.find((form) => form.id === formId);
+            } else {
+                // Obtener formulario desde Firestore
+                formToCopy = await getSubcollectionDocument('trainers', myUid, 'forms', formId);
+            }
             if (formToCopy) {
-                const newFormData = { ...formToCopy, name: `${formToCopy.name} (Copia)` };
-                delete newFormData.id;
-                await addSubcollectionDocument('trainers', myUid, 'forms', newFormData);
-                message.success('Formulario copiado correctamente');
+                // Abrir FormComponent con formToCopy como datos iniciales
+                setFormToEdit(formToCopy);
+                setShowFormComponent(true);
             }
         } catch (error) {
             console.error('Error al copiar el formulario:', error);
         }
     };
 
-    const handleAssignForm = (form) => {
-        setCurrentForm(form);
+    const handleAssignForm = async (form) => {
+        let formToAssign = form;
+        if (form.isBase) {
+            // Crear una copia del formulario base
+            try {
+                const newFormData = { ...form, isBase: false };
+                delete newFormData.id;
+                const newFormId = await addSubcollectionDocument('trainers', myUid, 'forms', newFormData);
+                formToAssign = { id: newFormId, ...newFormData };
+            } catch (error) {
+                console.error('Error al copiar el formulario base:', error);
+                return;
+            }
+        }
+        setCurrentForm(formToAssign);
         setAssignModalVisible(true);
     };
 
@@ -145,15 +170,17 @@ const Forms = () => {
             key: 'actions',
             render: (text, record) => (
                 <span>
-                    <Button type="link" onClick={() => handleDeleteForm(record.id)}>
-                        Eliminar
-                    </Button>
-                    <Button type="link" onClick={() => { setSelectedFormId(record.id); setShowFormViewer(true); }}>
-                        Ver
-                    </Button>
-                    <Button type="link" onClick={() => handleEditForm(record.id)}>
-                        Editar
-                    </Button>
+                    {!record.isBase && (
+                        <>
+                            <Button type="link" onClick={() => handleDeleteForm(record.id)}>
+                                Eliminar
+                            </Button>
+                            <Button type="link" onClick={() => handleEditForm(record.id)}>
+                                Editar
+                            </Button>
+                        </>
+                    )}
+
                     <Button type="link" onClick={() => handleCopyForm(record.id)}>
                         Copiar
                     </Button>
@@ -194,7 +221,9 @@ const Forms = () => {
                 {/* Tarjeta de Crear Formulario */}
                 <Col xs={24} md={12}>
                     <Card title="Crear Nuevo Formulario" className={styles.card}>
-                        <FormComponent />
+                        <Button type="primary" onClick={() => setShowFormComponent(true)}>
+                            Crear Formulario
+                        </Button>
                     </Card>
                 </Col>
             </Row>
@@ -244,6 +273,22 @@ const Forms = () => {
                     ))}
                 </Select>
             </Modal>
+
+            {/* Modal para crear o editar formulario */}
+            {showFormComponent && (
+                <Modal
+                    visible={showFormComponent}
+                    onCancel={() => setShowFormComponent(false)}
+                    footer={null}
+                    width={800}
+                >
+                    <FormComponent
+                        initialFormData={formToEdit}
+                        formId={formToEdit?.id}
+                        setShowForm={setShowFormComponent}
+                    />
+                </Modal>
+            )}
         </div>
     );
 };

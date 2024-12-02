@@ -1,5 +1,8 @@
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css'; // importa los estilos de Quill
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css'; // Importar los estilos de Quill
+
+// Carga dinámica de ReactQuill
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const RichTextEditor = ({ value, onChange }) => {
   const modules = {

@@ -14,6 +14,8 @@ import {
   getDocs,
   updateDoc,
   arrayUnion,
+  addDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../../firebase.config';
 import AuthContext from '../../context/AuthContext';
@@ -105,6 +107,21 @@ const TrainersList = () => {
     }
   };
 
+  // Nueva función para enviar notificación al entrenador
+  const sendTrainerRequest = async (trainerId) => {
+    try {
+      const notifRef = collection(db, 'trainers', trainerId, 'notifications');
+      await addDoc(notifRef, {
+        type: 'trainer_request',
+        clientId: myUid,
+        message: `El cliente ${myUid} quiere conectarse contigo.`,
+        timestamp: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error al enviar la solicitud al entrenador:', error);
+    }
+  };
+
   const selectTrainer = async (trainerId) => {
     if (currentTrainerId) {
       const confirm = window.confirm(
@@ -119,6 +136,9 @@ const TrainersList = () => {
       status: 'pending',
       createdAt: new Date(),
     });
+    // Enviar notificación al entrenador
+    await sendTrainerRequest(trainerId);
+
     setCurrentTrainerId(trainerId);
     message.success('Solicitud enviada al entrenador');
   };
