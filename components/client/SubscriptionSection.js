@@ -1,26 +1,9 @@
-// components/client/SubscriptionSection.js
-
 import React, { useContext, useEffect, useState } from "react";
 import { query, collection, where, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db, storage } from "../../firebase.config";
+import { db } from "../../firebase.config";
 import AuthContext from "../../context/AuthContext";
-import {
-    Card,
-    Button,
-    Steps,
-    Modal,
-    Form,
-    Upload,
-    Input,
-    message,
-} from "antd";
-import {
-    UploadOutlined,
-    CheckOutlined,
-    FileTextOutlined,
-    SettingOutlined,
-    SmileOutlined,
-} from "@ant-design/icons";
+import { Card, Button, Steps, Modal, Form, DatePicker, message } from "antd";
+import { UploadOutlined, CheckOutlined, SettingOutlined } from "@ant-design/icons";
 import styles from "../../styles/Subscription.module.css";
 
 const { Step } = Steps;
@@ -29,11 +12,8 @@ const SubscriptionSection = () => {
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
     const [currentStep, setCurrentStep] = useState(0);
-    const [dietComment, setDietComment] = useState("");
-    const [dietFile, setDietFile] = useState(null);
-    const [uploadingDiet, setUploadingDiet] = useState(false);
     const [formVisible, setFormVisible] = useState(false);
-    const [assignedForms, setAssignedForms] = useState([]); // Cambiado a array vacío
+    const [startDate, setStartDate] = useState(null);
     const { myData } = useContext(AuthContext);
 
     useEffect(() => {
@@ -57,107 +37,96 @@ const SubscriptionSection = () => {
         }
     }, [myData?.id]);
 
-    useEffect(() => {
-        const fetchClientForms = async () => {
-            if (!myData?.id) return;
-
-            const formsRef = collection(db, "clients", myData.id, "forms");
-            const formsSnapshot = await getDocs(formsRef);
-
-            if (!formsSnapshot.empty) {
-                const formsList = formsSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setAssignedForms(formsList);
-            } else {
-                console.log("No se encontraron formularios para el cliente:", myData.id);
-            }
-        };
-
-        fetchClientForms();
-    }, [myData?.id]);
-
     const getStepIndex = (status) => {
-        const steps = ["pending", "form", "routine", "diet", "complete"];
+        const steps = ["pending", "form", "routine", "diet", "active"];
         return steps.indexOf(status);
+    };
+
+    const updateSubscriptionStatus = async (status) => {
+        if (!subscription) return;
+        try {
+            const subscriptionRef = doc(db, "subscriptions", subscription.id);
+            await updateDoc(subscriptionRef, { status });
+            setCurrentStep(getStepIndex(status));
+            message.success(`Estado actualizado a ${status}`);
+        } catch (error) {
+            console.error("Error al actualizar estado:", error);
+            message.error("Error al actualizar el estado");
+        }
+    };
+
+    const handleStartDateSelection = async (date) => {
+        if (!subscription) return;
+        try {
+            const subscriptionRef = doc(db, "subscriptions", subscription.id);
+            await updateDoc(subscriptionRef, { startDate: date, status: "active" });
+            message.success(`Tu suscripción comenzará el ${date.format("YYYY-MM-DD")}`);
+            setCurrentStep(getStepIndex("active"));
+        } catch (error) {
+            console.error("Error al guardar la fecha de inicio:", error);
+            message.error("Error al guardar la fecha de inicio");
+        }
     };
 
     const steps = [
         {
             title: "Solicitud Pendiente",
-            icon: <SettingOutlined />,
             description: myData?.role === "trainer"
-                ? "Aceptar la solicitud del cliente y enviar el formulario inicial."
+                ? "Aceptar la solicitud del cliente."
                 : "Esperando que el entrenador acepte tu solicitud.",
             action: myData?.role === "trainer" && (
                 <Button type="primary" onClick={() => updateSubscriptionStatus("form")}>
-                    Aceptar y Enviar Formulario
+                    Aceptar Solicitud
                 </Button>
             ),
         },
         {
             title: "Formulario Inicial",
-            icon: <FileTextOutlined />,
-            description: "Por favor, completa el formulario inicial enviado por tu entrenador.",
-            action: assignedForms.length > 0 ? ( // Validación corregida
+            description: myData?.role === "trainer"
+                ? "Verifica si el cliente ha completado el formulario."
+                : "Completa el formulario inicial enviado por tu entrenador.",
+            action: myData?.role === "client" && (
                 <Button type="primary" onClick={() => setFormVisible(true)}>
-                    Ver Formulario
+                    Completar Formulario
                 </Button>
-            ) : (
-                <p>No se ha asignado ningún formulario inicial todavía.</p>
             ),
         },
         {
             title: "Rutina Propuesta",
-            icon: <CheckOutlined />,
-            description: "El entrenador propone una rutina personalizada.",
-            action: myData?.role === "trainer" ? (
+            description: myData?.role === "trainer"
+                ? "Asigna una rutina personalizada."
+                : "Revisa la rutina asignada en tu perfil.",
+            action: myData?.role === "trainer" && (
                 <Button type="primary" onClick={() => updateSubscriptionStatus("diet")}>
                     Asignar Rutina
                 </Button>
-            ) : (
-                <p>Revisar la rutina asignada en tu perfil.</p>
             ),
         },
         {
             title: "Plan de Dieta",
-            icon: <SmileOutlined />,
-            description: "El entrenador asigna un plan de dieta personalizado.",
-            action: myData?.role === "trainer" ? (
-                <Form layout="vertical">
-                    <Form.Item label="Subir Plan de Dieta">
-                        <Upload beforeUpload={(file) => { setDietFile(file); return false; }}>
-                            <Button icon={<UploadOutlined />}>Seleccionar Archivo</Button>
-                        </Upload>
-                    </Form.Item>
-                    <Form.Item label="Notas Adicionales">
-                        <Input.TextArea
-                            rows={4}
-                            placeholder="Escribe cualquier nota sobre la dieta aquí..."
-                            value={dietComment}
-                            onChange={(e) => setDietComment(e.target.value)}
-                        />
-                    </Form.Item>
-                    <Button type="primary" onClick={handleUploadDiet} loading={uploadingDiet}>
-                        Guardar Dieta
-                    </Button>
-                </Form>
-            ) : (
-                <p>Revisar el plan de dieta asignado en tu perfil.</p>
+            description: myData?.role === "trainer"
+                ? "Sube el plan de dieta para el cliente."
+                : "Revisa el plan de dieta asignado.",
+            action: myData?.role === "trainer" && (
+                <Button type="primary" onClick={() => updateSubscriptionStatus("active")}>
+                    Guardar Dieta
+                </Button>
             ),
         },
         {
-            title: "Estado de la Suscripción",
-            icon: <SmileOutlined />,
-            description: "Servicios contratados y próximos pasos.",
-            content: (
-                <ul>
-                    <li>Precio: 50€ al mes</li>
-                    <li>Servicios: Rutinas personalizadas, 3 revisiones al mes</li>
-                    <li>Fecha de inicio: {new Date().toLocaleDateString()}</li>
-                    <li>Próxima revisión: 15 de octubre</li>
-                </ul>
+            title: "Estado Activo",
+            description: "Selecciona la fecha de inicio y revisa el resumen de tu suscripción.",
+            action: myData?.role === "client" && (
+                <div>
+                    <DatePicker onChange={(date) => setStartDate(date)} />
+                    <Button
+                        type="primary"
+                        style={{ marginTop: "1rem" }}
+                        onClick={() => handleStartDateSelection(startDate)}
+                    >
+                        Confirmar Fecha de Inicio
+                    </Button>
+                </div>
             ),
         },
     ];
@@ -169,38 +138,28 @@ const SubscriptionSection = () => {
     return (
         <div className={styles.subscriptionContainer}>
             <Steps current={currentStep} direction="vertical">
-                {steps.map(({ title, icon, description, action, content }, index) => (
+                {steps.map(({ title, description, action }, index) => (
                     <Step
                         key={index}
                         title={title}
-                        icon={icon}
                         description={
                             <div>
                                 <p>{description}</p>
                                 {action && <div style={{ marginTop: "1rem" }}>{action}</div>}
-                                {content && <div style={{ marginTop: "1rem" }}>{content}</div>}
                             </div>
                         }
                     />
                 ))}
             </Steps>
 
-            {/* Modal para Formulario Inicial */}
+            {/* Modal para el Formulario Inicial */}
             <Modal
                 title="Formulario Inicial"
                 visible={formVisible}
                 onCancel={() => setFormVisible(false)}
                 footer={null}
             >
-                {assignedForms[0] ? (
-                    <div>
-                        <h3>{assignedForms[0].title || "Formulario Inicial"}</h3>
-                        <p>{assignedForms[0].description || "Por favor, completa las preguntas a continuación."}</p>
-                        {/* Renderizar las preguntas del formulario */}
-                    </div>
-                ) : (
-                    <p>No se encontró el formulario.</p>
-                )}
+                <p>Contenido del formulario inicial aquí...</p>
             </Modal>
         </div>
     );

@@ -1,7 +1,6 @@
-// pages/Dashboard.js
 import { Layout, FloatButton, Badge, Modal } from 'antd';
 import { MessageOutlined } from '@ant-design/icons';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Sidebar from '../components/layout/Sidebar';
 import DashboardHeader from '../components/layout/Header';
@@ -23,7 +22,7 @@ const Dashboard = () => {
     const { role } = useContext(AuthContext);
     const [isChatVisible, setChatVisible] = useState(false);
     const [newMessages, setNewMessages] = useState(0);
-    const [selectedSection, setSelectedSection] = useState('home');
+    const [selectedSection, setSelectedSection] = useState('');
     const [publicSections, setPublicSections] = useState({
         rates: true,
         socialMedia: true,
@@ -32,12 +31,21 @@ const Dashboard = () => {
 
     const router = useRouter();
 
+    useEffect(() => {
+        // Configurar la sección inicial según el rol
+        if (role === 'trainer') {
+            setSelectedSection('home');
+        } else {
+            setSelectedSection('program');
+        }
+    }, [role]);
+
     const toggleChat = () => setChatVisible(!isChatVisible);
 
     const handleLogout = async () => {
         try {
-            await signOut(auth); // Cerrar sesión en Firebase
-            router.push("/login"); // Redirigir al login
+            await signOut(auth);
+            router.push("/login");
         } catch (error) {
             console.error("Error al cerrar sesión:", error);
         }

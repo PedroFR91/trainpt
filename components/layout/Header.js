@@ -90,21 +90,33 @@ const DashboardHeader = ({ onLogout, trainerId }) => {
 
     const approveClientRequest = async (clientId, notifId) => {
         try {
-            // Crear o actualizar la suscripción en la colección 'subscriptions'
+            // Crear o actualizar la suscripción
             const subscriptionRef = doc(db, 'subscriptions', `${clientId}_${myUid}`);
             await setDoc(subscriptionRef, {
                 clientId,
                 trainerId: myUid,
-                status: 'active',
+                status: 'form', // Cambiar el estado a 'form'
                 timestamp: serverTimestamp(),
             });
+
+            // Asignar formulario inicial
+            const initialForm = myForms.find((form) => form.type === 'initial'); // Busca un formulario de tipo 'initial'
+            if (initialForm) {
+                await addSubcollectionDocument('clients', clientId, 'assignedForms', {
+                    formId: initialForm.id,
+                    assignedAt: serverTimestamp(),
+                    status: 'pending',
+                    trainerId: myUid,
+                    type: initialForm.type,
+                });
+            }
 
             // Eliminar la notificación
             const notifRef = doc(db, 'trainers', myUid, 'notifications', notifId);
             await deleteDoc(notifRef);
 
             notification.success({
-                message: 'Solicitud aprobada',
+                message: 'Solicitud aprobada y formulario asignado',
                 description: `Has aprobado la solicitud del cliente ${clientId}.`,
             });
         } catch (error) {
@@ -115,6 +127,7 @@ const DashboardHeader = ({ onLogout, trainerId }) => {
             });
         }
     };
+
 
     const declineClientRequest = async (clientId, notifId) => {
         try {
